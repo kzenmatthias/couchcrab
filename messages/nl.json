@@ -40,13 +40,8 @@
 	"series_kind_other": "Serie",
 	"series_creator_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} maker",
 				"countPlural=*": "{count} makers"
@@ -76,13 +71,8 @@
 	"series_started": "Gestart in {date}",
 	"series_episode_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} aflevering",
 				"countPlural=*": "{count} afleveringen"
@@ -164,13 +154,8 @@
 	"claim_title": "Claim je makersprofiel",
 	"claim_intro": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "Aangemeld met Google. Dit account heeft {count} YouTube-kanaal.",
 				"countPlural=*": "Aangemeld met Google. Dit account heeft {count} YouTube-kanalen."
@@ -212,14 +197,8 @@
 	"switch_off": "Uit",
 	"pov_watching": [
 		{
-			"declarations": [
-				"input total",
-				"local totalPlural = total: plural",
-				"input count"
-			],
-			"selectors": [
-				"totalPlural"
-			],
+			"declarations": ["input total", "local totalPlural = total: plural", "input count"],
+			"selectors": ["totalPlural"],
 			"match": {
 				"totalPlural=one": "Je kijkt naar {count} van {total} maker",
 				"totalPlural=*": "Je kijkt naar {count} van {total} makers"
@@ -247,13 +226,8 @@
 	"settings_creators_intro": "Kies de makers van wie je het POV wilt zien. Reeksen volgen deze lijst, tenzij je het daar anders instelt.",
 	"settings_selected_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} gekozen",
 				"countPlural=*": "{count} gekozen"

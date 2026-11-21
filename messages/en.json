@@ -40,13 +40,8 @@
 	"series_kind_other": "Series",
 	"series_creator_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} creator",
 				"countPlural=*": "{count} creators"
@@ -76,13 +71,8 @@
 	"series_started": "Started {date}",
 	"series_episode_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} episode",
 				"countPlural=*": "{count} episodes"
@@ -164,13 +154,8 @@
 	"claim_title": "Claim your creator profile",
 	"claim_intro": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "Signed in with Google. This account owns {count} YouTube channel.",
 				"countPlural=*": "Signed in with Google. This account owns {count} YouTube channels."
@@ -212,14 +197,8 @@
 	"switch_off": "Off",
 	"pov_watching": [
 		{
-			"declarations": [
-				"input total",
-				"local totalPlural = total: plural",
-				"input count"
-			],
-			"selectors": [
-				"totalPlural"
-			],
+			"declarations": ["input total", "local totalPlural = total: plural", "input count"],
+			"selectors": ["totalPlural"],
 			"match": {
 				"totalPlural=one": "Watching {count} of {total} creator",
 				"totalPlural=*": "Watching {count} of {total} creators"
@@ -247,13 +226,8 @@
 	"settings_creators_intro": "Pick the creators whose POV you want. Series follow this list unless you change it there.",
 	"settings_selected_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} selected",
 				"countPlural=*": "{count} selected"
