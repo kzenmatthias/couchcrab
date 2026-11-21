@@ -14,22 +14,24 @@ src/
       youtube/       API client, sync, rule engine
       audit.ts       write and revert history entries
     components/      shared UI (cards, rails, timeline, player, POV bar, switches, dialogs)
-    prefs/           who-I-watch, progress, settings (localStorage + account sync)
+    prefs/           viewing prefs store, cookie mirror, progress, sync adapter, theme, notice
     styles/          design tokens and base CSS
     poster-art.ts    generated poster art
     i18n.ts          translation fallback and Intl helpers
     timeline.ts      timeline order, ISO week and session grouping (pure, unit tested)
+    viewing.ts       who-I-watch, spoiler and captions filters, next episode (pure, unit tested)
     video.ts         episode card type, YouTube id/URL and duration helpers
     youtube-iframe.ts  loads the YouTube IFrame Player API in the browser
     labels.ts        translated labels for database enums
     paraglide/       generated, do not edit
   routes/
     (site)/          home, series/[slug] (timeline, by-creator, extras, about), creators/[slug],
-                     watch/[videoId], [page] (site pages), later settings
+                     watch/[videoId], settings/{creators,display}, [page] (site pages)
     manage/          management tool (editor/admin)
     auth/            Discord and Google login and callbacks, POST signout
     (site)/signin, (site)/claim  sign-in page and creator claim step
     prefs/           POST endpoint for language and theme (works without JavaScript)
+    api/videos/      GET public episode cards by YouTube id (Continue watching, revealed titles)
   env.ts             environment variables (SvelteKit 3 `defineEnvVars`)
 messages/            en.json, nl.json (UI strings)
 scripts/             migrate.ts, seed.ts, sync.ts (entry points for the npm scripts)
@@ -179,7 +181,47 @@ Signed out, the header shows a "Sign in" link. Signed in, it shows an account bu
 - The first-visit notice is remembered in `localStorage`; an inline script in `app.html` hides it before the first paint.
 - Poster art is generated SVG per series from its `poster` settings, with no text inside the image: `{ "type": "art", "palette": "meadow", "seed": 11 }`. Palettes (`meadow`, `dusk`, `ember`, `tide`, `amber`, `gold`, `night`, `forest`, `violet`) set the colours and motif. Admins can upload an image instead: `{ "type": "image", "url": "..." }`.
 - Site pages are Markdown, rendered with `marked` and cleaned with `sanitize-html` on the server. The page title is the only `h1`.
-- Preferences work without JavaScript-heavy state libraries: Svelte 5 runes plus a small store synced to `localStorage` and, when signed in, to the server.
+- Preferences work without JavaScript-heavy state libraries: Svelte 5 runes plus a small store synced to `localStorage` and, when signed in, to the server. See "Viewing preferences".
+
+## Viewing preferences
+
+Everything works without an account. The code lives in `src/lib/prefs/`:
+
+| File | Does |
+| --- | --- |
+| `schema.ts` | The `Prefs` type, defaults and `migratePrefs`: versioned JSON (`version: 1`) under the localStorage key `couchcrab:prefs`. Every field is validated on read; an older shape is migrated step by step, anything invalid gets its default. |
+| `progress.ts` | Watch progress per YouTube video id under `couchcrab:progress`: `{ seconds, watched, updatedAt }`. Watched from 90% (`WATCHED_RATIO`) or when the video ends; Continue watching lists started (10 s or more), unwatched videos, newest first. At most 3000 entries. |
+| `mirror.ts` | The cookie mirror (below). |
+| `store.svelte.ts` | `ViewingStore`, the runes store, shared through context (`getViewing()`). |
+| `sync.ts` | `PrefsSyncAdapter` and `mergeSnapshots`. |
+| `display.ts` | Display settings as attributes on `<html>`. |
+
+Creators and series are referred to by database id. Defaults: watch everyone, spoiler-free off, autoplay on with a 15 s countdown, captions as YouTube decides, shortcuts N (next), S (show title), M (mark watched).
+
+### What lives where
+
+- **localStorage**: all prefs and the progress. The progress never goes to the server.
+- **Cookie `viewing`**: a compact mirror of what the server needs to render without a flash: the global creator list, custom lists per series, spoiler-free and only-creator-captions (default and per-series overrides) and text-only lists. Format `1~g1.2.a~c5_1.2~s1~p3~q7~o1~r4~u6~t1` (version first, ids in base 36; `g` missing means everyone, `g` alone nobody). Only unreserved URL characters, at most 3800 characters: when a huge setup would not fit, custom series lists are dropped (largest first) and those series follow the global list on the server. The browser writes it; the server only reads it, in the page loads (`parseMirror(cookies.get('viewing'))`).
+- **`<html>` attributes**: `data-text-size` (`large`, `larger`), `data-motion` (`reduce`, `allow`), `data-underline-links`, `data-text-only`. An inline script in `src/app.html` sets them from localStorage before the first paint; `base.css` scales the root font size, underlines links and lets `allow` override `prefers-reduced-motion`.
+
+### Rendering
+
+- The page loads filter with `forViewer()` from `src/lib/viewing.ts`: episodes of creators you don't watch and, when asked, episodes without creator captions are removed; in spoiler-free series the title is replaced by an empty string and `titleHidden: true`, so it is in neither the HTML nor the page data. An Extras video follows the list and options of its parent series (`povSeriesId`).
+- The store starts from the cookie on the server and during hydration, so both render the same. After mount it reads localStorage; progress-dependent parts (badges, Continue watching, revealed titles of watched episodes) appear then. Real titles of watched spoiler-free episodes come from `GET /api/videos?ids=…` (public data, at most 50 ids).
+- Every change goes to localStorage and the cookie. When the mirrored part changed, the root layout calls `invalidateAll()`, so the server loads run again with the new cookie.
+- Next episode (`nextEpisode`): the next item of the same week or session in timeline order that the viewer watches, else the first such item of a later group.
+- The watch page saves the position through the IFrame API on pause, every 15 s while playing and when leaving the page, and marks the video watched at 90% or when it ends. Captions use `cc_load_policy=1` and `cc_lang_pref` when "captions on" is set. Demo ids keep the placeholder; builds with `import.meta.env.DEV` or `VITE_TEST_HOOKS=1` (the e2e build) add a "Simulate end of video" button so the countdown can be tested without YouTube.
+
+### Sync adapter
+
+```ts
+interface PrefsSyncAdapter {
+	pull(): Promise<{ prefs: Prefs; progress: ProgressMap } | null>;
+	push(snapshot: { prefs: Prefs; progress: ProgressMap }): Promise<void>;
+}
+```
+
+`viewing.connect(adapter)` pulls the account's copy, merges it (`mergeSnapshots`: the prefs with the newest `updatedAt` win as a whole, progress is merged per video, newest entry first), applies and pushes the result; after that every change is pushed, debounced by 2 s. `disconnect()` stops pushing. The server side (`user_creators`, `user_series_creators`, `progress`, `user_settings`) comes with accounts.
 
 ## Testing and CI
 

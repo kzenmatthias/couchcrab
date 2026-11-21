@@ -27,6 +27,11 @@ All notable changes to this project are documented here. The format follows [Kee
 - Sign-in page that explains both paths and what Couchcrab asks YouTube and keeps. Without keys on the server the buttons are disabled with an explanation.
 - Creators claim their profile: after Google sign-in Couchcrab lists the YouTube channels the account owns, a matching creator can be claimed at once (Verified creator) and other channels go to review.
 - Account menu in the header with the theme, links to your settings, the creator dashboard for claimed creators and Sign out. It works with the keyboard and without JavaScript.
+- Who I watch (`/settings/creators`): pick the creators whose POV you want, with search, select all and clear all. Each series follows that list or uses its own; the series page shows a POV bar with "Change creators" and "Reset to global list". Home, timelines, by-creator views and Extras only show the creators you watch, already in the server render.
+- Spoiler-free mode per series (and a default for new series): unwatched episodes get a neutral card titled "Episode N" with a "Title hidden" badge, and the real title is left out of the page. The watch page has "Show real title".
+- Watch progress in this browser: "Watched" and "62% watched" badges on cards, a "Continue watching" row on home and a "Mark as watched" button. A video counts as watched from 90%.
+- Autoplay countdown at the end of a video, with "Play now" and "Cancel", paused while hovered or focused, announced once to screen readers, or "Wait for me" without counting.
+- Display & accessibility settings (`/settings/display`): text size, animations, underlined links, text-only lists, autoplay and countdown, captions on by default with a preferred language, only episodes with creator captions, and single-key shortcuts (N, S, M) that can be changed or turned off.
 
 ### Changed
 
