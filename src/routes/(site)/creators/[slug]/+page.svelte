@@ -8,12 +8,26 @@
 	import Rail from '#lib/components/Rail.svelte';
 	import SeriesPoster from '#lib/components/SeriesPoster.svelte';
 	import VerifiedBadge from '#lib/components/VerifiedBadge.svelte';
+	import { getViewing } from '#lib/prefs/store.svelte.js';
 	import { seedFrom, spokenDuration, youtubeChannelUrl } from '#lib/video.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 	const c = $derived(data.creator);
 	const locale = $derived(getLocale());
+	const viewing = getViewing();
+
+	/*
+	 * Spoiler-free series: the server leaves the title out; once an episode is watched its real
+	 * title is fetched and shown, like on the episode cards.
+	 */
+	const isWatched = (youtubeId: string) => viewing.entry(youtubeId)?.watched ?? false;
+	const revealedTitle = (v: (typeof data.uploads)[number]) =>
+		v.titleHidden && isWatched(v.youtubeVideoId) ? viewing.titles[v.youtubeVideoId] : undefined;
+	$effect(() => {
+		for (const v of data.uploads)
+			if (v.titleHidden && isWatched(v.youtubeVideoId)) viewing.requestTitle(v.youtubeVideoId);
+	});
 </script>
 
 <svelte:head>
@@ -59,9 +73,12 @@
 	{#if data.uploads.length}
 		<ul>
 			{#each data.uploads as v (v.id)}
+				{@const revealed = revealedTitle(v)}
 				<li>
 					<a class="t" href={resolve('/(site)/watch/[videoId]', { videoId: v.youtubeVideoId })}>
-						{#if v.titleHidden}
+						{#if revealed !== undefined}
+							{revealed}
+						{:else if v.titleHidden}
 							{v.episodeNumber
 								? m.episode_long({ number: v.episodeNumber })
 								: m.episode_hidden_untitled()}
@@ -69,7 +86,9 @@
 							{v.title}
 						{/if}
 					</a>
-					{#if v.titleHidden}<span class="badge">{m.badge_title_hidden()}</span>{/if}
+					{#if v.titleHidden && revealed === undefined}
+						<span class="badge">{m.badge_title_hidden()}</span>
+					{/if}
 					<span class="m">
 						<a href={resolve('/(site)/series/[slug]', { slug: v.series.slug })}>{v.series.title}</a>
 						· {spokenDuration(v.durationS, locale)}
