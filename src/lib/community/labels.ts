@@ -33,6 +33,7 @@ const FIELDS: Record<string, () => string> = {
 	target: m.community_field_target,
 	priority: m.community_field_priority,
 	enabled: m.community_field_enabled,
+	within_series_dates: m.community_field_within_series_dates,
 	sync: m.community_field_sync,
 	role: m.community_field_role,
 	number: m.community_field_number,

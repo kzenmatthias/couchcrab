@@ -201,7 +201,12 @@ export const titleRules = sqliteTable(
 			.notNull()
 			.default('main'),
 		priority: integer('priority').notNull().default(0),
-		enabled: bool('enabled').notNull().default(true)
+		enabled: bool('enabled').notNull().default(true),
+		/**
+		 * Only match uploads published from the series' start minus 2 days up to its end plus 7
+		 * days (open-ended while it runs). A series without a start date never matches then.
+		 */
+		withinSeriesDates: bool('within_series_dates').notNull().default(false)
 	},
 	(t) => [index('title_rules_series_idx').on(t.seriesId)]
 );

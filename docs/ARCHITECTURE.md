@@ -63,7 +63,7 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 | `series_creators` | series_id, creator_id |
 | `groups` | id, series_id, kind (`session`, `week`), number, title, starts_at, ends_at |
 | `videos` | id, youtube_video_id, channel_id, title, published_at, duration_s, has_creator_captions, is_live_vod, live_started_at (actual livestream start, live VODs only), is_short, series_id, group_id, episode_number, status (`placed`, `unsorted`, `ignored`), placed_by (`rule`, `user`, `sync`), fetched_at |
-| `title_rules` | id, series_id, channel_id (nullable = all channels of the series), pattern, match (`contains`, `regex`), target (`main`, `extras`), priority, enabled |
+| `title_rules` | id, series_id, channel_id (nullable = all channels of the series), pattern, match (`contains`, `regex`), target (`main`, `extras`), priority, enabled, within_series_dates (only match uploads in the series' date window) |
 | `site_texts` | key (`notice`, `footer_disclaimer`), locale, value, updated_at. Short site texts managed in the app. |
 | `pages` / `page_translations` | `pages`: id, slug. `page_translations`: page_id, locale, title, body (Markdown), updated_at |
 | `users` | id, discord_id (nullable), google_sub (nullable), name, avatar_url, role (`viewer`, `editor`, `admin`), trust (approved minus rejected suggestions), creator_id (the creator profile this user claimed). At least one of discord_id and google_sub is set. |
@@ -86,6 +86,7 @@ npm run sync                              # all channels with sync_enabled, then
 npm run sync -- --channel UCxxxxxxxx      # one channel (and only its videos for retention)
 npm run sync -- --dry-run                 # fetch and evaluate, write nothing, list each video
 npm run sync -- --refresh-only            # retention only
+npm run sync -- --first-max 20000         # a first sync takes up to 20000 uploads per channel
 ```
 
 Without `YOUTUBE_API_KEY` the script prints a short note and exits with code 0, so the demo data works without a key. It exits with 1 when a channel or the retention step failed.
@@ -94,7 +95,7 @@ Without `YOUTUBE_API_KEY` the script prints a short note and exits with code 0, 
 
 1. Channels of creators with `opted_out` are skipped (no API call). Channels with `sync_enabled` off are not read at all.
 2. `channels.list` (`contentDetails,snippet`) gives the uploads playlist.
-3. `playlistItems.list` pages through it (50 per page, newest first). An incremental sync stops at the first item published before `last_synced_at` minus a safety margin of 3 days (`SAFETY_MARGIN_S`), for late or rescheduled uploads. A first sync takes at most the 200 newest uploads (`FIRST_SYNC_MAX`, `firstSyncMax` option).
+3. `playlistItems.list` pages through it (50 per page, newest first). An incremental sync stops at the first item published before `last_synced_at` minus a safety margin of 3 days (`SAFETY_MARGIN_S`), for late or rescheduled uploads. A first sync takes at most the 200 newest uploads (`FIRST_SYNC_MAX`); `--first-max <n>` (the `firstSyncMax` option) raises that, for example to fetch a channel's whole history after the catalog import. YouTube lists at most about 20,000 items of an uploads playlist. A full history costs about 2 quota units per 50 uploads (one `playlistItems.list` page and one `videos.list` batch), so 10,000 uploads are about 400 of the 10,000 daily units. The ids and details of one channel stay in memory until its transaction is written, which is a few MB even for a large channel; a quota error before that writes nothing for the channel, and the next run starts its first sync again.
 4. `videos.list` (`contentDetails,snippet,liveStreamingDetails`) in batches of 50 gives the details. Durations are ISO 8601 (`PT32M15S`) and stored in seconds.
 5. Classification: `has_creator_captions` when `contentDetails.caption` is `"true"`; `is_live_vod` when `liveStreamingDetails.actualEndTime` is set; `is_short` when the duration is 180 seconds or less (`SHORT_MAX_SECONDS`) and the video is not a live VOD. The API has no Shorts flag, so a regular upload of three minutes or less also counts as a Short; an editor can still place it by hand.
 6. Upcoming items (scheduled streams and premieres) and streams that are live right now are skipped. `last_synced_at` is then set no later than the earliest skipped item, so a later sync picks it up once it has ended. Otherwise `last_synced_at` becomes the time of the sync.
@@ -113,7 +114,8 @@ A dry run performs the same writes inside a transaction and rolls it back, so it
 
 - Rules are tried by `priority` (highest first), then by `id`. The first match wins.
 - A rule with `channel_id` set only applies to uploads of that channel.
-- `contains` is a case-insensitive substring match. `regex` is a JavaScript regular expression with the `i` flag; an invalid pattern or one longer than 200 characters never matches (it does not throw).
+- `contains` is a case-insensitive substring match. `regex` is a JavaScript regular expression with the `i` flag; an invalid pattern or one longer than 400 characters never matches (it does not throw).
+- A rule with `within_series_dates` only matches uploads published from the series' `started_at` minus 2 days up to and including its `ended_at` plus 7 days (`inSeriesWindow`; open-ended while `ended_at` is empty). The window is the rule's own series, also when the video goes to its Extras child. A series without `started_at` has no window, so such a rule never matches; the rule form and list say so. This is for creators who never number their seasons: a broad pattern on their channel stays limited to one season. `loadRuleSeries` passes the dates in `RuleSeries`, so the sync, "Test this rule" and "Apply rules to Unsorted" all use it.
 - `target: extras` places the video in the series' Extras child (the series with `parent_id` pointing at it). If the series has no Extras child, the rule is skipped and the next rule gets a chance.
 - A livestream VOD goes to the Extras child even when the matching rule targets the main series, because livestreams are not episodes. Without an Extras child it stays in the main series.
 - When the destination series is grouped by week or session, the video gets the group whose window (`starts_at` up to `ends_at`, open-ended when `ends_at` is empty) contains its publish date.
@@ -218,6 +220,10 @@ The theme and the language stay in their cookies and are not part of the account
 | `sync.ts` | "Sync now" and dry run: `runSync` with a client for `YOUTUBE_API_KEY`; without a key the page explains and the buttons are disabled | admin |
 
 Slugs are made from the name (`src/lib/slug.ts`, also used for the live suggestion in the forms) and get `-2`, `-3`, ... when taken; a slug typed by hand must be free.
+
+### Catalog import
+
+`npm run catalog:import -- <file> [--dry-run]` (`scripts/import-catalog.ts`, logic in `manage/catalog-import.ts`) loads a starter catalog from JSON (format in the README). `parseCatalog` checks the whole file and returns every problem; `importCatalog` then calls the service functions above (`createCreator`, `addChannel`, `createSeries`, `createExtras`, `createGroup`, `createRule` and their update counterparts) inside one transaction, where their own transactions become savepoints. A refused call is recorded and the run goes on, so all problems are reported; any problem, or a dry run, rolls the whole transaction back. The import acts as an editor with `Actor.system = 'sync'`, so `auditUser` writes history entries with actor `sync` and no user. It matches existing rows (creators by slug or channel, series by slug, sessions by number, rules by pattern, match and channel, where a rule's `channel` is a creator slug for their main channel or an exact `UC...` channel id), only writes when something differs, never deletes, skips claimed creators' profiles (channels can still be added) and leaves opted-out creators alone. Missing colours and posters are picked stably from the slug (`PROFILE_COLORS`, the poster palettes).
 
 ### Site texts
 

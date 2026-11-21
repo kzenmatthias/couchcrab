@@ -20,6 +20,8 @@ export interface CandidateRule {
 	target: 'main' | 'extras';
 	priority: number;
 	enabled: boolean;
+	/** Only match uploads inside the series' date window (`inSeriesWindow`). */
+	withinSeriesDates?: boolean;
 }
 
 export interface RuleGroup {
@@ -35,6 +37,9 @@ export interface RuleSeries {
 	/** Id of the Extras child series (`parent_id` = this series), if it has one. */
 	extrasId: number | null;
 	groups: RuleGroup[];
+	/** The series' dates, for rules with `withinSeriesDates`. */
+	startedAt?: Date | null;
+	endedAt?: Date | null;
 }
 
 export interface Placement {
@@ -46,7 +51,7 @@ export interface Placement {
 }
 
 /** Longer regex patterns are ignored. Titles are at most 100 characters on YouTube. */
-export const MAX_PATTERN_LENGTH = 200;
+export const MAX_PATTERN_LENGTH = 400;
 const MAX_TITLE_LENGTH = 200;
 
 const regexCache = new Map<string, RegExp | null>();
@@ -73,6 +78,27 @@ export function ruleMatches(rule: Pick<CandidateRule, 'pattern' | 'match'>, titl
 		return rule.pattern.length > 0 && text.toLowerCase().includes(rule.pattern.toLowerCase());
 	}
 	return compileRulePattern(rule.pattern)?.test(text) ?? false;
+}
+
+const DAY_MS = 86_400_000;
+/** A date-bound rule also matches uploads this long before the series starts (trailers, teasers). */
+export const WINDOW_BEFORE_MS = 2 * DAY_MS;
+/** ... and this long after it ended (late recaps). */
+export const WINDOW_AFTER_MS = 7 * DAY_MS;
+
+/**
+ * Whether `at` lies in the series' date window: from `startedAt` minus 2 days up to and
+ * including `endedAt` plus 7 days, open-ended while `endedAt` is empty. A series without
+ * `startedAt` has no window, so a date-bound rule never matches.
+ */
+export function inSeriesWindow(
+	series: Pick<RuleSeries, 'startedAt' | 'endedAt'> | undefined,
+	at: Date
+): boolean {
+	if (!series?.startedAt) return false;
+	const t = at.getTime();
+	if (t < series.startedAt.getTime() - WINDOW_BEFORE_MS) return false;
+	return !series.endedAt || t <= series.endedAt.getTime() + WINDOW_AFTER_MS;
 }
 
 /** Sort order for candidate rules: highest priority first, then lowest id. */
@@ -103,6 +129,8 @@ export function findGroup(series: RuleSeries | undefined, at: Date): number | nu
  * - A livestream VOD always goes to Extras when the series has an Extras child, even when the
  *   rule targets the main series (livestreams are not episodes). Without an Extras child it
  *   stays in the main series.
+ * - A rule with `withinSeriesDates` only matches uploads inside its series' date window
+ *   (`inSeriesWindow`), whichever series the video ends up in.
  * - The group (week or session) is the one of the destination series whose window contains
  *   `publishedAt`.
  */
@@ -118,6 +146,7 @@ export function placeVideo(
 	for (const rule of ordered) {
 		if (!ruleMatches(rule, video.title)) continue;
 		const info = series.get(rule.seriesId);
+		if (rule.withinSeriesDates && !inSeriesWindow(info, video.publishedAt)) continue;
 		const extrasId = info?.extrasId ?? null;
 		const wantsExtras = rule.target === 'extras' || video.isLiveVod;
 		if (rule.target === 'extras' && extrasId === null) continue;

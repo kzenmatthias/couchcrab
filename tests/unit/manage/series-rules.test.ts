@@ -1,3 +1,4 @@
+import { MAX_PATTERN_LENGTH } from '#lib/server/youtube/rules.js';
 import { and, eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import * as t from '#lib/server/db/schema.js';
@@ -168,7 +169,7 @@ describe('title rules', () => {
 		).toEqual({ pattern: 'invalid_regex' });
 		expect(
 			errorsOf(() =>
-				createRule(env.db, env.editor, row.id, { pattern: 'x'.repeat(201), match: 'contains' })
+				createRule(env.db, env.editor, row.id, { pattern: 'x'.repeat(MAX_PATTERN_LENGTH + 1), match: 'contains' })
 			)
 		).toEqual({ pattern: 'pattern_too_long' });
 		expect(
@@ -199,6 +200,36 @@ describe('title rules', () => {
 		});
 		expect(auditRows(env.db)).toHaveLength(before);
 		expect(unsortedTitled('My new texture pack').status).toBe('unsorted');
+	});
+
+	it('limits a rule to the series dates when asked, in the test and the re-run', () => {
+		const row = newSeries(['quillby']);
+		const video = unsortedTitled('My new texture pack');
+		const setPublished = (iso: string) =>
+			env.db
+				.update(t.videos)
+				.set({ publishedAt: new Date(iso) })
+				.where(eq(t.videos.id, video.id))
+				.run();
+		const input = { pattern: 'texture', match: 'contains', within_series_dates: '1' };
+
+		setPublished('2026-08-29T00:00:00Z'); // 3 days before the start: outside
+		expect(testRule(env.db, env.editor, row.id, input).matches).toHaveLength(0);
+		setPublished('2026-08-30T00:00:00Z'); // 2 days before: inside
+		expect(testRule(env.db, env.editor, row.id, input).matches).toHaveLength(1);
+
+		setPublished('2026-08-01T00:00:00Z');
+		const rule = createRule(env.db, env.editor, row.id, { ...input, enabled: '1' });
+		expect(rule.withinSeriesDates).toBe(true);
+		expect(lastAudit(env.db)).toMatchObject({
+			entity: 'rule',
+			after: { withinSeriesDates: true }
+		});
+		expect(applyRulesToUnsorted(env.db, env.editor, { dryRun: true }).placed).toHaveLength(0);
+		setPublished('2026-09-05T00:00:00Z');
+		expect(applyRulesToUnsorted(env.db, env.editor, { dryRun: true }).placed).toMatchObject([
+			{ videoId: video.id, ruleId: rule.id }
+		]);
 	});
 
 	it('applies rules to Unsorted: a dry run first, then for real with actor rule', () => {

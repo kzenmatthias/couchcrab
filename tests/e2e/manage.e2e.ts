@@ -82,6 +82,17 @@ test('an editor creates a series with a participant and a rule, applies it and p
 	// A rule, tested first (nothing written), then created.
 	await page.getByRole('link', { name: 'Title rules', exact: true }).last().click();
 	await page.getByLabel('Pattern').fill(`Mossbound ${tag}`);
+	// Limited to the series dates, a series without a start date matches nothing (and says so).
+	const dates = page.getByRole('checkbox', { name: 'Only during the series dates' });
+	await expect(dates).toHaveAccessibleDescription(/has no start date/);
+	await dates.check();
+	await page.getByRole('button', { name: 'Test this rule' }).click();
+	await expect(page.getByRole('region', { name: 'Test result' })).toBeFocused();
+	await expect(
+		page.getByRole('region', { name: 'Test result' }).getByRole('rowheader', { name: ruled })
+	).toHaveCount(0);
+	await expect(dates).toBeChecked();
+	await dates.uncheck();
 	await page.getByRole('button', { name: 'Test this rule' }).click();
 	const result = page.getByRole('region', { name: 'Test result' });
 	await expect(result).toBeFocused();

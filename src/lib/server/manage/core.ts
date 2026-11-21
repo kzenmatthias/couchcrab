@@ -12,6 +12,11 @@ const RANK: Record<Role, number> = { viewer: 0, editor: 1, admin: 2 };
 export interface Actor {
 	id: number;
 	role: Role;
+	/**
+	 * Set for an automated job instead of a person (the catalog import). Its history entries get
+	 * this actor and no user; `id` is not a user id then.
+	 */
+	system?: 'sync';
 }
 
 /** Codes for field errors. The management pages turn them into translated messages. */
@@ -81,7 +86,7 @@ export function assertRole(actor: Actor, role: 'editor' | 'admin'): void {
 	if (!hasRole(actor, role)) throw new ForbiddenError();
 }
 
-/** Writes an `audit_log` entry for a change by this person. */
+/** Writes an `audit_log` entry for a change by this person (or automated job, see `Actor.system`). */
 export function auditUser(
 	tx: Executor,
 	actor: Actor,
@@ -90,6 +95,7 @@ export function auditUser(
 	before: Record<string, unknown> | null,
 	after: Record<string, unknown> | null
 ): number {
+	if (actor.system) return writeAudit(tx, { actor: actor.system, entity, entityId, before, after });
 	return writeAudit(tx, { actor: 'user', actorUserId: actor.id, entity, entityId, before, after });
 }
 

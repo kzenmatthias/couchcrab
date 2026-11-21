@@ -31,7 +31,8 @@ const FIELD: Record<string, string> = {
 	youtubeChannelId: 'youtube_channel',
 	youtubeVideoId: 'youtube_video',
 	claimedAt: 'claimed_at',
-	verifiedAt: 'verified_at'
+	verifiedAt: 'verified_at',
+	withinSeriesDates: 'within_series_dates'
 };
 
 const DATE_KEYS = new Set([

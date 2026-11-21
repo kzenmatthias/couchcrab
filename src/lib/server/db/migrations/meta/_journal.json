@@ -43,6 +43,13 @@
       "when": 1795282963201,
       "tag": "0005_live_started_at",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1795293702284,
+      "tag": "0006_within_series_dates",
+      "breakpoints": true
     }
   ]
 }

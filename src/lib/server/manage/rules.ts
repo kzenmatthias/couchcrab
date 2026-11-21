@@ -35,7 +35,8 @@ const snapshot = (r: RuleDraft) => ({
 	match: r.match,
 	target: r.target,
 	priority: r.priority,
-	enabled: r.enabled
+	enabled: r.enabled,
+	withinSeriesDates: r.withinSeriesDates
 });
 
 /** Rules of a series, highest priority first (the order the engine tries them). */
@@ -81,7 +82,7 @@ function hasExtras(db: DB, seriesId: number) {
 
 /**
  * Validates a rule. A regex must compile with the engine's own guard (`compileRulePattern`:
- * at most 200 characters, valid JavaScript syntax); otherwise the engine would never match it.
+ * at most 400 characters, valid JavaScript syntax); otherwise the engine would never match it.
  */
 export function parseRule(
 	db: DB,
@@ -106,7 +107,11 @@ export function parseRule(
 	}
 	const priority = integerField(c, input, 'priority', { min: -1000, max: 1000, fallback: 0 });
 	const enabled = flag(input, 'enabled');
-	return { c, draft: { seriesId, channelId, pattern, match, target, priority, enabled } };
+	const withinSeriesDates = flag(input, 'within_series_dates');
+	return {
+		c,
+		draft: { seriesId, channelId, pattern, match, target, priority, enabled, withinSeriesDates }
+	};
 }
 
 function assertSeries(db: DB, seriesId: number) {
