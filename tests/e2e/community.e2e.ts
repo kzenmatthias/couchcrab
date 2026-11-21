@@ -1,8 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page, test } from '@playwright/test';
 import { signIn, userIdByName } from './auth-helpers.js';
-import { insertPlacedVideo, sessionOf } from './community-helpers.js';
-import { uniqueTag } from './manage-helpers.js';
+import { channelState, createClaimedCreator } from './creator-helpers.js';
+import { insertPlacedVideo, insertUnsortedOn, sessionOf } from './community-helpers.js';
+import { idOf, uniqueTag } from './manage-helpers.js';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'];
 const THEMES = ['dark', 'light', 'contrast'] as const;
@@ -146,6 +147,76 @@ test('a creator request without an account is on top of the review queue', async
 	expect(flags.indexOf(false) === -1 || flags.slice(flags.indexOf(false)).every((f) => !f)).toBe(
 		true
 	);
+});
+
+test('the account menu links to My suggestions when signed in', async ({
+	page,
+	context,
+	baseURL
+}) => {
+	await page.goto('/');
+	await page.locator('summary', { hasText: 'Menu' }).click();
+	await expect(page.getByRole('link', { name: 'My suggestions' })).toHaveCount(0);
+	await signIn(context, baseURL!, userIdByName('Demo Viewer'));
+	await page.goto('/');
+	const toggle = page.locator('summary', { hasText: 'Account menu' });
+	await toggle.focus();
+	await page.keyboard.press('Enter');
+	const link = page.locator('details.account').getByRole('link', { name: 'My suggestions' });
+	await expect(link).toHaveAttribute('href', '/me/suggestions');
+	await link.focus();
+	await page.keyboard.press('Enter');
+	await expect(page.getByRole('heading', { level: 1, name: 'My suggestions' })).toBeVisible();
+});
+
+test('an unlinked channel leaves Unsorted, keeps its sync off, and an admin reverts the unlink', async ({
+	page,
+	context,
+	baseURL
+}) => {
+	const creator = createClaimedCreator('lanternfall-season-3');
+	const stray = `Unlinked stray ${uniqueTag()}`;
+	insertUnsortedOn(creator.secondChannelTitle, stray);
+	await signIn(context, baseURL!, creator.userId);
+	await page.goto('/creator/channels');
+	await page
+		.getByRole('button', { name: new RegExp(`^Unlink.*${creator.secondChannelTitle}`) })
+		.click();
+	await page.getByRole('button', { name: 'Yes, unlink' }).click();
+	await expect(page.getByRole('status')).toContainText('The channel was unlinked.');
+
+	await context.clearCookies();
+	await signIn(context, baseURL!, userIdByName('Demo Editor'));
+	await page.goto('/manage/unsorted');
+	await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+	await expect(page.getByText(stray)).toHaveCount(0);
+	await page.goto(`/manage/creators/${idOf('creators', creator.slug)}`);
+	const sync = page
+		.getByRole('group', { name: new RegExp(creator.secondChannelTitle) })
+		.getByRole('checkbox', { name: 'Sync this channel' });
+	await expect(sync).toBeDisabled();
+	await expect(sync).toHaveAccessibleDescription(/sync stays off until an admin restores/);
+
+	await context.clearCookies();
+	await signIn(context, baseURL!, userIdByName('Demo Admin'));
+	await page.goto('/manage/history?entity=channel&actor=creator');
+	await page
+		.getByRole('article')
+		.filter({ hasText: creator.secondChannelTitle })
+		.first()
+		.getByRole('link', { name: /^Revert: Channel/ })
+		.click();
+	await page
+		.getByRole('region', { name: 'Revert this change?' })
+		.getByRole('button', { name: 'Yes, revert' })
+		.click();
+	await expect(page.getByRole('status').filter({ hasText: 'Reverted.' })).toBeVisible();
+	expect(channelState(creator.secondChannelTitle)).toMatchObject({
+		unlinkedAt: null,
+		syncEnabled: 1
+	});
+	await page.goto('/manage/unsorted');
+	await expect(page.getByText(stray)).toBeVisible();
 });
 
 const SIGNED_IN_PAGES = [

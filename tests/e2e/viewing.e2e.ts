@@ -23,7 +23,9 @@ test('who I watch filters home and the series timeline', async ({ page }) => {
 	await hydrated(page);
 	await expect(page.getByRole('heading', { level: 1, name: 'Who I watch' })).toBeVisible();
 	const count = page.getByRole('status').filter({ hasText: 'selected' });
-	await expect(count).toHaveText('12 selected');
+	// Other tests add creators in parallel, so the totals come from the page, not a fixed number.
+	const toggles = page.getByRole('main').locator('button[aria-pressed]');
+	await expect(count).toHaveText(`${await toggles.count()} selected`);
 
 	await page.getByRole('button', { name: 'Clear all' }).click();
 	await expect(count).toHaveText('0 selected');
@@ -46,7 +48,7 @@ test('who I watch filters home and the series timeline', async ({ page }) => {
 	for (const card of await uploads.all()) await expect(card).toContainText('Pebblewick');
 
 	await page.goto(SEASON);
-	await expect(page.getByRole('heading', { name: 'Watching 1 of 8 creators' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: /^Watching 1 of \d+ creators$/ })).toBeVisible();
 	await expect(page.getByText('Global list', { exact: true })).toBeVisible();
 	const cards = page.getByRole('main').getByRole('article');
 	await expect(cards.first()).toBeVisible();
@@ -55,9 +57,11 @@ test('who I watch filters home and the series timeline', async ({ page }) => {
 	// Select all brings everyone back (also after a reload: the server reads the cookie).
 	await page.goto('/settings/creators');
 	await page.getByRole('button', { name: 'Select all' }).click();
-	await expect(count).toHaveText('12 selected');
+	await expect(count).toHaveText(`${await toggles.count()} selected`);
 	await page.goto(SEASON);
-	await expect(page.getByRole('heading', { name: 'Watching 8 of 8 creators' })).toBeVisible();
+	await expect(
+		page.getByRole('heading', { name: /^Watching (\d+) of \1 creators$/ })
+	).toBeVisible();
 });
 
 test('a series can use its own list and reset to the global one', async ({ page }) => {
@@ -68,10 +72,15 @@ test('a series can use its own list and reset to the global one', async ({ page 
 	await expect(page.getByRole('radio', { name: 'Global list' })).toBeChecked();
 	await page.getByRole('button', { name: 'Marrowfen', exact: true }).click();
 	await expect(page.getByRole('radio', { name: 'Custom' })).toBeChecked();
-	await expect(page.getByText('7 of 8 selected')).toBeVisible();
+	const custom = page.getByText(/^\d+ of \d+ selected$/);
+	await expect(custom).toBeVisible();
+	const [picked, total] = ((await custom.textContent()) ?? '').match(/\d+/g)!.map(Number);
+	expect(picked).toBe(total - 1);
 
 	await page.goto(SEASON);
-	await expect(page.getByRole('heading', { name: 'Watching 7 of 8 creators' })).toBeVisible();
+	await expect(
+		page.getByRole('heading', { name: `Watching ${total - 1} of ${total} creators` })
+	).toBeVisible();
 	await expect(page.getByText('Custom list', { exact: true })).toBeVisible();
 	await expect(
 		page.getByRole('main').getByRole('article').filter({ hasText: 'Marrowfen' })
@@ -92,7 +101,9 @@ test('a series can use its own list and reset to the global one', async ({ page 
 
 	await page.goto(SEASON);
 	await page.getByRole('button', { name: 'Reset to global list' }).click();
-	await expect(page.getByRole('heading', { name: 'Watching 8 of 8 creators' })).toBeVisible();
+	await expect(
+		page.getByRole('heading', { name: /^Watching (\d+) of \1 creators$/ })
+	).toBeVisible();
 	await expect(
 		page.getByRole('main').getByRole('article').filter({ hasText: 'Marrowfen' }).first()
 	).toBeVisible();

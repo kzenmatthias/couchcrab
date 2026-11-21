@@ -70,3 +70,17 @@ export function sessionOf(youtubeId: string): number | null {
 			).number
 	);
 }
+
+/** Inserts an Unsorted upload on the channel with this title. */
+export function insertUnsortedOn(channelTitle: string, title: string) {
+	withDb((db) => {
+		const channel = db.prepare('SELECT id FROM channels WHERE title = ?').get(channelTitle) as {
+			id: number;
+		};
+		const now = Math.floor(Date.now() / 1000);
+		db.prepare(
+			`INSERT INTO videos (youtube_video_id, channel_id, title, published_at, duration_s, status, fetched_at)
+			 VALUES (?, ?, ?, ?, 900, 'unsorted', ?)`
+		).run(`e2e${randomBytes(4).toString('hex')}`, channel.id, title, now - 300, now);
+	});
+}
