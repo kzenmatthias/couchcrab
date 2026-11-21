@@ -1097,5 +1097,8 @@
 	"community_page_signin_lead": "Iedereen met een account kan een wijziging voorstellen. Er verandert niets tot een reviewer ze goedkeurt.",
 	"community_recent_heading": "Recente wijzigingen",
 	"community_recent_lead": "Wijzigingen aan series, sessies, titelregels en afleveringen op heel Couchcrab. Wie een wijziging voorstelde, blijft anoniem.",
-	"manage_page_community": "Community"
+	"manage_page_community": "Community",
+	"nav_tabbar_label": "Hoofdmenu (onderaan)",
+	"search_open": "Zoeken",
+	"search_submit": "Zoeken"
 }

@@ -1097,5 +1097,8 @@
 	"community_page_signin_lead": "Anyone with an account can suggest an edit. Nothing changes until a reviewer approves it.",
 	"community_recent_heading": "Recent changes",
 	"community_recent_lead": "Changes to series, sessions, title rules and episodes across Couchcrab. People who suggested a change stay anonymous.",
-	"manage_page_community": "Community"
+	"manage_page_community": "Community",
+	"nav_tabbar_label": "Main (bottom bar)",
+	"search_open": "Search",
+	"search_submit": "Search"
 }

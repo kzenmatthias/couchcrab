@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { mainNav } from '#lib/main-nav.js';
 	import { hrefPath, navCurrent } from '#lib/nav.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { Theme } from '#lib/prefs/theme.js';
@@ -19,23 +20,15 @@
 
 	let { user, theme }: Props = $props();
 
-	const nav = $derived([
-		{ href: resolve('/(site)'), label: m.nav_home() },
-		{ href: resolve('/(site)/series'), label: m.nav_series() },
-		{ href: resolve('/(site)/creators'), label: m.nav_creators() },
-		{ href: resolve('/(site)/[page]', { page: 'who-i-watch' }), label: m.nav_who_i_watch() },
-		{ href: resolve('/(site)/community'), label: m.nav_community() }
-	]);
+	const nav = $derived(mainNav());
+	const searchHref = resolve('/(site)/search');
 
 	/** `page` on the page itself, `true` inside its section (e.g. a series under Series). */
 	const current = (href: string) => navCurrent(href, page.url);
 
+	const onSearch = $derived(hrefPath(searchHref, page.url) === page.url.pathname);
 	/** On the search page the field keeps the query, so it can be refined. */
-	const query = $derived(
-		hrefPath(resolve('/(site)/search'), page.url) === page.url.pathname
-			? (page.url.searchParams.get('q') ?? '')
-			: ''
-	);
+	const query = $derived(onSearch ? (page.url.searchParams.get('q') ?? '') : '');
 </script>
 
 <header class="top">
@@ -45,11 +38,13 @@
 	</a>
 	<span class="unofficial">{m.unofficial_label()}</span>
 
-	<nav aria-label={m.nav_label()}>
+	<!-- Wide screens only; narrow screens get the same links in the bottom TabBar. -->
+	<nav class="main-nav" aria-label={m.nav_label()}>
 		<ul>
 			{#each nav as item (item.href)}
 				<li>
-					<a href={item.href} aria-current={current(item.href)}>
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- mainNav() hrefs come from resolve() -->
+					<a href={item.href} aria-current={current(item.current ?? item.href)}>
 						{item.label}
 					</a>
 				</li>
@@ -59,7 +54,7 @@
 
 	<span class="sp"></span>
 
-	<form class="search" role="search" method="get" action={resolve('/(site)/search')}>
+	<form class="search" role="search" method="get" action={searchHref}>
 		<label class="sr-only" for="site-search">{m.search_label()}</label>
 		<input
 			id="site-search"
@@ -69,6 +64,15 @@
 			value={query}
 		/>
 	</form>
+
+	<!-- Narrow screens: a link to the search page, where the field is focused. Works without JS. -->
+	<a class="search-link" href={searchHref} aria-current={onSearch ? 'page' : undefined}>
+		<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+			<circle cx="10.5" cy="10.5" r="6.5" />
+			<path d="m15.5 15.5 5 5" />
+		</svg>
+		<span class="sr-only">{m.search_open()}</span>
+	</a>
 
 	<!-- The theme lives only here, for everyone: signed out the menu has a Sign in link. -->
 	<AccountMenu {user} {theme} />
@@ -102,7 +106,7 @@
 		padding: 2px 6px;
 		font-weight: 700;
 	}
-	nav ul {
+	.main-nav ul {
 		display: flex;
 		gap: 4px 16px;
 		flex-wrap: wrap;
@@ -110,17 +114,17 @@
 		margin: 0;
 		padding: 0;
 	}
-	nav a {
+	.main-nav a {
 		text-decoration: none;
 		color: var(--muted);
 		display: inline-block;
 		padding: 10px 2px;
 		font-size: 0.875rem;
 	}
-	nav a:hover {
+	.main-nav a:hover {
 		text-decoration: underline;
 	}
-	nav a[aria-current] {
+	.main-nav a[aria-current] {
 		color: var(--text);
 		font-weight: 700;
 		text-decoration: underline;
@@ -144,12 +148,51 @@
 		color: var(--muted);
 		opacity: 1;
 	}
+	.search-link {
+		display: none;
+	}
+	/* Narrow screens: a compact top bar; the main links move to the bottom tab bar. */
 	@media (max-width: 900px) {
-		.search {
-			flex: 1 1 100%;
+		.top {
+			padding: 10px 16px;
+			gap: 8px;
 		}
-		.search input {
-			width: 100%;
+		.sp {
+			display: none;
+		}
+		.logo {
+			font-size: 1.0625rem;
+		}
+		.main-nav,
+		.search {
+			display: none;
+		}
+		.search-link {
+			margin-left: auto;
+			display: grid;
+			place-items: center;
+			width: 44px;
+			height: 44px;
+			border-radius: 50%;
+			background: var(--surface2);
+			border: 1px solid var(--line);
+		}
+		.search-link[aria-current] {
+			border-color: var(--text);
+		}
+		.search-link svg {
+			width: 1.25rem;
+			height: 1.25rem;
+			fill: none;
+			stroke: currentColor;
+			stroke-width: 2;
+			stroke-linecap: round;
+		}
+	}
+	/* Very narrow: the logo keeps its accessible name, the word next to it goes. */
+	@media (max-width: 419px) {
+		.logo span {
+			display: none;
 		}
 	}
 </style>

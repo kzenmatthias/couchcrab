@@ -118,6 +118,10 @@
 		</form>
 
 		<ul class="links">
+			<!-- Narrow screens: the bottom tab bar has no room for Community, so it is here. -->
+			<li class="narrow-only">
+				<a href={resolve('/(site)/community')}>{m.nav_community()}</a>
+			</li>
 			<li><a href={resolve('/(site)/settings/creators')}>{m.account_who_i_watch()}</a></li>
 			<li><a href={resolve('/(site)/settings/display')}>{m.account_display()}</a></li>
 			{#if user}
@@ -304,6 +308,14 @@
 	}
 	p.signout {
 		margin-bottom: 0;
+	}
+	.narrow-only {
+		display: none;
+	}
+	@media (max-width: 900px) {
+		.narrow-only {
+			display: list-item;
+		}
 	}
 	/* On narrow screens the panel opens in the flow, full width, so it never leaves the screen. */
 	@media (max-width: 640px) {
