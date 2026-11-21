@@ -129,19 +129,23 @@
 								<form method="post" action="?/approve" use:enhance>
 									<input type="hidden" name="suggestion_id" value={item.id} />
 									<input type="hidden" name="title" value={item.title} />
-									<button type="submit" class="btn primary">
-										{m.community_approve()}<span class="sr-only">{name}</span>
+									<button
+										type="submit"
+										class="btn primary"
+										aria-label={m.community_approve() + name}
+									>
+										{m.community_approve()}
 									</button>
 								</form>
 							{/if}
 							{#if link}
-								<a class="btn ghost" href={link}>
-									{m.community_review_open_item()}<span class="sr-only">{name}</span>
+								<a class="btn ghost" href={link} aria-label={m.community_review_open_item() + name}>
+									{m.community_review_open_item()}
 								</a>
 							{/if}
 						</div>
 						<details open={!!errFor(item.id, 'reason')}>
-							<summary>{m.community_reject()}<span class="sr-only">{name}</span></summary>
+							<summary aria-label={m.community_reject() + name}>{m.community_reject()}</summary>
 							<form method="post" action="?/reject" use:enhance>
 								<input type="hidden" name="suggestion_id" value={item.id} />
 								<input type="hidden" name="title" value={item.title} />
@@ -162,14 +166,14 @@
 											? `r${item.id}-reason-error`
 											: undefined}></textarea>
 								</div>
-								<button type="submit" class="btn ghost">
-									{m.community_reject()}<span class="sr-only">{name}</span>
+								<button type="submit" class="btn ghost" aria-label={m.community_reject() + name}>
+									{m.community_reject()}
 								</button>
 							</form>
 						</details>
 						{#if item.sender.name !== null}
 							<details open={!!errFor(item.id, 'message')}>
-								<summary>{m.community_ask()}<span class="sr-only">{name}</span></summary>
+								<summary aria-label={m.community_ask() + name}>{m.community_ask()}</summary>
 								<form method="post" action="?/ask" use:enhance>
 									<input type="hidden" name="suggestion_id" value={item.id} />
 									<input type="hidden" name="title" value={item.title} />
@@ -190,8 +194,12 @@
 												? `r${item.id}-message-error`
 												: undefined}></textarea>
 									</div>
-									<button type="submit" class="btn ghost">
-										{m.community_ask_send()}<span class="sr-only">{name}</span>
+									<button
+										type="submit"
+										class="btn ghost"
+										aria-label={m.community_ask_send() + name}
+									>
+										{m.community_ask_send()}
 									</button>
 								</form>
 							</details>

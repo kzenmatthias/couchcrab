@@ -185,7 +185,7 @@
 
 			<ErrorSummary {errors} {labels} {targets} />
 
-			<form method="post" use:enhance aria-describedby="target-desc">
+			<form method="post" novalidate use:enhance aria-describedby="target-desc">
 				<fieldset aria-describedby={errors?.type ? errorId('type') : undefined}>
 					<legend>{m.community_suggest_type_legend()}</legend>
 					{@render fieldError('type')}

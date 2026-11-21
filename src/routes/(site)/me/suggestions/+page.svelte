@@ -71,10 +71,12 @@
 						{#if s.status === 'open' || s.status === 'question'}
 							<form method="post" action="?/withdraw" use:enhance>
 								<input type="hidden" name="suggestion_id" value={s.id} />
-								<button type="submit" class="btn ghost">
-									{m.community_me_withdraw()}<span class="sr-only">
-										{m.community_item_name({ title: s.title })}
-									</span>
+								<button
+									type="submit"
+									class="btn ghost"
+									aria-label={m.community_me_withdraw() + m.community_item_name({ title: s.title })}
+								>
+									{m.community_me_withdraw()}
 								</button>
 							</form>
 						{/if}

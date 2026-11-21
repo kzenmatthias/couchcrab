@@ -75,7 +75,7 @@
 					: m.community_requests_signed_out()}
 			</p>
 			<ErrorSummary {errors} {labels} targets={{ request: 'f-request-0' }} />
-			<form method="post" use:enhance>
+			<form method="post" novalidate use:enhance>
 				<fieldset>
 					<legend>
 						{m.community_request_legend()} <span class="req">({m.community_required()})</span>
