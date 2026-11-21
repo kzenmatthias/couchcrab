@@ -238,6 +238,13 @@
 				<span class="sr-only">{m.opens_youtube()}</span>
 				<span aria-hidden="true">↗</span>
 			</a>
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() plus a query -->
+			<a
+				class="btn ghost"
+				href="{resolve('/(site)/suggest')}?video={encodeURIComponent(v.youtubeVideoId)}"
+			>
+				{m.community_suggest_link()}
+			</a>
 		</p>
 		{#if viewing.prefs.shortcuts.enabled}
 			<p class="keys">

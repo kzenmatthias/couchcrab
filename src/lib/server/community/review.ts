@@ -126,15 +126,13 @@ export function describeSuggestion(db: DB, r: Resolver, s: SuggestionRow): Descr
 	const p = readPayload(s.payload);
 	const base = { applies: false, claim: false, missing: false };
 	if (!p) {
-		const raw = s.payload as { title?: unknown; youtubeChannelId?: unknown };
+		const raw = s.payload as { title?: string; youtubeChannelId?: string };
 		return {
 			...base,
 			claim: true,
-			title: String(raw.title ?? raw.youtubeChannelId ?? ''),
+			title: raw.title ?? raw.youtubeChannelId ?? '',
 			link: null,
-			changes: [
-				{ field: 'channel', before: null, after: { text: String(raw.youtubeChannelId ?? '') } }
-			]
+			changes: [{ field: 'channel', before: null, after: { text: raw.youtubeChannelId ?? '' } }]
 		};
 	}
 	if (p.type === 'creator_request') {
@@ -515,4 +513,35 @@ export function promotionCandidates(db: DB, actor: Actor, threshold: number): Se
 			.all()
 			.map((u) => u.id)
 	);
+}
+
+/** The sender's own suggestions with heading and diff, for "My suggestions". */
+export function describeMySuggestions(db: DB, userId: number, limit = 100) {
+	const rows = db
+		.select()
+		.from(t.suggestions)
+		.where(eq(t.suggestions.userId, userId))
+		.orderBy(desc(t.suggestions.createdAt), desc(t.suggestions.id))
+		.limit(limit)
+		.all();
+	const r = new Resolver(db);
+	return rows.map((s) => {
+		const d = describeSuggestion(db, r, s);
+		const p = readPayload(s.payload);
+		return {
+			id: s.id,
+			type: p?.type ?? 'creator_request',
+			targetType: s.targetType,
+			isCreatorRequest: s.isCreatorRequest,
+			status: s.status,
+			note: s.note,
+			reviewMessage: s.reviewMessage,
+			createdAt: s.createdAt,
+			reviewedAt: s.reviewedAt,
+			title: d.title,
+			link: d.link,
+			// After a review the "before" is the new state, so the diff only helps while open.
+			changes: s.status === 'open' || s.status === 'question' ? d.changes : []
+		};
+	});
 }

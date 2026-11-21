@@ -3,15 +3,33 @@
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { formatDate } from '#lib/i18n.js';
 	import { kindLabel, statusLabel } from '#lib/labels.js';
+	import { actorTypeLabel, entityLabel, valText } from '#lib/community/labels.js';
+	import ChangeList from '#lib/components/community/ChangeList.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 	const s = $derived(data.series);
-	const date = (d: Date) => formatDate(d, getLocale(), { dateStyle: 'long', timeZone: 'UTC' });
+	const locale = getLocale();
+	const date = (d: Date) => formatDate(d, locale, { dateStyle: 'long', timeZone: 'UTC' });
+	type Item = (typeof data.history)[number];
+	const actorText = (h: Item) =>
+		h.actorType === 'rule' || h.actorType === 'sync'
+			? actorTypeLabel(h.actorType)
+			: (h.actorName ?? m.community_actor_someone());
+	const summary = (h: Item) => {
+		const name = h.label ? valText(h.label.name, locale) : m.community_public_episode();
+		const what = m.community_hist_what({ entity: entityLabel(h.entity), name });
+		const args = { actor: actorText(h), what };
+		return h.kind === 'create'
+			? m.community_hist_create(args)
+			: h.kind === 'delete'
+				? m.community_hist_delete(args)
+				: m.community_hist_update(args);
+	};
 </script>
 
 <svelte:head>
-	<title>{s.title} · {m.series_tab_about()} · {m.site_name()}</title>
+	<title>{s.title} · {m.community_series_tab_about()} · {m.site_name()}</title>
 </svelte:head>
 
 <div class="about">
@@ -40,6 +58,30 @@
 			<dd><time datetime={s.endedAt.toISOString()}>{date(s.endedAt)}</time></dd>
 		{/if}
 	</dl>
+
+	<section class="history" aria-labelledby="history-h">
+		<h2 id="history-h">{m.community_public_history_heading()}</h2>
+		<p class="lead">{m.community_public_history_lead()}</p>
+		{#if data.history.length === 0}
+			<p>{m.community_public_history_empty()}</p>
+		{:else}
+			<ul class="plain">
+				{#each data.history as h (h.id)}
+					<li>
+						<p class="sum">
+							<b>{summary(h)}</b>
+							{#if h.suggested}({m.community_public_suggested()}){/if}
+							{#if h.isRevert}{m.community_public_revert()}{/if}
+						</p>
+						<p class="when">
+							<time datetime={h.createdAt.toISOString()}>{date(h.createdAt)}</time>
+						</p>
+						<ChangeList changes={h.changes} />
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
 </div>
 
 <style>
@@ -73,5 +115,22 @@
 	}
 	dd {
 		margin: 0;
+	}
+	.history {
+		margin-top: 40px;
+	}
+	.history .lead,
+	.when {
+		color: var(--muted);
+		font-size: 0.9375rem;
+	}
+	.history li {
+		border-top: 1px solid var(--line);
+		padding: 12px 0;
+	}
+	.sum,
+	.when {
+		margin: 0;
+		overflow-wrap: anywhere;
 	}
 </style>

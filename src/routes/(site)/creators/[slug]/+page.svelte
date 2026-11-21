@@ -81,6 +81,15 @@
 				</ul>
 			{/if}
 			<p class="fan">{m.creator_fan_note({ name: c.name })}</p>
+			<p>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() plus a query -->
+				<a
+					class="btn ghost"
+					href="{resolve('/(site)/suggest')}?creator={encodeURIComponent(c.slug)}"
+				>
+					{m.community_suggest_link()}
+				</a>
+			</p>
 		</div>
 	</div>
 </ArtHeader>

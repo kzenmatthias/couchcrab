@@ -24,6 +24,18 @@
 
 <ul class="stats plain">
 	<li>
+		<a href={resolve('/manage/review')}>
+			<span class="n">{data.review.suggestions}</span>
+			<span>{m.community_stat_suggestions()}</span>
+		</a>
+	</li>
+	<li>
+		<a href={resolve('/manage/review')}>
+			<span class="n">{data.review.creatorRequests}</span>
+			<span>{m.community_stat_requests()}</span>
+		</a>
+	</li>
+	<li>
 		<a href={resolve('/manage/unsorted')}>
 			<span class="n">{data.unsorted}</span>
 			<span>{m.manage_stat_unsorted()}</span>

@@ -47,6 +47,7 @@
 		targets={{ role: `role-${form.userId}` }}
 	/>
 {/if}
+<p class="muted">{m.community_promote_explain({ threshold: data.threshold })}</p>
 <p role="status">{m.manage_results({ count: data.users.length })}</p>
 
 <div class="table-wrap">
@@ -57,6 +58,7 @@
 				<th scope="col">{m.manage_col_name()}</th>
 				<th scope="col">{m.manage_col_providers()}</th>
 				<th scope="col">{m.manage_col_claimed_creator()}</th>
+				<th scope="col">{m.community_col_trust()}</th>
 				<th scope="col">{m.manage_col_role()}</th>
 			</tr>
 		</thead>
@@ -77,6 +79,14 @@
 						{:else}
 							<span class="muted">{m.manage_none()}</span>
 						{/if}
+					</td>
+					<td>
+						{m.community_review_trust({
+							approved: u.trust.approved,
+							rejected: u.trust.rejected,
+							trust: u.trust.trust
+						})}
+						{#if u.promote}<br /><span class="tag">{m.community_promote_hint()}</span>{/if}
 					</td>
 					<td>
 						<form method="post" action="?/role" use:enhance class="role">

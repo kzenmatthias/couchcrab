@@ -11,10 +11,12 @@
 	const isAdmin = $derived(data.manager.role === 'admin');
 	const sections = $derived([
 		{ href: resolve('/manage'), label: m.manage_nav_dashboard() },
+		{ href: resolve('/manage/review'), label: m.community_nav_review() },
 		{ href: resolve('/manage/unsorted'), label: m.manage_nav_unsorted() },
 		{ href: resolve('/manage/creators'), label: m.manage_nav_creators() },
 		{ href: resolve('/manage/series'), label: m.manage_nav_series() },
 		{ href: resolve('/manage/rules'), label: m.manage_nav_rules() },
+		{ href: resolve('/manage/history'), label: m.community_nav_history() },
 		...(isAdmin
 			? [
 					{ href: resolve('/manage/site'), label: m.manage_nav_site() },

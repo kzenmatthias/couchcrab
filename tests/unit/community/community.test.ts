@@ -111,11 +111,11 @@ describe('payload validation per kind', () => {
 		const { video, groups } = sessionVideo(env.db);
 		const target = loadVideoTarget(env.db, video.youtubeVideoId)!;
 		expect(
-			parseSuggestion(target, { type: 'video_group', group_id: groups[1].id }).payload
+			parseSuggestion(target, { type: 'video_group', new_group_id: groups[1].id }).payload
 		).toMatchObject({ type: 'video_group', groupId: groups[1].id });
 		expect(
-			errorsOf(() => parseSuggestion(target, { type: 'video_group', group_id: groups[0].id }))
-		).toEqual({ group_id: 'no_change' });
+			errorsOf(() => parseSuggestion(target, { type: 'video_group', new_group_id: groups[0].id }))
+		).toEqual({ new_group_id: 'no_change' });
 		const lantern = loadVideoTarget(
 			env.db,
 			env.db
@@ -125,8 +125,8 @@ describe('payload validation per kind', () => {
 				.get()!.youtubeVideoId
 		)!;
 		expect(
-			errorsOf(() => parseSuggestion(lantern, { type: 'video_group', group_id: groups[1].id }))
-		).toEqual({ group_id: 'invalid_choice' });
+			errorsOf(() => parseSuggestion(lantern, { type: 'video_group', new_group_id: groups[1].id }))
+		).toEqual({ new_group_id: 'invalid_choice' });
 	});
 
 	it('video: livestream VOD needs an Extras series, captions must change, other needs a note', () => {
@@ -238,7 +238,7 @@ describe('rate limit', () => {
 				env.viewer.id,
 				'video',
 				video.youtubeVideoId,
-				{ type: 'video_group', group_id: groups[1].id },
+				{ type: 'video_group', new_group_id: groups[1].id },
 				now
 			);
 		expect(() => assertWithinLimit(env.db, env.viewer.id, now)).toThrow(ValidationError);
@@ -249,7 +249,7 @@ describe('rate limit', () => {
 					env.viewer.id,
 					'video',
 					video.youtubeVideoId,
-					{ type: 'video_group', group_id: groups[1].id },
+					{ type: 'video_group', new_group_id: groups[1].id },
 					now
 				)
 			)
@@ -282,7 +282,7 @@ describe('review: approving applies the change through the service layer', () =>
 		const { video, groups } = sessionVideo(env.db);
 		const id = createSuggestion(env.db, env.viewer.id, 'video', video.youtubeVideoId, {
 			type: 'video_group',
-			group_id: groups[1].id,
+			new_group_id: groups[1].id,
 			note: 'The description says session 2.'
 		});
 		const item = listReviewQueue(env.db, env.editor).find((i) => i.id === id)!;
@@ -376,7 +376,7 @@ describe('review: approving applies the change through the service layer', () =>
 		const make = () =>
 			createSuggestion(env.db, env.viewer.id, 'video', video.youtubeVideoId, {
 				type: 'video_group',
-				group_id: groups[2].id
+				new_group_id: groups[2].id
 			});
 		const a = make();
 		const b = make();
@@ -405,7 +405,7 @@ describe('review: approving applies the change through the service layer', () =>
 		const { video, groups } = sessionVideo(env.db);
 		createSuggestion(env.db, env.viewer.id, 'video', video.youtubeVideoId, {
 			type: 'video_group',
-			group_id: groups[1].id
+			new_group_id: groups[1].id
 		});
 		createCreatorRequest(env.db, null, {
 			request: 'correction',
@@ -429,7 +429,7 @@ describe('trust', () => {
 		const make = () =>
 			createSuggestion(env.db, env.viewer.id, 'video', video.youtubeVideoId, {
 				type: 'video_group',
-				group_id: groups[1].id
+				new_group_id: groups[1].id
 			});
 		const ids = [make(), make(), make()];
 		rejectSuggestion(env.db, env.editor, ids[0], {});
@@ -590,7 +590,7 @@ describe('history lists', () => {
 		const { video, groups } = sessionVideo(env.db);
 		const id = createSuggestion(env.db, env.viewer.id, 'video', video.youtubeVideoId, {
 			type: 'video_group',
-			group_id: groups[1].id
+			new_group_id: groups[1].id
 		});
 		approveSuggestion(env.db, env.editor, id, LOCALES);
 		const s = seriesBySlug(env.db, 'ember-hearts');

@@ -31,7 +31,10 @@
 					}
 				]
 			: []),
-		{ href: resolve('/(site)/series/[slug]/about', { slug: s.slug }), label: m.series_tab_about() }
+		{
+			href: resolve('/(site)/series/[slug]/about', { slug: s.slug }),
+			label: m.community_series_tab_about()
+		}
 	]);
 </script>
 
@@ -75,9 +78,21 @@
 	</ul>
 </nav>
 
+{#snippet suggestBox()}
+	<section class="box" aria-labelledby="wrong-h">
+		<h2 id="wrong-h">{m.community_something_wrong_heading()}</h2>
+		<p>{m.community_something_wrong_text()}</p>
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() plus a query -->
+		<a class="btn ghost" href="{resolve('/(site)/suggest')}?series={encodeURIComponent(s.slug)}">
+			{m.community_suggest_link()}
+		</a>
+	</section>
+{/snippet}
+
 <div class="body" class:with-options={pov}>
 	<div class="content">
 		{@render children()}
+		{#if !pov}{@render suggestBox()}{/if}
 	</div>
 	{#if pov}
 		<aside class="options" aria-labelledby="options-h">
@@ -99,6 +114,7 @@
 			<p class="more">
 				<a href={resolve('/(site)/settings/display')}>{m.series_options_more()}</a>
 			</p>
+			{@render suggestBox()}
 		</aside>
 	{/if}
 </div>
@@ -190,5 +206,20 @@
 	}
 	.more {
 		font-size: 0.875rem;
+	}
+	.box {
+		margin-top: 28px;
+		border: 1px solid var(--line);
+		border-radius: var(--radius-lg);
+		background: var(--surface);
+		padding: 14px 18px;
+	}
+	.box h2 {
+		font-size: 1.125rem;
+		margin: 0 0 4px;
+	}
+	.box p {
+		margin: 0 0 12px;
+		color: var(--muted);
 	}
 </style>

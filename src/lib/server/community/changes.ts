@@ -149,7 +149,7 @@ export function toVal(r: Resolver, entity: string, key: string, value: unknown):
 			text: p.type === 'image' ? (p.url ?? '') : `${p.palette ?? ''} ${p.seed ?? ''}`.trim()
 		};
 	}
-	return { text: typeof value === 'object' ? JSON.stringify(value) : String(value) };
+	return { text: JSON.stringify(value) };
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);

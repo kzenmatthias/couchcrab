@@ -38,5 +38,13 @@ export const variables = defineEnvVars({
 	ADMIN_DISCORD_IDS: {
 		description: 'Comma-separated Discord user ids that get the admin role on every sign-in.',
 		schema: list
+	},
+	PROMOTE_TRUST_THRESHOLD: {
+		description:
+			'Trust (approved minus rejected suggestions) from which /manage/users suggests promoting a viewer to editor. Defaults to 10.',
+		schema: (value: string | undefined) => {
+			const n = Number(value);
+			return value && Number.isInteger(n) && n > 0 ? n : 10;
+		}
 	}
 });

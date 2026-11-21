@@ -35,6 +35,9 @@
 			<li>
 				<a href={resolve('/(site)/[page]', { page: 'privacy' })}>{m.footer_privacy()}</a>
 			</li>
+			<li>
+				<a href={resolve('/(site)/creator-requests')}>{m.community_footer_requests()}</a>
+			</li>
 		</ul>
 	</nav>
 

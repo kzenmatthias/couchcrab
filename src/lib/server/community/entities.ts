@@ -152,7 +152,12 @@ export function currentSnapshot(db: DB, entity: string, entityId: number): Snaps
 
 const dateInput = (value: unknown) =>
 	typeof value === 'string' && value ? value.slice(0, 19) : '';
-const str = (value: unknown) => (value === null || value === undefined ? '' : String(value));
+const str = (value: unknown) =>
+	typeof value === 'string'
+		? value
+		: typeof value === 'number' || typeof value === 'boolean'
+			? String(value)
+			: '';
 const on = (value: unknown) => (value ? 'on' : '');
 
 /** A series snapshot as the input of `updateSeries`. */

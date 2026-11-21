@@ -90,6 +90,7 @@ Everything works without keys: the sign-in buttons are then disabled with a shor
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` | Sign in with Discord (viewers and editors). |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Creators claim their profile by signing in with Google. |
 | `ADMIN_DISCORD_IDS` | Comma-separated Discord user ids that get the admin role on every sign-in. |
+| `PROMOTE_TRUST_THRESHOLD` | Trust (approved minus rejected suggestions) from which the user list marks a viewer with "Suggest promoting to editor". Default 10. |
 
 Redirect URLs (use your own origin in production, e.g. `https://couchcrab.example`):
 

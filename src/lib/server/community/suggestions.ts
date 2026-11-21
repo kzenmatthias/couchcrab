@@ -123,9 +123,10 @@ const dateValue = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
 /**
  * Validates the form of "Suggest an edit" for one target. Field names: `type` (the kind of
- * problem), then per kind `series_id`, `group_id`, `captions` (`yes`/`no`), `field` plus the
+ * problem), then per kind `series_id` and `group_id` (wrong series; `series_id` is also the
+ * series a creator is missing from), `new_group_id` (wrong session), `captions` (`yes`/`no`), `field` plus the
  * field's own input (`title`, `kind`, `status`, `started_at`, `ended_at`, `description`, `name`,
- * `bio`), `creator_id` (or `new` with `creator_name`), `pattern`, `match`, `rule_target`,
+ * `bio`), `creator_id` (or `new` with `creator_name`), `rule_series_id`, `pattern`, `match`, `rule_target`,
  * `channel_id`, and the optional `note`.
  */
 export function parseSuggestion(
@@ -159,14 +160,14 @@ export function parseSuggestion(
 		}
 		case 'video_group': {
 			if (target.type !== 'video') break;
-			const groupId = id(text(input, 'group_id'));
-			if (!text(input, 'group_id')) c.fail('group_id', 'required');
+			const groupId = id(text(input, 'new_group_id'));
+			if (!text(input, 'new_group_id')) c.fail('new_group_id', 'required');
 			else if (
 				groupId === null ||
 				!target.groups.some((g) => g.id === groupId && g.seriesId === target.seriesId)
 			)
-				c.fail('group_id', 'invalid_choice');
-			else if (groupId === target.groupId) c.fail('group_id', NO_CHANGE);
+				c.fail('new_group_id', 'invalid_choice');
+			else if (groupId === target.groupId) c.fail('new_group_id', NO_CHANGE);
 			payload = { type, seriesId: target.seriesId, groupId: groupId ?? 0 };
 			break;
 		}
@@ -257,10 +258,10 @@ export function parseSuggestion(
 			let seriesId = target.type === 'series' ? target.id : null;
 			let hasExtras = target.type === 'series' ? target.hasExtras : false;
 			if (target.type === 'creator') {
-				seriesId = id(text(input, 'series_id'));
-				if (!text(input, 'series_id')) c.fail('series_id', 'required');
+				seriesId = id(text(input, 'rule_series_id'));
+				if (!text(input, 'rule_series_id')) c.fail('rule_series_id', 'required');
 				else if (seriesId === null || !target.inSeries.some((s) => s.id === seriesId))
-					c.fail('series_id', 'invalid_choice');
+					c.fail('rule_series_id', 'invalid_choice');
 				hasExtras = seriesId !== null && target.withExtras.includes(seriesId);
 			}
 			const pattern = text(input, 'pattern');
