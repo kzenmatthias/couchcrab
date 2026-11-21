@@ -3,7 +3,7 @@
  * (applies the change through the management service layer), reject and ask a question. Also
  * the trust formula.
  */
-import { and, asc, count, desc, eq, gte, inArray } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, not, sql } from 'drizzle-orm';
 import type { FieldChange } from '../../community/change.js';
 import type { DB } from '../db/client.js';
 import * as t from '../db/schema.js';
@@ -29,6 +29,18 @@ import { runTagged } from './tx.js';
 export const REVIEW_MESSAGE_MAX = 500;
 export const QUEUE_LIMIT = 100;
 const PENDING = ['open', 'question'] as const;
+
+/**
+ * Suggestions about a video that is hidden now (its channel was unlinked by the creator, or the
+ * creator opted out) stay out of the queue and its counts until the video is public again.
+ */
+const hiddenVideoTarget = sql`(${t.suggestions.targetType} = 'video' AND EXISTS (
+	SELECT 1 FROM ${t.videos}
+	JOIN ${t.channels} ON ${t.channels.id} = ${t.videos.channelId}
+	JOIN ${t.creators} ON ${t.creators.id} = ${t.channels.creatorId}
+	WHERE ${t.videos.id} = ${t.suggestions.targetId}
+	AND (${t.channels.unlinkedAt} IS NOT NULL OR ${t.creators.optedOut} = 1)))`;
+const inQueue = and(inArray(t.suggestions.status, PENDING), not(hiddenVideoTarget));
 
 /* ---------- trust ---------- */
 
@@ -290,7 +302,7 @@ export function listReviewQueue(db: DB, actor: Actor) {
 		.select({ s: t.suggestions, userName: t.users.name, userRole: t.users.role })
 		.from(t.suggestions)
 		.leftJoin(t.users, eq(t.users.id, t.suggestions.userId))
-		.where(inArray(t.suggestions.status, PENDING))
+		.where(inQueue)
 		.orderBy(
 			desc(t.suggestions.isCreatorRequest),
 			asc(t.suggestions.createdAt),
@@ -322,10 +334,8 @@ export function pendingCounts(db: DB, actor: Actor) {
 	const n = (where: ReturnType<typeof and>) =>
 		db.select({ n: count() }).from(t.suggestions).where(where).get()?.n ?? 0;
 	return {
-		suggestions: n(inArray(t.suggestions.status, PENDING)),
-		creatorRequests: n(
-			and(inArray(t.suggestions.status, PENDING), eq(t.suggestions.isCreatorRequest, true))
-		)
+		suggestions: n(inQueue),
+		creatorRequests: n(and(inQueue, eq(t.suggestions.isCreatorRequest, true)))
 	};
 }
 
@@ -333,6 +343,14 @@ function pendingSuggestion(db: DB, suggestionId: number): SuggestionRow {
 	const s = db.select().from(t.suggestions).where(eq(t.suggestions.id, suggestionId)).get();
 	if (!s) throw new NotFoundError();
 	if (s.status !== 'open' && s.status !== 'question') fail({ suggestion: 'not_pending' });
+	if (
+		!db
+			.select({ id: t.suggestions.id })
+			.from(t.suggestions)
+			.where(and(eq(t.suggestions.id, s.id), inQueue))
+			.get()
+	)
+		fail({ suggestion: 'target_missing' });
 	return s;
 }
 

@@ -68,6 +68,13 @@ export function revertBlock(db: DB, actor: Actor, entry: EntryRow): RevertBlock 
 	const keys = REVERTIBLE_KEYS[entry.entity];
 	if (!keys) return 'not_revertible';
 	if (!CONTENT_ENTITIES.has(entry.entity) && !hasRole(actor, 'admin')) return 'admin_only';
+	// Linking or unlinking a creator's channel is the creator's or an admin's call.
+	if (
+		entry.entity === 'channel' &&
+		!same(entry.before?.unlinkedAt, entry.after?.unlinkedAt) &&
+		!hasRole(actor, 'admin')
+	)
+		return 'admin_only';
 	if (entry.after === null) return 'not_revertible';
 	if (entry.before === null) {
 		if (entry.entity === 'video') return 'from_youtube';
@@ -140,7 +147,7 @@ function actorTypeOf(
 	if (actor === 'rule') return 'rule';
 	if (actor === 'sync') return 'sync';
 	// The creator dashboard writes its own actor value; older entries are users with a profile.
-	if ((actor as string) === 'creator') return 'creator';
+	if (actor === 'creator') return 'creator';
 	return creatorId !== null && role === 'viewer' ? 'creator' : 'person';
 }
 
@@ -176,7 +183,7 @@ export function listHistory(db: DB, actor: Actor, filter: HistoryFilter = {}) {
 		case 'creator':
 			conditions.push(
 				or(
-					sql`${t.auditLog.actor} = 'creator'`,
+					eq(t.auditLog.actor, 'creator'),
 					and(
 						eq(t.auditLog.actor, 'user'),
 						isNotNull(actorUser.creatorId),
@@ -341,7 +348,8 @@ export function publicSeriesHistory(
 							inArray(t.videos.id, videoIds),
 							eq(t.videos.status, 'placed'),
 							eq(t.videos.isShort, false),
-							eq(t.creators.optedOut, false)
+							eq(t.creators.optedOut, false),
+							isNull(t.channels.unlinkedAt)
 						)
 					)
 					.all()

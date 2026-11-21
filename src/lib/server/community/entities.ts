@@ -7,7 +7,15 @@ import { asc, eq } from 'drizzle-orm';
 import type { DB } from '../db/client.js';
 import * as t from '../db/schema.js';
 import { type Actor, hasRole, type Input, iso } from '../manage/core.js';
-import { deleteChannel, deleteCreator, updateChannel, updateCreator } from '../manage/creators.js';
+import {
+	channelSnapshot,
+	deleteChannel,
+	deleteCreator,
+	restoreChannel,
+	unlinkChannel,
+	updateChannel,
+	updateCreator
+} from '../manage/creators.js';
 import { deleteRule, updateRule } from '../manage/rules.js';
 import { deleteGroup, updateGroup, updateSeries } from '../manage/series.js';
 import { setUserRole } from '../manage/users.js';
@@ -34,7 +42,15 @@ export const REVERTIBLE_KEYS: Record<string, readonly string[]> = {
 	creator: ['slug', 'name', 'color', 'avatarUrl', 'bio', 'optedOut'],
 	group: ['seriesId', 'kind', 'number', 'title', 'startsAt', 'endsAt'],
 	rule: ['seriesId', 'channelId', 'pattern', 'match', 'target', 'priority', 'enabled'],
-	channel: ['creatorId', 'youtubeChannelId', 'title', 'kind', 'syncEnabled'],
+	channel: [
+		'creatorId',
+		'youtubeChannelId',
+		'title',
+		'kind',
+		'syncEnabled',
+		'unlinkedAt',
+		'unlinkedByUserId'
+	],
 	user: ['role']
 };
 
@@ -131,15 +147,7 @@ export function currentSnapshot(db: DB, entity: string, entityId: number): Snaps
 		}
 		case 'channel': {
 			const c = db.select().from(t.channels).where(eq(t.channels.id, entityId)).get();
-			return c
-				? {
-						creatorId: c.creatorId,
-						youtubeChannelId: c.youtubeChannelId,
-						title: c.title,
-						kind: c.kind,
-						syncEnabled: c.syncEnabled
-					}
-				: null;
+			return c ? channelSnapshot(c) : null;
 		}
 		case 'user': {
 			const u = db.select().from(t.users).where(eq(t.users.id, entityId)).get();
@@ -199,6 +207,34 @@ export function creatorInput(s: Snapshot, actor: Actor, current: Snapshot): Inpu
 	return input;
 }
 
+/**
+ * A channel state: first the link state (an unlink by the creator is undone with
+ * `restoreChannel`, a relink or restore with `unlinkChannel`, both admin only), then kind,
+ * title and sync with `updateChannel` when they still differ.
+ */
+function applyChannel(db: DB, actor: Actor, channelId: number, state: Snapshot, current: Snapshot) {
+	const wantUnlinked = Boolean(state.unlinkedAt);
+	let now = current;
+	if (wantUnlinked !== Boolean(current.unlinkedAt)) {
+		const row = wantUnlinked
+			? unlinkChannel(
+					db,
+					actor,
+					channelId,
+					new Date(String(state.unlinkedAt)),
+					typeof state.unlinkedByUserId === 'number' ? state.unlinkedByUserId : null
+				)
+			: restoreChannel(db, actor, channelId);
+		now = channelSnapshot(row);
+	}
+	if (state.kind !== now.kind || state.title !== now.title || state.syncEnabled !== now.syncEnabled)
+		updateChannel(db, actor, channelId, {
+			kind: str(state.kind),
+			title: str(state.title),
+			sync_enabled: on(state.syncEnabled)
+		});
+}
+
 /** Writes `state` (a full snapshot) back through the service layer. */
 export function applySnapshot(
 	db: DB,
@@ -254,11 +290,7 @@ export function applySnapshot(
 			});
 			return;
 		case 'channel':
-			updateChannel(db, actor, entityId, {
-				kind: str(state.kind),
-				title: str(state.title),
-				sync_enabled: on(state.syncEnabled)
-			});
+			applyChannel(db, actor, entityId, state, current);
 			return;
 		case 'user':
 			setUserRole(db, actor, entityId, { role: str(state.role) });

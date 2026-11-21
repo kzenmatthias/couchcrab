@@ -1,9 +1,9 @@
 /**
  * What a suggestion can point at (a video, a series or a creator) and the choices its form
  * offers. Only things the public can see are valid targets: placed videos that are not Shorts,
- * and creators who did not opt out.
+ * of channels the creator did not unlink, and creators who did not opt out.
  */
-import { and, asc, eq, inArray, notInArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, notInArray } from 'drizzle-orm';
 import type { Executor } from '../audit.js';
 import * as t from '../db/schema.js';
 
@@ -116,7 +116,7 @@ function channelsOfCreators(db: Executor, creatorIds: number[]) {
 		.select({ id: t.channels.id, title: t.channels.title, creatorName: t.creators.name })
 		.from(t.channels)
 		.innerJoin(t.creators, eq(t.creators.id, t.channels.creatorId))
-		.where(inArray(t.channels.creatorId, creatorIds))
+		.where(and(inArray(t.channels.creatorId, creatorIds), isNull(t.channels.unlinkedAt)))
 		.orderBy(asc(t.creators.name), asc(t.channels.id))
 		.all();
 }
@@ -155,7 +155,8 @@ export function loadVideoTarget(db: Executor, youtubeVideoId: string): VideoTarg
 				eq(t.videos.youtubeVideoId, youtubeVideoId),
 				eq(t.videos.status, 'placed'),
 				eq(t.videos.isShort, false),
-				eq(t.creators.optedOut, false)
+				eq(t.creators.optedOut, false),
+				isNull(t.channels.unlinkedAt)
 			)
 		)
 		.get();
