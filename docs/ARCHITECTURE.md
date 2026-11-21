@@ -12,6 +12,7 @@ src/
       catalog.ts     read-only queries for the public pages (applies the visibility rules)
       auth/          Discord and Google OAuth, sessions, roles, creator claims
       youtube/       API client, sync, rule engine
+      manage/        the management service layer (validation, role checks, history)
       audit.ts       write and revert history entries
       me.ts          the signed-in viewer's prefs and progress in the database
     components/      shared UI (cards, rails, timeline, player, POV bar, switches, dialogs)
@@ -36,7 +37,7 @@ src/
     api/me/          the signed-in viewer's prefs snapshot (GET, PUT) and progress batches (POST)
   env.ts             environment variables (SvelteKit 3 `defineEnvVars`)
 messages/            en.json, nl.json (UI strings)
-scripts/             migrate.ts, seed.ts, sync.ts (entry points for the npm scripts)
+scripts/             migrate.ts, seed.ts, sync.ts, make-admin.ts (entry points for the npm scripts)
 tests/               unit/ (Vitest) and e2e/ (Playwright + axe)
 ```
 
@@ -58,13 +59,14 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 | `groups` | id, series_id, kind (`session`, `week`), number, title, starts_at, ends_at |
 | `videos` | id, youtube_video_id, channel_id, title, published_at, duration_s, has_creator_captions, is_live_vod, is_short, series_id, group_id, episode_number, status (`placed`, `unsorted`, `ignored`), placed_by (`rule`, `user`, `sync`), fetched_at |
 | `title_rules` | id, series_id, channel_id (nullable = all channels of the series), pattern, match (`contains`, `regex`), target (`main`, `extras`), priority, enabled |
+| `site_texts` | key (`notice`, `footer_disclaimer`), locale, value, updated_at. Short site texts managed in the app. |
 | `pages` / `page_translations` | `pages`: id, slug. `page_translations`: page_id, locale, title, body (Markdown), updated_at |
 | `users` | id, discord_id (nullable), google_sub (nullable), name, avatar_url, role (`viewer`, `editor`, `admin`), trust, creator_id (the creator profile this user claimed). At least one of discord_id and google_sub is set. |
 | `claims` | id, user_id, creator_id (null when the channel is not on Couchcrab yet), youtube_channel_id, status (`verified`, `pending_review`, `rejected`), created_at, reviewed_by, reviewed_at |
 | `sessions` | id (SHA-256 hash of the session token), user_id, expires_at |
 | `claim_checks` | session_id, user_id, channels (JSON: owned channel ids and titles), expires_at (15 minutes). The owned channels between Google sign-in and the claim step. |
 | `suggestions` | id, user_id, target_type, target_id, kind (`create`, `update`, `delete`), payload (JSON), note, is_creator_request, status (`open`, `approved`, `rejected`, `withdrawn`), reviewed_by, reviewed_at |
-| `audit_log` | id, actor (`user`, `rule`, `sync`), actor_user_id (set when actor is `user`), entity, entity_id, before, after (JSON), created_at, reverted_by |
+| `audit_log` | id, actor (`user`, `rule`, `sync`), actor_user_id (set when actor is `user`, and for `rule` entries of a rule run someone started in the management tool), entity, entity_id, before, after (JSON), created_at, reverted_by |
 | `user_creators` | user_id, creator_id (global who-I-watch) |
 | `user_series_creators` | user_id, series_id, creator_id (custom list per series) |
 | `progress` | user_id, video_id, seconds, watched_at, updated_at |
@@ -155,7 +157,7 @@ Code in `src/lib/server/auth/`: `session.ts` (tokens, cookies, sliding expiry), 
 - "Claim <name>" (or a choice when the channels match several creators) re-checks everything on the server and, in one transaction, sets `creators.claimed_at`, `users.creator_id`, `channels.verified_at` and `verified_by_user_id` for the owned channels of that creator, inserts `claims` rows with status `verified` and writes an `audit_log` entry per change (actor `user`).
 - "This isn't me" signs out.
 - A claimed creator gets the "Verified creator" badge and may edit only their own creator profile and channels, change the placement of their own videos without review (written to `audit_log`, revertible by admins) and set `opted_out`, which hides all their videos. Every such write checks `users.creator_id` on the server.
-- Every write in the management tool checks the role on the server.
+- Every write in the management tool checks the role on the server (see "Management tool").
 
 ### Account menu
 
@@ -177,6 +179,45 @@ All three need a session (401 otherwise). Writes need `content-type: application
 
 The theme and the language stay in their cookies and are not part of the account.
 
+## Management tool
+
+`/manage` is for editors and admins. Its layout (`src/routes/manage/+layout.svelte`) has its own header with the "Unofficial" label, a "Manage" link and "Back to the site", a section navigation and the site footer.
+
+### Roles and the service layer
+
+- `src/routes/manage/+layout.server.ts` sends a signed-out visitor to `/signin` and answers 403 to anyone below editor. A layout guard does not protect form actions, so **every load and every action calls `actorFor(locals, role)`** (`src/lib/server/manage/http.ts`) itself.
+- Every read and write goes through the service layer in `src/lib/server/manage/`. Each function takes `(db, actor, input)`, checks the role again (`assertRole`), validates the input and writes in one transaction with an `audit_log` entry holding `before` and `after` (`auditUser`). There are no client-only checks; the forms work without JavaScript (`use:enhance` only improves them).
+- Validation errors are `ValidationError` with a map of field name to error code (`required`, `slug_taken`, `invalid_regex`, `last_admin`, ...). The routes return them with `fail(400)` and the submitted values; `src/routes/manage/ui/errors.ts` turns codes into messages.
+
+| Module | Does | Role |
+| --- | --- | --- |
+| `dashboard.ts` | Counts (unsorted videos, pending claims, creators, series) and the last sync per channel | editor |
+| `creators.ts` | Creators: list, create, edit, delete (only without videos); channels: parse and resolve `UC…` ids, `@handles` and channel URLs (`channels.list` with `id` or `forHandle` when `YOUTUBE_API_KEY` is set, otherwise a raw id only), add, edit, delete (only without videos). A claimed creator's colour, avatar and bio are the creator's: editors keep them, admins can change them. `opted_out` is admin only. | editor |
+| `series.ts` | Series with participants, descriptions per locale (English required), poster settings; "Create Extras series" (one child per series, same kind, participants and poster, slug `<slug>-extras`); sessions and manual weeks (unique number per kind, end after start) | editor |
+| `rules.ts` | Title rules per series. Regexes are checked with the engine's own guard (`compileRulePattern`). `testRule` runs one unsaved rule over the 200 latest uploads of the participating channels and writes nothing. `applyRulesToUnsorted` runs `placeVideo` over every unsorted, non-Short video with the same rule context as the sync (`loadRuleContext`); a dry run only reports, a real run writes `placed_by = rule` and an audit entry with actor `rule`, the rule id and the person who started it. | editor |
+| `videos.ts` | The Unsorted queue (and the ignored list): place in a series or Extras and a group of that series (`placed_by = user`), ignore, or send back to Unsorted | editor |
+| `site.ts` | Site pages (`about`, `disclaimer`, `accessibility`, `privacy`) per locale with a sanitised preview (`renderMarkdown`, the same as the public page), and the site texts | admin |
+| `users.ts` | Users with their sign-in providers and claimed creator; role changes. The last admin cannot be demoted, also not by themselves. | admin |
+| `claims.ts` | `pending_review` claims. Approve: add the channel (verified for the claiming user) to an existing creator or a new one, let the user claim that creator if they have none, mark the claim verified and the creator request approved. Reject: mark both rejected. | admin |
+| `sync.ts` | "Sync now" and dry run: `runSync` with a client for `YOUTUBE_API_KEY`; without a key the page explains and the buttons are disabled | admin |
+
+Slugs are made from the name (`src/lib/slug.ts`, also used for the live suggestion in the forms) and get `-2`, `-3`, ... when taken; a slug typed by hand must be free.
+
+### Site texts
+
+The first-visit notice and the footer disclaimer are rows in `site_texts`. The root layout load reads them for the active locale (`readSiteTexts`), falling back to English; `FirstVisitNotice` and `SiteFooter` fall back to their message strings when there is no row, so the site never shows an empty disclaimer. The seed fills both with the message strings, which name Hermitcraft.
+
+### Forms and accessibility
+
+- Every field has a label; hints and errors are linked with `aria-describedby` and invalid fields get `aria-invalid` (`ui/Field.svelte`).
+- After a failed submit, `ui/ErrorSummary.svelte` lists the errors at the top as links to the fields and takes focus.
+- Destructive actions (delete a creator, channel, group or rule, reject a claim, apply rules) have a confirmation step: the first submit returns a confirmation panel (`ui/ConfirmPanel.svelte`) that takes focus and posts the real action. No `confirm()` dialogs.
+- Tables have a caption and `th scope`. The participant picker is a filterable list of checkboxes.
+
+### First admin
+
+`ADMIN_DISCORD_IDS` makes Discord accounts admin on every sign-in. `npm run make-admin -- <user id>` promotes any existing user. The demo seed has a fictional "Demo Editor" and "Demo Admin" for the e2e tests.
+
 ## Translations
 
 - Paraglide JS with `messages/{locale}.json`. English (`en`) is the source, Dutch (`nl`) ships from the start.
@@ -197,7 +238,7 @@ The theme and the language stay in their cookies and are not part of the account
 - Design tokens (colours, spacing, radii) as CSS custom properties in `src/lib/styles/tokens.css`, three themes: dark, light, high contrast. See the design board for the values.
 - The theme is stored in a `theme` cookie (`system`, `dark`, `light`, `contrast`) and rendered on the server as `<html data-theme>`, so there is no flash of the wrong theme. `system` (the default) follows `prefers-color-scheme` and `prefers-contrast: more` in CSS. `prefers-reduced-motion` turns off transitions and animations.
 - The first-visit notice is remembered in `localStorage`; an inline script in `app.html` hides it before the first paint.
-- Poster art is generated SVG per series from its `poster` settings, with no text inside the image: `{ "type": "art", "palette": "meadow", "seed": 11 }`. Palettes (`meadow`, `dusk`, `ember`, `tide`, `amber`, `gold`, `night`, `forest`, `violet`) set the colours and motif. Admins can upload an image instead: `{ "type": "image", "url": "..." }`.
+- Poster art is generated SVG per series from its `poster` settings, with no text inside the image: `{ "type": "art", "palette": "meadow", "seed": 11 }`, with an optional `motif` that replaces the palette's own. Palettes (`meadow`, `dusk`, `ember`, `tide`, `amber`, `gold`, `night`, `forest`, `violet`) set the colours and motif. Admins can upload an image instead: `{ "type": "image", "url": "..." }`.
 - Site pages are Markdown, rendered with `marked` and cleaned with `sanitize-html` on the server. The page title is the only `h1`.
 - Preferences work without JavaScript-heavy state libraries: Svelte 5 runes plus a small store synced to `localStorage` and, when signed in, to the server. See "Viewing preferences".
 

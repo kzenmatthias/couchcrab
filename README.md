@@ -103,7 +103,7 @@ Redirect URLs (use your own origin in production, e.g. `https://couchcrab.exampl
 1. Open the [Discord developer portal](https://discord.com/developers/applications) and create a new application.
 2. Under **OAuth2**, copy the **Client ID** and reset/copy the **Client Secret** into `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`.
 3. Add the redirect URL above under **Redirects** and save. Couchcrab only asks for the `identify` scope.
-4. To make yourself admin, turn on Developer Mode in Discord, right-click your name, **Copy User ID**, and put it in `ADMIN_DISCORD_IDS`.
+4. To make yourself admin, turn on Developer Mode in Discord, right-click your name, **Copy User ID**, and put it in `ADMIN_DISCORD_IDS`. You get the admin role on your next sign-in.
 
 **Google OAuth client**
 
@@ -115,6 +115,16 @@ Redirect URLs (use your own origin in production, e.g. `https://couchcrab.exampl
 
 Couchcrab uses the Google access token once, to ask YouTube which channels the account owns (`channels.list?mine=true`), and then drops it. It keeps the Google account id and the ids and names of claimed channels, never the token.
 
+### Becoming admin locally
+
+The management tool lives at `/manage`. Editors manage creators, channels, series, title rules and the Unsorted queue; admins also manage users and roles, the site pages and texts, creator claims and the sync. There are three ways in:
+
+- **Discord:** put your Discord user id in `ADMIN_DISCORD_IDS` (see above). Every sign-in with that id gets the admin role.
+- **Any account:** sign in once, then run `npm run make-admin -- <user id>`. Admins see the ids on `/manage/users`; on a fresh install, look the id up with `npm run db:studio`.
+- **Demo data:** `npm run db:seed` adds the fictional users "Demo Editor" and "Demo Admin". They have fake Discord ids, so you can't sign in as them; the e2e tests use them by writing a session row directly.
+
+Promote others to editor or admin on `/manage/users`. The last admin can't be demoted.
+
 ### Useful commands
 
 | Command | Does |
@@ -125,6 +135,7 @@ Couchcrab uses the Google access token once, to ask YouTube which channels the a
 | `npm test` | Unit tests |
 | `npm run test:e2e` | Browser tests, including accessibility checks |
 | `npm run db:migrate` / `npm run db:seed` | Database setup and demo data |
+| `npm run make-admin -- <user id>` | Give a user the admin role |
 | `npm run sync` | Fetch new uploads from YouTube, sort them with the title rules and refresh stored data older than 25 days. Flags (after `--`): `--channel <youtube id>`, `--dry-run`, `--refresh-only`. Needs `YOUTUBE_API_KEY`; without it, it exits with a note |
 
 ## Documentation
