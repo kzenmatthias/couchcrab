@@ -9,17 +9,23 @@ src/
   lib/
     server/
       db/            schema.ts, client.ts, index.ts (app connection), migrations/, seed.ts
+      catalog.ts     read-only queries for the public pages (applies the visibility rules)
       auth/          Discord and Google OAuth, sessions, roles, creator claims
       youtube/       API client, sync, rule engine
       audit.ts       write and revert history entries
-    components/      shared UI (cards, rails, POV bar, switches, dialogs)
+    components/      shared UI (cards, rails, timeline, player, POV bar, switches, dialogs)
     prefs/           who-I-watch, progress, settings (localStorage + account sync)
     styles/          design tokens and base CSS
     poster-art.ts    generated poster art
     i18n.ts          translation fallback and Intl helpers
+    timeline.ts      timeline order, ISO week and session grouping (pure, unit tested)
+    video.ts         episode card type, YouTube id/URL and duration helpers
+    youtube-iframe.ts  loads the YouTube IFrame Player API in the browser
+    labels.ts        translated labels for database enums
     paraglide/       generated, do not edit
   routes/
-    (site)/          home, series, creators, player, settings
+    (site)/          home, series/[slug] (timeline, by-creator, extras, about), creators/[slug],
+                     watch/[videoId], [page] (site pages), later settings
     manage/          management tool (editor/admin)
     auth/            Discord and Google login and callbacks
     prefs/           POST endpoint for language and theme (works without JavaScript)
@@ -125,6 +131,12 @@ The YouTube API Services policy requires stored API data to be refreshed or dele
 - No user-facing string in components; everything goes through `m.some_key()`.
 - Dates, durations and numbers use `Intl` with the active locale.
 - Community content uses `*_translations` tables with a fallback to English.
+
+## Public pages
+
+- Only `placed` videos that are not Shorts are shown publicly; Unsorted and ignored videos stay in the management tool. Creators with `opted_out`, and all their videos, never appear. `src/lib/server/catalog.ts` applies these rules in every query.
+- Mixed timeline: upload order (`published_at`, then id). Grouping `week` uses ISO 8601 weeks in UTC, so it does not depend on the server time zone or the visitor's locale; week 1 is the week the series started. Grouping `session` uses the session groups; videos without a session come last. Dates are shown in UTC through `Intl`.
+- The watch page uses the YouTube IFrame Player API with the `youtube-nocookie.com` host. Demo data uses fake ids (`demo` + 7 characters); for those the cards show generated art instead of a YouTube thumbnail and the player shows a placeholder.
 
 ## Front-end
 

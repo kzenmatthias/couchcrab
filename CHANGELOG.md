@@ -18,7 +18,14 @@ All notable changes to this project are documented here. The format follows [Kee
 - Automated accessibility checks (axe, WCAG 2.2 AA) in all three themes.
 - Designs for signing in, claiming a creator profile with Google and the creator dashboard.
 - YouTube sync (`npm run sync`): fetches new uploads of every synced channel, sorts them into series and Extras with the title rules (or Unsorted), skips Shorts, upcoming streams and opted-out creators, logs every change in the history and refreshes stored YouTube data within 25 days. Supports `--channel`, `--dry-run` and `--refresh-only`.
+- Home page with a featured series, and rows of new uploads, series and creators. Rows scroll with Tab or with labelled back and forward buttons.
+- Series list and series pages with a mixed timeline grouped per week (or per session for live series), a by-creator view, Extras with livestream VODs and an About page.
+- Creator list and creator pages with their YouTube channels, the "Verified creator" badge, their series and latest uploads.
+- Watch page with the YouTube player (privacy-enhanced mode), a "Watch on YouTube" link and the rest of the week or session as a queue.
+- Episode cards with the duration written out for screen readers and a CC badge for creator-made captions.
 
 ### Changed
 
 - One creator list without fixed groups; creators are managed in the app.
+- The Series and Creators links in the header now open the new list pages.
+- Unsorted videos and creators who opted out are never shown on the public pages.
