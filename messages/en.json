@@ -1053,5 +1053,7 @@
 	"community_col_trust": "Trust",
 	"community_promote_hint": "Suggest promoting to editor",
 	"community_promote_explain": "Viewers with a trust of {threshold} or more are marked “Suggest promoting to editor”. Trust is approved minus rejected suggestions. Promotion stays manual.",
-	"community_footer_requests": "Creator requests"
+	"community_footer_requests": "Creator requests",
+	"manage_error_channel_unlinked": "The creator unlinked this channel. An admin can restore it, which turns the sync on again.",
+	"manage_channel_sync_unlinked_hint": "Unlinked by the creator: the sync stays off until an admin restores the channel."
 }

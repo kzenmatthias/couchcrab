@@ -43,7 +43,8 @@ export type ErrorCode =
 	| 'number_taken'
 	| 'group_mismatch'
 	| 'claim_other_creator'
-	| 'not_pending';
+	| 'not_pending'
+	| 'channel_unlinked';
 
 export type FieldErrors = Record<string, ErrorCode>;
 

@@ -1,5 +1,5 @@
 /** Counts and the last sync per channel for the management dashboard. */
-import { asc, count, eq } from 'drizzle-orm';
+import { and, asc, count, eq, isNull } from 'drizzle-orm';
 import type { DB } from '../db/client.js';
 import * as t from '../db/schema.js';
 import { type Actor, assertRole } from './core.js';
@@ -9,7 +9,12 @@ export function dashboard(db: DB, actor: Actor) {
 	const n = (rows: { n: number }[]) => rows[0]?.n ?? 0;
 	return {
 		unsorted: n(
-			db.select({ n: count() }).from(t.videos).where(eq(t.videos.status, 'unsorted')).all()
+			db
+				.select({ n: count() })
+				.from(t.videos)
+				.innerJoin(t.channels, eq(t.channels.id, t.videos.channelId))
+				.where(and(eq(t.videos.status, 'unsorted'), isNull(t.channels.unlinkedAt)))
+				.all()
 		),
 		pendingClaims: n(
 			db.select({ n: count() }).from(t.claims).where(eq(t.claims.status, 'pending_review')).all()

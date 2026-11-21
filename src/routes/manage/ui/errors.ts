@@ -30,7 +30,8 @@ const MESSAGES: Record<ErrorCode, () => string> = {
 	number_taken: m.manage_error_number_taken,
 	group_mismatch: m.manage_error_group_mismatch,
 	claim_other_creator: m.manage_error_claim_other_creator,
-	not_pending: m.manage_error_not_pending
+	not_pending: m.manage_error_not_pending,
+	channel_unlinked: m.manage_error_channel_unlinked
 };
 
 export function errorMessage(code: string): string {

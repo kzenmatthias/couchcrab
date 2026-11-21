@@ -337,6 +337,8 @@ export function updateChannel(db: DB, actor: Actor, channelId: number, input: In
 	const c = new Checker();
 	const kind = oneOf(c, input, 'kind', ['main', 'secondary'] as const, before.kind);
 	const syncEnabled = flag(input, 'sync_enabled');
+	// An unlinked channel stays off until an admin restores it (`restoreChannel`).
+	if (before.unlinkedAt && syncEnabled) c.fail('sync_enabled', 'channel_unlinked');
 	const title = optionalText(c, input, 'title', 120) ?? before.title;
 	c.done();
 	return db.transaction((tx) => {
@@ -379,6 +381,33 @@ export function restoreChannel(db: DB, actor: Actor, channelId: number): Channel
 		const row = tx
 			.update(t.channels)
 			.set({ unlinkedAt: null, unlinkedByUserId: null, syncEnabled: true })
+			.where(eq(t.channels.id, channelId))
+			.returning()
+			.get();
+		auditUser(tx, actor, 'channel', channelId, channelSnapshot(before), channelSnapshot(row));
+		return row;
+	});
+}
+
+/**
+ * Unlinks a channel again (admins only), as the creator did: used when a restore or a relink is
+ * reverted from the history. `at` and `byUserId` keep the original unlink.
+ */
+export function unlinkChannel(
+	db: DB,
+	actor: Actor,
+	channelId: number,
+	at: Date = new Date(),
+	byUserId: number | null = null
+): ChannelRow {
+	assertRole(actor, 'admin');
+	const before = db.select().from(t.channels).where(eq(t.channels.id, channelId)).get();
+	if (!before) throw new NotFoundError();
+	if (before.unlinkedAt) return before;
+	return db.transaction((tx) => {
+		const row = tx
+			.update(t.channels)
+			.set({ unlinkedAt: at, unlinkedByUserId: byUserId, syncEnabled: false })
 			.where(eq(t.channels.id, channelId))
 			.returning()
 			.get();

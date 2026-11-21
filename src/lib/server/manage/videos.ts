@@ -1,5 +1,5 @@
 /** The Unsorted queue: place a video by hand, ignore it, or send it back to Unsorted. */
-import { asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull } from 'drizzle-orm';
 import type { Executor } from '../audit.js';
 import type { DB } from '../db/client.js';
 import * as t from '../db/schema.js';
@@ -18,25 +18,28 @@ export const QUEUE_LIMIT = 200;
 
 export function listQueue(db: DB, actor: Actor, status: 'unsorted' | 'ignored') {
 	assertRole(actor, 'editor');
-	return db
-		.select({
-			id: t.videos.id,
-			youtubeVideoId: t.videos.youtubeVideoId,
-			title: t.videos.title,
-			publishedAt: t.videos.publishedAt,
-			durationS: t.videos.durationS,
-			isShort: t.videos.isShort,
-			isLiveVod: t.videos.isLiveVod,
-			channelTitle: t.channels.title,
-			creatorName: t.creators.name
-		})
-		.from(t.videos)
-		.innerJoin(t.channels, eq(t.channels.id, t.videos.channelId))
-		.innerJoin(t.creators, eq(t.creators.id, t.channels.creatorId))
-		.where(eq(t.videos.status, status))
-		.orderBy(desc(t.videos.publishedAt), desc(t.videos.id))
-		.limit(QUEUE_LIMIT)
-		.all();
+	return (
+		db
+			.select({
+				id: t.videos.id,
+				youtubeVideoId: t.videos.youtubeVideoId,
+				title: t.videos.title,
+				publishedAt: t.videos.publishedAt,
+				durationS: t.videos.durationS,
+				isShort: t.videos.isShort,
+				isLiveVod: t.videos.isLiveVod,
+				channelTitle: t.channels.title,
+				creatorName: t.creators.name
+			})
+			.from(t.videos)
+			.innerJoin(t.channels, eq(t.channels.id, t.videos.channelId))
+			.innerJoin(t.creators, eq(t.creators.id, t.channels.creatorId))
+			// Videos of a channel the creator unlinked stay out of the queue until it is restored.
+			.where(and(eq(t.videos.status, status), isNull(t.channels.unlinkedAt)))
+			.orderBy(desc(t.videos.publishedAt), desc(t.videos.id))
+			.limit(QUEUE_LIMIT)
+			.all()
+	);
 }
 
 /** Groups of every series, for the placement form. */

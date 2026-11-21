@@ -168,9 +168,14 @@
 								name="sync_enabled"
 								value="1"
 								checked={ch.syncEnabled}
+								disabled={!!ch.unlinkedAt}
+								aria-describedby={ch.unlinkedAt ? `ch-${ch.id}-sync-hint` : undefined}
 							/>
 							<label for="ch-{ch.id}-sync">{m.manage_field_sync()}</label>
 						</div>
+						{#if ch.unlinkedAt}
+							<p class="hint" id="ch-{ch.id}-sync-hint">{m.manage_channel_sync_unlinked_hint()}</p>
+						{/if}
 						<div class="actions">
 							<button type="submit" class="btn primary">{m.manage_save_channel()}</button>
 							{#if ch.unlinkedAt && isAdmin}

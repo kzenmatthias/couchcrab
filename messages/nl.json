@@ -1053,5 +1053,7 @@
 	"community_col_trust": "Vertrouwen",
 	"community_promote_hint": "Voorstel: promoveren tot editor",
 	"community_promote_explain": "Kijkers met een vertrouwen van {threshold} of meer krijgen “Voorstel: promoveren tot editor”. Vertrouwen is goedgekeurde min afgewezen voorstellen. Promoveren blijft met de hand.",
-	"community_footer_requests": "Verzoeken van makers"
+	"community_footer_requests": "Verzoeken van makers",
+	"manage_error_channel_unlinked": "De maker ontkoppelde dit kanaal. Een admin kan het herstellen, dan gaat de synchronisatie weer aan.",
+	"manage_channel_sync_unlinked_hint": "Ontkoppeld door de maker: de synchronisatie blijft uit tot een admin het kanaal herstelt."
 }
