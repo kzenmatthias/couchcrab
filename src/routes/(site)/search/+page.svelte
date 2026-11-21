@@ -54,6 +54,19 @@
 <div class="page">
 	<h1>{data.q ? m.search_heading_results({ query: data.q }) : m.search_title()}</h1>
 
+	<!--
+		Narrow screens only (the header field is hidden there): the search link in the top bar
+		leads here. Without a query the field gets focus on load, with or without JavaScript.
+	-->
+	<form class="field" role="search" method="get" action={resolve('/(site)/search')}>
+		<label for="page-search">{m.search_label()}</label>
+		<div class="row">
+			<!-- svelte-ignore a11y_autofocus -->
+			<input id="page-search" name="q" type="search" value={data.q} autofocus={!data.q} />
+			<button type="submit">{m.search_submit()}</button>
+		</div>
+	</form>
+
 	<!-- Announced when the results change without a full page load. -->
 	<p class="summary" role="status">
 		{#if r}
@@ -139,6 +152,44 @@
 		letter-spacing: -0.03em;
 		margin: 0 0 8px;
 		overflow-wrap: anywhere;
+	}
+	.field {
+		display: none;
+	}
+	@media (max-width: 900px) {
+		.field {
+			display: block;
+			margin: 0 0 20px;
+			max-width: 36rem;
+		}
+	}
+	.field label {
+		display: block;
+		font-weight: 700;
+		margin: 0 0 6px;
+	}
+	.row {
+		display: flex;
+		gap: 8px;
+	}
+	.field input {
+		flex: 1 1 auto;
+		min-width: 0;
+		min-height: 44px;
+		padding: 9px 14px;
+		background: var(--surface2);
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+	}
+	.field button {
+		flex: none;
+		min-height: 44px;
+		padding: 9px 16px;
+		background: var(--accent);
+		color: var(--on-accent);
+		border: 1px solid transparent;
+		border-radius: var(--radius);
+		font-weight: 700;
 	}
 	.summary {
 		color: var(--muted);
