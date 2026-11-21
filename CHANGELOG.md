@@ -62,9 +62,12 @@ All notable changes to this project are documented here. The format follows [Kee
 - One creator list without fixed groups; creators are managed in the app.
 - The Series and Creators links in the header now open the new list pages.
 - Unsorted videos and creators who opted out are never shown on the public pages.
+- On screens narrower than 900 px the header is a compact top bar (logo, "Unofficial" label, a search button and the menu) and the main navigation is a bottom tab bar with Home, Series, Creators and Who I watch, each with an icon and a text label. Search opens the search page with the field focused; Community is in the menu.
 
 ### Fixed
 
+- On phones the header no longer takes up half the screen with wrapping links and a full-width search field. The bottom tab bar never covers the footer, the last items of a page, focused elements or the autoplay countdown.
+- "Who I watch" in the main navigation is marked as the current page on the creator settings it leads to.
 - The current link in the header, the creator dashboard, settings, series tabs and the management navigation is marked (`aria-current` and its style) in the server render too, so also before JavaScript loads or without it.
 - Creator pages show the real title of watched episodes in spoiler-free series, like the episode cards.
 - The first-visit notice and the footer disclaimer come from the site texts managed in the app, with English and then the built-in text as fallback.
