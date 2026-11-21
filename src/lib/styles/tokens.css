@@ -1,0 +1,149 @@
+/*
+ * Design tokens, taken from the design board (docs/design/index.html).
+ * Three themes: dark (default), light and high contrast.
+ * `data-theme="system"` follows prefers-color-scheme and prefers-contrast.
+ */
+
+:root {
+	--radius-sm: 6px;
+	--radius: 10px;
+	--radius-lg: 16px;
+	--radius-xl: 20px;
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 24px;
+	--space-6: 32px;
+	--space-7: 40px;
+	--space-8: 56px;
+	--page-pad: var(--space-8);
+	--font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--font-mono: ui-monospace, Menlo, monospace;
+	--focus-width: 3px;
+}
+
+@media (max-width: 900px) {
+	:root {
+		--page-pad: 20px;
+	}
+}
+
+/* ---------- dark ---------- */
+:root,
+[data-theme='dark'] {
+	color-scheme: dark;
+	--bg: #07131a;
+	--surface: #132b36;
+	--surface2: #0f232c;
+	--line: #3a5a68;
+	--text: #eef5f7;
+	--muted: #b3c6cd;
+	--accent: #ff7a59;
+	--on-accent: #1b0c07;
+	--accent-text: #ffb39e;
+	--sea-text: #9ff1ec;
+	--sand: #f3d9a4;
+	--focus: #ffe08a;
+	--ghost: #ffffff14;
+	--ghost-line: #ffffff4d;
+	--sw-off: #5b7a87;
+	--sw-on: #3fd0c9;
+	--sw-knob: #06292b;
+	--scrim: #000000dd;
+}
+
+/* ---------- light ---------- */
+[data-theme='light'] {
+	color-scheme: light;
+	--bg: #faf7f2;
+	--surface: #ffffff;
+	--surface2: #f1ece4;
+	--line: #8f857a;
+	--text: #13232b;
+	--muted: #44545b;
+	--accent: #b93a14;
+	--on-accent: #ffffff;
+	--accent-text: #9a2f0f;
+	--sea-text: #0a5e5a;
+	--sand: #6e4f0c;
+	--focus: #0b57d0;
+	--ghost: #13232b0d;
+	--ghost-line: #13232b59;
+	--sw-off: #7d8b91;
+	--sw-on: #0a7a74;
+	--sw-knob: #ffffff;
+	--scrim: #000000dd;
+}
+
+/* ---------- high contrast ---------- */
+[data-theme='contrast'] {
+	color-scheme: dark;
+	--bg: #000;
+	--surface: #000;
+	--surface2: #000;
+	--line: #fff;
+	--text: #fff;
+	--muted: #fff;
+	--accent: #ffd400;
+	--on-accent: #000;
+	--accent-text: #ffd400;
+	--sea-text: #7ffcff;
+	--sand: #ffd400;
+	--focus: #00e5ff;
+	--ghost: transparent;
+	--ghost-line: #fff;
+	--sw-off: #fff;
+	--sw-on: #ffd400;
+	--sw-knob: #000;
+	--scrim: #000000f2;
+}
+
+/* ---------- system: same values as light / contrast ---------- */
+@media (prefers-color-scheme: light) {
+	[data-theme='system'] {
+		color-scheme: light;
+		--bg: #faf7f2;
+		--surface: #ffffff;
+		--surface2: #f1ece4;
+		--line: #8f857a;
+		--text: #13232b;
+		--muted: #44545b;
+		--accent: #b93a14;
+		--on-accent: #ffffff;
+		--accent-text: #9a2f0f;
+		--sea-text: #0a5e5a;
+		--sand: #6e4f0c;
+		--focus: #0b57d0;
+		--ghost: #13232b0d;
+		--ghost-line: #13232b59;
+		--sw-off: #7d8b91;
+		--sw-on: #0a7a74;
+		--sw-knob: #ffffff;
+		--scrim: #000000dd;
+	}
+}
+
+@media (prefers-contrast: more) {
+	[data-theme='system'] {
+		color-scheme: dark;
+		--bg: #000;
+		--surface: #000;
+		--surface2: #000;
+		--line: #fff;
+		--text: #fff;
+		--muted: #fff;
+		--accent: #ffd400;
+		--on-accent: #000;
+		--accent-text: #ffd400;
+		--sea-text: #7ffcff;
+		--sand: #ffd400;
+		--focus: #00e5ff;
+		--ghost: transparent;
+		--ghost-line: #fff;
+		--sw-off: #fff;
+		--sw-on: #ffd400;
+		--sw-knob: #000;
+		--scrim: #000000f2;
+	}
+}
