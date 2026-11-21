@@ -61,11 +61,8 @@
 		<input id="site-search" name="q" type="search" placeholder={m.search_placeholder()} />
 	</form>
 
-	{#if user}
-		<AccountMenu {user} {theme} />
-	{:else}
-		<a class="signin" href={resolve('/(site)/signin')}>{m.account_sign_in()}</a>
-	{/if}
+	<!-- The theme lives only here, for everyone: signed out the menu has a Sign in link. -->
+	<AccountMenu {user} {theme} />
 </header>
 
 <style>
@@ -137,18 +134,6 @@
 	.search input::placeholder {
 		color: var(--muted);
 		opacity: 1;
-	}
-	.signin {
-		display: inline-flex;
-		align-items: center;
-		text-decoration: none;
-		min-height: 40px;
-		padding: 6px 14px;
-		border-radius: 999px;
-		background: var(--surface2);
-		border: 1px solid var(--line);
-		font-size: 0.8125rem;
-		font-weight: 700;
 	}
 	@media (max-width: 900px) {
 		.search {

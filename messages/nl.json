@@ -318,5 +318,7 @@
 	"watch_next_link": "Volgende: {next}",
 	"watch_simulate_end": "Einde van de video nabootsen",
 	"settings_series_edit_label": "Wijzigen: {title}",
-	"shortcut_change_label": "Wijzigen: {action}"
+	"shortcut_change_label": "Wijzigen: {action}",
+	"account_menu_signed_out": "Menu",
+	"account_signed_out_note": "Je keuzes worden in deze browser bewaard. Meld je aan om ze op al je toestellen te hebben."
 }

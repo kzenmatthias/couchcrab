@@ -318,5 +318,7 @@
 	"watch_next_link": "Next: {next}",
 	"watch_simulate_end": "Simulate end of video",
 	"settings_series_edit_label": "Edit: {title}",
-	"shortcut_change_label": "Change: {action}"
+	"shortcut_change_label": "Change: {action}",
+	"account_menu_signed_out": "Menu",
+	"account_signed_out_note": "Your choices are saved in this browser. Sign in to keep them on all your devices."
 }

@@ -8,7 +8,8 @@
 	import { initials } from '#lib/video.js';
 
 	type Props = {
-		user: { name: string; avatarUrl: string | null; creatorId: number | null };
+		/** Null when signed out: the same disclosure, as "Menu" with a Sign in link. */
+		user: { name: string; avatarUrl: string | null; creatorId: number | null } | null;
 		theme: Theme;
 	};
 
@@ -64,20 +65,28 @@
 	}
 </script>
 
-<details class="account" bind:this={details}>
+<details class="account" class:signed-out={!user} bind:this={details}>
 	<summary bind:this={summary}>
-		<span class="av" aria-hidden="true">
-			{#if user.avatarUrl}
-				<img src={user.avatarUrl} alt="" />
-			{:else}
-				{initials(user.name)}
-			{/if}
-		</span>
-		<span class="sr-only">{m.account_menu_button({ name: user.name })}</span>
+		{#if user}
+			<span class="av" aria-hidden="true">
+				{#if user.avatarUrl}
+					<img src={user.avatarUrl} alt="" />
+				{:else}
+					{initials(user.name)}
+				{/if}
+			</span>
+			<span class="sr-only">{m.account_menu_button({ name: user.name })}</span>
+		{:else}
+			<span class="menu">{m.account_menu_signed_out()}</span>
+		{/if}
 	</summary>
 
 	<div class="panel">
-		<p class="who">{m.account_signed_in_as({ name: user.name })}</p>
+		{#if user}
+			<p class="who">{m.account_signed_in_as({ name: user.name })}</p>
+		{:else}
+			<p class="who">{m.account_signed_out_note()}</p>
+		{/if}
 
 		<form method="post" action={resolve('/prefs')}>
 			<input type="hidden" name="redirect_to" value={redirectTo} />
@@ -103,22 +112,26 @@
 			{/if}
 		</form>
 
-		<!-- These pages are built separately; switch to resolve() once their routes exist. -->
 		<ul class="links">
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-			<li><a href="/settings/creators">{m.account_who_i_watch()}</a></li>
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-			<li><a href="/settings/display">{m.account_display()}</a></li>
-			{#if user.creatorId !== null}
+			<li><a href={resolve('/(site)/settings/creators')}>{m.account_who_i_watch()}</a></li>
+			<li><a href={resolve('/(site)/settings/display')}>{m.account_display()}</a></li>
+			{#if user && user.creatorId !== null}
+				<!-- The creator dashboard is built separately; switch to resolve() once it exists. -->
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<li><a href="/creator">{m.account_creator_dashboard()}</a></li>
 			{/if}
 		</ul>
 
-		<form method="post" action={resolve('/auth/signout')} class="signout">
-			<input type="hidden" name="redirect_to" value={redirectTo} />
-			<button type="submit">{m.account_sign_out()}</button>
-		</form>
+		{#if user}
+			<form method="post" action={resolve('/auth/signout')} class="signout">
+				<input type="hidden" name="redirect_to" value={redirectTo} />
+				<button type="submit">{m.account_sign_out()}</button>
+			</form>
+		{:else}
+			<p class="signout">
+				<a class="signin" href={resolve('/(site)/signin')}>{m.account_sign_in()}</a>
+			</p>
+		{/if}
 	</div>
 </details>
 
@@ -135,6 +148,23 @@
 		width: fit-content;
 		min-width: 44px;
 		min-height: 44px;
+	}
+	.signed-out summary {
+		border-radius: 999px;
+	}
+	.menu {
+		display: inline-flex;
+		align-items: center;
+		min-height: 40px;
+		padding: 6px 14px;
+		border-radius: 999px;
+		background: var(--surface2);
+		border: 1px solid var(--line);
+		font-size: 0.8125rem;
+		font-weight: 700;
+	}
+	[open] .menu {
+		border-color: var(--text);
 	}
 	summary::-webkit-details-marker {
 		display: none;
@@ -248,6 +278,23 @@
 	.signout button {
 		width: 100%;
 		text-align: left;
+	}
+	.signin {
+		display: block;
+		margin-top: 8px;
+		min-height: 40px;
+		padding: 8px 12px;
+		background: var(--surface2);
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		font-weight: 700;
+		text-decoration: none;
+	}
+	.signin:hover {
+		text-decoration: underline;
+	}
+	p.signout {
+		margin-bottom: 0;
 	}
 	/* On narrow screens the panel opens in the flow, full width, so it never leaves the screen. */
 	@media (max-width: 640px) {
