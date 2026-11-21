@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
-- A starter catalog with real data, `catalog/hermitcraft-and-friends.json`: Hermitcraft seasons 1 to 11, the Life series, the April Fools specials and Empires SMP seasons 1 and 2, with 73 creators, 95 channels and tested title rules.
+- A starter catalog with real data, `catalog/hermitcraft-and-friends.json`: Hermitcraft seasons 1 to 11, the Life series, the April Fools specials, Empires SMP seasons 1 and 2, and the X Life, Afterlife, New Life, Vampires, Misadventures, Festivale and Pantheon SMPs, with 105 creators, 133 channels and tested title rules.
 - `npm run catalog:import -- <file> [--dry-run]`: load a starter catalog of creators, channels, series, sessions and title rules from a JSON file. Safe to run again; it never deletes and keeps claimed and opted-out creators as they are.
 - Title rules can be limited to the series dates ("Only during the series dates"): they then only match uploads from 2 days before the series starts up to 7 days after it ends. For creators who never number their seasons.
 - The catalog import accepts a YouTube channel id as a rule's `channel` and a rule's `withinSeriesDates`.

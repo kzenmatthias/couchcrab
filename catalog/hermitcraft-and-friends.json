@@ -12,6 +12,39 @@
 			]
 		},
 		{
+			"slug": "abolishregret",
+			"name": "AbolishRegret",
+			"channels": [
+				{
+					"youtubeChannelId": "UCqClOXy8mhSnRS9-rtiEDVg",
+					"title": "AbolishRegret",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "aimsey",
+			"name": "Aimsey",
+			"channels": [
+				{
+					"youtubeChannelId": "UCNjmovcGfZmAvyCSPb0KrwQ",
+					"title": "aimsey",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "apokuna",
+			"name": "Apokuna",
+			"channels": [
+				{
+					"youtubeChannelId": "UCMwKPCHQBE5kHoegkSVkW5A",
+					"title": "apokuna",
+					"kind": "main"
+				}
+			]
+		},
+		{
 			"slug": "aureylian",
 			"name": "Aureylian",
 			"channels": [
@@ -23,12 +56,45 @@
 			]
 		},
 		{
+			"slug": "avid",
+			"name": "Avid",
+			"channels": [
+				{
+					"youtubeChannelId": "UCvIdf6Xan1zf7xndKk8PsHw",
+					"title": "Delta Archive",
+					"kind": "main"
+				}
+			]
+		},
+		{
 			"slug": "bdubs",
 			"name": "Bdubs",
 			"channels": [
 				{
 					"youtubeChannelId": "UClu2e7S8atp6tG2galK9hgg",
 					"title": "BdoubleO100",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "bekyamon",
+			"name": "Bekyamon",
+			"channels": [
+				{
+					"youtubeChannelId": "UCCqsvgZLGCO06s8K5tN-Baw",
+					"title": "bekyamon LIVE",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "berthadarling",
+			"name": "Bertha",
+			"channels": [
+				{
+					"youtubeChannelId": "UCZ7t9lujB4cTmBFDVdjUVtg",
+					"title": "Bertha",
 					"kind": "main"
 				}
 			]
@@ -67,6 +133,28 @@
 				{
 					"youtubeChannelId": "UCBFWEHwFwSWoBFRneeRsVuw",
 					"title": "BrenyBeast",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "brookella",
+			"name": "Brookella",
+			"channels": [
+				{
+					"youtubeChannelId": "UC8xfFiUq9uFvYMI3pEMRXfg",
+					"title": "Brookella",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "cambam",
+			"name": "Cambam",
+			"channels": [
+				{
+					"youtubeChannelId": "UCjOB6Lv_oCwuu47mtGBuRWQ",
+					"title": "Cambam",
 					"kind": "main"
 				}
 			]
@@ -230,6 +318,17 @@
 			]
 		},
 		{
+			"slug": "graecie",
+			"name": "Graecie",
+			"channels": [
+				{
+					"youtubeChannelId": "UC0S_DUGjQ6PhcWcxngOCWeQ",
+					"title": "Graecie",
+					"kind": "main"
+				}
+			]
+		},
+		{
 			"slug": "grian",
 			"name": "Grian",
 			"channels": [
@@ -242,6 +341,28 @@
 					"youtubeChannelId": "UCDiznUV6dtdB9PQj__XVhnA",
 					"title": "Two Much Grian",
 					"kind": "secondary"
+				}
+			]
+		},
+		{
+			"slug": "hbomb94",
+			"name": "Hbomb",
+			"channels": [
+				{
+					"youtubeChannelId": "UC5SCCTlzTrHOeNxGgFtkKjA",
+					"title": "HBomb94",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "helloiamkate",
+			"name": "Kate",
+			"channels": [
+				{
+					"youtubeChannelId": "UCWmDLqfbFxQgM6qPYQHpMwQ",
+					"title": "helloiamkate",
+					"kind": "main"
 				}
 			]
 		},
@@ -305,6 +426,17 @@
 			]
 		},
 		{
+			"slug": "infinitedrift",
+			"name": "InfiniteDrift",
+			"channels": [
+				{
+					"youtubeChannelId": "UC_L5DaslvV0_wn_3_OEBCeA",
+					"title": "InfiniteDrift",
+					"kind": "main"
+				}
+			]
+		},
+		{
 			"slug": "iskall85",
 			"name": "Iskall85",
 			"channels": [
@@ -317,6 +449,17 @@
 					"youtubeChannelId": "UCpJU1leLsnhl53KUfy5nAzQ",
 					"title": "vodskall85",
 					"kind": "secondary"
+				}
+			]
+		},
+		{
+			"slug": "jacksucksatstuff",
+			"name": "Jack",
+			"channels": [
+				{
+					"youtubeChannelId": "UCxLIJccyaRQDeyu6RzUsPuw",
+					"title": "JackSucksAtStuff",
+					"kind": "main"
 				}
 			]
 		},
@@ -377,6 +520,17 @@
 					"youtubeChannelId": "UCS_BD8cjFA8juZogPH5hEjg",
 					"title": "Joey Graceffa Games",
 					"kind": "secondary"
+				}
+			]
+		},
+		{
+			"slug": "jojosolos",
+			"name": "Jojo",
+			"channels": [
+				{
+					"youtubeChannelId": "UCRnrgGApQSu8h1ZnTkLYCFQ",
+					"title": "jojosolos",
+					"kind": "main"
 				}
 			]
 		},
@@ -447,6 +601,49 @@
 			]
 		},
 		{
+			"slug": "knivesbow",
+			"name": "Knivesbow",
+			"channels": [
+				{
+					"youtubeChannelId": "UC2obVzS4OMEsPwiozMCDFJA",
+					"title": "KnivesBow",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "laurenzside",
+			"name": "Lauren",
+			"channels": [
+				{
+					"youtubeChannelId": "UCeBnbqt4VRhotq2TQjkIi2A",
+					"title": "LaurenZside",
+					"kind": "main"
+				},
+				{
+					"youtubeChannelId": "UCdoPCtKATcd9HBDp_vhauRA",
+					"title": "LaurenZside Movies",
+					"kind": "secondary"
+				}
+			]
+		},
+		{
+			"slug": "legundo",
+			"name": "Legundo",
+			"channels": [
+				{
+					"youtubeChannelId": "UC8hNLyX7ZIj59YZET9blxpw",
+					"title": "Legundo",
+					"kind": "main"
+				},
+				{
+					"youtubeChannelId": "UCg6bc5NVNdhJzte8Q5hjOHg",
+					"title": "LegunDOS",
+					"kind": "secondary"
+				}
+			]
+		},
+		{
 			"slug": "lizzie",
 			"name": "Lizzie",
 			"channels": [
@@ -507,12 +704,50 @@
 			]
 		},
 		{
+			"slug": "mattranger",
+			"name": "Matt Ranger",
+			"channels": [
+				{
+					"youtubeChannelId": "UCiaAWCaTOVvsuCUKk4DNcCg",
+					"title": "MrMattRanger",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "mogswamp",
+			"name": "Mogswamp",
+			"channels": [
+				{
+					"youtubeChannelId": "UCUmGPUvjZXvIY5zqrLHZeCQ",
+					"title": "Mogswamp VODs",
+					"kind": "main"
+				},
+				{
+					"youtubeChannelId": "UCRJBLIR5E1bfDmq3kAzRpeg",
+					"title": "Mogswamp",
+					"kind": "secondary"
+				}
+			]
+		},
+		{
 			"slug": "monkeyfarm",
 			"name": "Monkeyfarm",
 			"channels": [
 				{
 					"youtubeChannelId": "UCn2ySNr-W8ZSXlEsxONqUXw",
 					"title": "Monkeyfarm",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "moonintensity",
+			"name": "Moon",
+			"channels": [
+				{
+					"youtubeChannelId": "UCy0QT5Dj1bkj1uX0j298QCg",
+					"title": "MoonIntensity",
 					"kind": "main"
 				}
 			]
@@ -535,6 +770,17 @@
 				{
 					"youtubeChannelId": "UCQne7qUlo887f3ryu5nMqaA",
 					"title": "TheOrionSound",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "owengejuice",
+			"name": "Owen",
+			"channels": [
+				{
+					"youtubeChannelId": "UCVDpCbnzh0IzlDMZw2SAMUg",
+					"title": "OwengeJuiceTV",
 					"kind": "main"
 				}
 			]
@@ -572,12 +818,45 @@
 			]
 		},
 		{
+			"slug": "popularmmos",
+			"name": "Pat",
+			"channels": [
+				{
+					"youtubeChannelId": "UCpGdL9Sn3Q5YWUH2DVUW1Ug",
+					"title": "PopularMMOs",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "prismarinaplays",
+			"name": "Prismarina",
+			"channels": [
+				{
+					"youtubeChannelId": "UCQfB0UnioDVJiXclkE93teg",
+					"title": "prismarina plays",
+					"kind": "main"
+				}
+			]
+		},
+		{
 			"slug": "pungence",
 			"name": "Pungence",
 			"channels": [
 				{
 					"youtubeChannelId": "UCHcOgmlVc0Ua5RI4pGoNB0w",
 					"title": "Pungence",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "pyroscythe",
+			"name": "Pyroscythe",
+			"channels": [
+				{
+					"youtubeChannelId": "UCintqcph_kd35VKzVEMVhrg",
+					"title": "Pyroscythe",
 					"kind": "main"
 				}
 			]
@@ -595,6 +874,17 @@
 					"youtubeChannelId": "UCq-9jiz3k4LP6F39pZoq8MQ",
 					"title": "PythonMC",
 					"kind": "secondary"
+				}
+			]
+		},
+		{
+			"slug": "quig",
+			"name": "Quig",
+			"channels": [
+				{
+					"youtubeChannelId": "UCQt_2rkxt9VbDO1PwQr4_sw",
+					"title": "Quig",
+					"kind": "main"
 				}
 			]
 		},
@@ -622,6 +912,17 @@
 					"youtubeChannelId": "UCgKPGvDqqdWKLacXW-3zBSg",
 					"title": "rendogtv",
 					"kind": "secondary"
+				}
+			]
+		},
+		{
+			"slug": "ripmika",
+			"name": "Mika",
+			"channels": [
+				{
+					"youtubeChannelId": "UC2Bl-cM44SM3DJsy4X6AFwQ",
+					"title": "RIPmika",
+					"kind": "main"
 				}
 			]
 		},
@@ -664,6 +965,17 @@
 				{
 					"youtubeChannelId": "UCxucf8O8itcmkqu3d7yUavg",
 					"title": "Dangthatsalongname",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "seapeekay",
+			"name": "Seapeekay",
+			"channels": [
+				{
+					"youtubeChannelId": "UCc5h7Pz308KNjOunkmw0GOA",
+					"title": "SeaPeeKay",
 					"kind": "main"
 				}
 			]
@@ -740,6 +1052,27 @@
 			]
 		},
 		{
+			"slug": "soupforeloise",
+			"name": "Soup",
+			"channels": [
+				{
+					"youtubeChannelId": "UCl6UQhP7w1VLmlJdM10QpXA",
+					"title": "more soupforeloise",
+					"kind": "main"
+				},
+				{
+					"youtubeChannelId": "UCOZ40zi4aKo_WEfdcke0rVw",
+					"title": "soupforvods",
+					"kind": "secondary"
+				},
+				{
+					"youtubeChannelId": "UCga6OWWiOlRTh4xb3neEffw",
+					"title": "soupforeloise",
+					"kind": "secondary"
+				}
+			]
+		},
+		{
 			"slug": "spumwack",
 			"name": "Spumwack",
 			"channels": [
@@ -751,12 +1084,61 @@
 			]
 		},
 		{
+			"slug": "stacyplays",
+			"name": "Stacy",
+			"channels": [
+				{
+					"youtubeChannelId": "UC2c6FqF4olAZ7LodVEUueNQ",
+					"title": "stacyplays",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "strawburry17",
+			"name": "Strawburry",
+			"channels": [
+				{
+					"youtubeChannelId": "UC4IgEVgl6t18-89GPekZtAw",
+					"title": "Strawburry17Plays",
+					"kind": "main"
+				},
+				{
+					"youtubeChannelId": "UCFari28bQmSVIbmzDjbiS7Q",
+					"title": "Strawburry17",
+					"kind": "secondary"
+				}
+			]
+		},
+		{
 			"slug": "stressmonster101",
 			"name": "Stressmonster101",
 			"channels": [
 				{
 					"youtubeChannelId": "UC24lkOxZYna9nlXYBcJ9B8Q",
 					"title": "Stressmonster101",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "sunnysev",
+			"name": "SunnySev",
+			"channels": [
+				{
+					"youtubeChannelId": "UC0pLfKSdPxb2PUIur5OJJVA",
+					"title": "SunnySev",
+					"kind": "main"
+				}
+			]
+		},
+		{
+			"slug": "taneesha",
+			"name": "Taneesha",
+			"channels": [
+				{
+					"youtubeChannelId": "UCAANL7qShDwP20-2QbZX3kw",
+					"title": "Taneesha",
 					"kind": "main"
 				}
 			]
@@ -2287,7 +2669,7 @@
 			],
 			"rules": [
 				{
-					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|hunger games|the movie|best (?:of|bits)|moments|theme song|montage|bitlife|new life smp|afterlife|x life smp)\\b)(?!.*\\bwild life\\b).*\\blast ?life\\b",
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|hunger games|the movie|best (?:of|bits)|moments|theme song|montage|bitlife|new life smp|afterlife|x life smp|pantheon)\\b)(?!.*\\bwild life\\b).*\\blast ?life\\b",
 					"match": "regex",
 					"target": "main",
 					"channel": null,
@@ -3010,6 +3392,450 @@
 					"target": "main",
 					"channel": "UCS_BD8cjFA8juZogPH5hEjg",
 					"priority": 0
+				}
+			]
+		},
+		{
+			"slug": "x-life-smp-1",
+			"title": "X Life SMP",
+			"kind": "season",
+			"status": "ended",
+			"grouping": "week",
+			"startedAt": "2020-05-23",
+			"endedAt": "2021-04-12",
+			"creators": [
+				"scottsmajor",
+				"joel",
+				"jimmy",
+				"lizzie",
+				"gem",
+				"shubble",
+				"fwhip",
+				"katherine",
+				"oli",
+				"joey-graceffa",
+				"laurenzside",
+				"popularmmos",
+				"quig",
+				"ripmika",
+				"seapeekay",
+				"strawburry17",
+				"hbomb94",
+				"jacksucksatstuff"
+			],
+			"description_en": "A modded Minecraft SMP run by Smajor1995 with a large group of friends. Every player starts with a single heart and gains one more heart each time they die, up to ten; dying after reaching ten hearts takes them out of the series.",
+			"description_nl": "Een gemodde Minecraft-SMP van Smajor1995 met een grote groep vrienden. Elke speler begint met één hart en krijgt er bij elke dood één bij, tot tien; wie daarna nog sterft, ligt uit de reeks.",
+			"extras": false,
+			"rules": [
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*\\b(?:hermitcraft|empires)\\b)(?!.*next ?gen).*\\bx[ -]?life\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 0,
+					"withinSeriesDates": true
+				},
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*(?:next ?gen|modpack|\\bin 20\\d\\d\\b)).*\\bx[ -]?life\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": "seapeekay",
+					"priority": 0
+				},
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*next ?gen).*\\bx[ -]?life\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": "jacksucksatstuff",
+					"priority": 0
+				}
+			]
+		},
+		{
+			"slug": "x-life-smp-2",
+			"title": "X Life: Next Gen",
+			"kind": "season",
+			"status": "ended",
+			"grouping": "week",
+			"startedAt": "2023-09-11",
+			"endedAt": "2023-11-24",
+			"creators": [
+				"joey-graceffa",
+				"infinitedrift",
+				"berthadarling",
+				"helloiamkate",
+				"jojosolos",
+				"knivesbow",
+				"moonintensity",
+				"prismarinaplays"
+			],
+			"description_en": "A second season of X Life with a new group of players, among them Joey Graceffa and InfiniteDrift. The heart rule is reversed: everyone starts with ten hearts, loses one at each death and is out of the series at zero.",
+			"description_nl": "Een tweede seizoen van X Life met een nieuwe groep spelers, met onder anderen Joey Graceffa en InfiniteDrift. De hartjesregel is omgekeerd: iedereen begint met tien harten, verliest er één bij elke dood en ligt uit de reeks bij nul.",
+			"extras": false,
+			"rules": [
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b).*\\bx[ -]?life\\b\\s*:?\\s*next ?gen\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 0
+				},
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*\\b(?:hermitcraft|empires|modpack)\\b)(?!.*next ?gen).*\\bx[ -]?life\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 0,
+					"withinSeriesDates": true
+				}
+			]
+		},
+		{
+			"slug": "afterlife-smp",
+			"title": "Afterlife SMP",
+			"kind": "season",
+			"status": "ended",
+			"grouping": "week",
+			"startedAt": "2022-03-04",
+			"endedAt": "2022-06-30",
+			"creators": [
+				"scottsmajor",
+				"joel",
+				"jimmy",
+				"lizzie",
+				"gem",
+				"shubble",
+				"fwhip",
+				"katherine",
+				"oli",
+				"sausage",
+				"joey-graceffa",
+				"laurenzside",
+				"ripmika",
+				"seapeekay",
+				"strawburry17"
+			],
+			"description_en": "A modded Minecraft SMP run by Smajor1995 in which every player spawns with a random Origin that gives unique abilities and drawbacks. Each death rolls a new Origin, and after ten deaths a player is out of the series for good.",
+			"description_nl": "Een gemodde Minecraft-SMP van Smajor1995 waarin elke speler start met een willekeurige Origin met eigen krachten en nadelen. Bij elke dood volgt een nieuwe Origin, en na tien keer sterven ligt een speler definitief uit de reeks.",
+			"extras": false,
+			"rules": [
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*afterlife: the game).*\\bafter ?life\\b(?=.*\\b(?:smp|modded)\\b)",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 0
+				},
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b).*\\bafter ?life\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": "oli",
+					"priority": 0,
+					"withinSeriesDates": true
+				}
+			]
+		},
+		{
+			"slug": "new-life-smp",
+			"title": "New Life SMP",
+			"kind": "season",
+			"status": "ended",
+			"grouping": "week",
+			"startedAt": "2023-05-27",
+			"endedAt": "2023-12-19",
+			"creators": [
+				"scottsmajor",
+				"scar",
+				"joel",
+				"jimmy",
+				"pearl",
+				"gem",
+				"pixlriffs",
+				"shubble",
+				"sausage",
+				"fwhip",
+				"katherine",
+				"martyn",
+				"joey-graceffa",
+				"owengejuice",
+				"seapeekay",
+				"stacyplays"
+			],
+			"description_en": "A modded Minecraft SMP run by Smajor1995 and a follow-up to Afterlife, again built around random Origins from a pool of more than a hundred. Every death gives a player a new Origin, and after losing six lives they leave the series.",
+			"description_nl": "Een gemodde Minecraft-SMP van Smajor1995, een vervolg op Afterlife, opnieuw rond willekeurige Origins uit een pool van meer dan honderd. Bij elke dood krijgt een speler een nieuwe Origin, en na zes verloren levens verlaat die de reeks.",
+			"extras": false,
+			"rules": [
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*\\bafter ?life\\b).*\\bnew life (?:modded )?smp\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 0
+				},
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*\\bafter ?life\\b).*\\bnew life\\b(?=\\s*(?:#\\s*(?:\\d|ad\\b)|\\||$|-?\\s*ep\\b))",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 0,
+					"withinSeriesDates": true
+				}
+			]
+		},
+		{
+			"slug": "vampires-smp",
+			"title": "Vampires SMP",
+			"kind": "season",
+			"status": "ended",
+			"grouping": "session",
+			"startedAt": "2025-09-14",
+			"endedAt": "2025-11-16",
+			"creators": [
+				"scottsmajor",
+				"ren",
+				"cleo",
+				"pearl",
+				"shubble",
+				"martyn",
+				"sausage",
+				"abolishregret",
+				"avid",
+				"infinitedrift",
+				"owengejuice",
+				"apokuna",
+				"legundo",
+				"pyroscythe"
+			],
+			"description_en": "A survival SMP with a twist, set in a run-down town where fourteen creators must survive together. Two of them are secretly vampires whose goal is to turn the humans, while the rest try to find out who they are and stop them.",
+			"description_nl": "Een survival-SMP met een twist, in een vervallen stadje waar veertien makers samen moeten overleven. Twee van hen zijn in het geheim vampiers die de mensen willen bekeren, terwijl de rest probeert te ontdekken wie ze zijn en hen te stoppen.",
+			"extras": false,
+			"sessions": [
+				{
+					"number": 1,
+					"startsAt": "2025-09-14"
+				},
+				{
+					"number": 2,
+					"startsAt": "2025-09-21"
+				},
+				{
+					"number": 3,
+					"startsAt": "2025-09-28"
+				},
+				{
+					"number": 4,
+					"startsAt": "2025-10-05"
+				},
+				{
+					"number": 5,
+					"startsAt": "2025-10-12"
+				},
+				{
+					"number": 6,
+					"startsAt": "2025-10-26"
+				},
+				{
+					"number": 7,
+					"startsAt": "2025-11-09"
+				},
+				{
+					"number": 8,
+					"startsAt": "2025-11-16"
+				}
+			],
+			"rules": [
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*\\b(?:peak|escape room|murder mystery|clock ?tower|vs 1000|plays|returns|train)\\b).*\\bvampires smp\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 0
+				},
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b).*\\|\\s*vampires\\s*:\\s*episode\\s*\\d",
+					"match": "regex",
+					"target": "main",
+					"channel": "pearl",
+					"priority": 0
+				}
+			]
+		},
+		{
+			"slug": "misadventures-smp",
+			"title": "Misadventures SMP",
+			"kind": "season",
+			"status": "ended",
+			"grouping": "week",
+			"startedAt": "2025-03-21",
+			"endedAt": "2026-04-22",
+			"creators": [
+				"scottsmajor",
+				"joel",
+				"jimmy",
+				"ren",
+				"pixlriffs",
+				"shubble",
+				"sausage",
+				"fwhip",
+				"katherine",
+				"martyn",
+				"joey-graceffa",
+				"cambam",
+				"avid",
+				"infinitedrift",
+				"mattranger",
+				"seapeekay",
+				"taneesha",
+				"mogswamp",
+				"jojosolos",
+				"soupforeloise",
+				"sunnysev"
+			],
+			"description_en": "A large Minecraft SMP with a fantasy, tabletop-inspired feel, where players explore and build up a shared world with kingdoms, guilds and dungeons. It ran through 2025 and came back for a second stretch in spring 2026.",
+			"description_nl": "Een grote Minecraft-SMP met een fantasy- en tafelrollenspelsfeer, waarin spelers samen een wereld verkennen en uitbouwen met koninkrijken, gilden en kerkers. De reeks liep in 2025 en kwam in de lente van 2026 terug voor een tweede deel.",
+			"extras": false,
+			"rules": [
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*\\bday ?z\\b)(?=.*\\b(?:smp|minecraft|vod|ep\\.?\\s*\\d)|.*#\\d).*\\bmisadventures\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 0
+				},
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*\\bday ?z\\b).*\\bmisadventures\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 0,
+					"withinSeriesDates": true
+				}
+			]
+		},
+		{
+			"slug": "festivale-smp",
+			"title": "Festivale SMP",
+			"kind": "season",
+			"status": "ongoing",
+			"grouping": "week",
+			"startedAt": "2026-08-15",
+			"endedAt": null,
+			"creators": [
+				"scottsmajor",
+				"jimmy",
+				"lizzie",
+				"sausage",
+				"katherine",
+				"martyn",
+				"fwhip",
+				"joey-graceffa",
+				"aimsey",
+				"brookella",
+				"cambam",
+				"infinitedrift",
+				"laurenzside",
+				"legundo",
+				"bekyamon",
+				"graecie",
+				"soupforeloise",
+				"pyroscythe"
+			],
+			"description_en": "A modded Minecraft SMP in which the players take turns hosting festivals for one another. Between the festivals there is plenty of building, adventuring and pranking.",
+			"description_nl": "Een gemodde Minecraft-SMP waarin de spelers om beurten festivals voor elkaar organiseren. Tussen de festivals door wordt er volop gebouwd, op avontuur getrokken en worden er streken uitgehaald.",
+			"extras": false,
+			"rules": [
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b).*\\bfestivale\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 0
+				},
+				{
+					"pattern": "\\bcozy modded minecraft world with my friends\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": "fwhip",
+					"priority": 0,
+					"withinSeriesDates": true
+				}
+			]
+		},
+		{
+			"slug": "pantheon-smp",
+			"title": "Pantheon SMP",
+			"kind": "season",
+			"status": "ended",
+			"grouping": "session",
+			"startedAt": "2026-08-09",
+			"endedAt": "2026-10-04",
+			"creators": [
+				"scottsmajor",
+				"cleo",
+				"pearl",
+				"shubble",
+				"sausage",
+				"martyn",
+				"abolishregret",
+				"infinitedrift",
+				"legundo",
+				"owengejuice",
+				"apokuna",
+				"pyroscythe"
+			],
+			"description_en": "A survival SMP with a twist based on Greek mythology. Twelve creators, each blessed by one of twelve Greek gods, are pulled from the river Styx and fight until one champion is left standing.",
+			"description_nl": "Een survival-SMP met een twist, gebaseerd op de Griekse mythologie. Twaalf makers, elk gezegend door een van twaalf Griekse goden, worden uit de Styx gehaald en vechten tot er één kampioen overblijft.",
+			"extras": false,
+			"sessions": [
+				{
+					"number": 1,
+					"startsAt": "2026-08-09"
+				},
+				{
+					"number": 2,
+					"startsAt": "2026-08-16"
+				},
+				{
+					"number": 3,
+					"startsAt": "2026-08-23"
+				},
+				{
+					"number": 4,
+					"startsAt": "2026-08-30"
+				},
+				{
+					"number": 5,
+					"startsAt": "2026-09-06"
+				},
+				{
+					"number": 6,
+					"startsAt": "2026-09-13"
+				},
+				{
+					"number": 7,
+					"startsAt": "2026-09-20"
+				},
+				{
+					"number": 8,
+					"startsAt": "2026-10-04"
+				}
+			],
+			"rules": [
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b).*\\bpantheon ?smp\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 5
+				},
+				{
+					"pattern": "^(?!.*\\b(?:react(?:s|ing|ion)?|the movie|best (?:of|bits)|moments|montage|trailer|hunger games|full (?:movie|saga|story)|complete story)\\b)(?!.*\\b(?:hide and seek|escape room|except|murder mystery)\\b).*\\bpantheon\\b",
+					"match": "regex",
+					"target": "main",
+					"channel": null,
+					"priority": 5,
+					"withinSeriesDates": true
 				}
 			]
 		}

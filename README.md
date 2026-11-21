@@ -154,7 +154,7 @@ npm run catalog:import -- catalog.json             # write it, all in one transa
 npm run sync -- --first-max 20000                  # first sync: each channel's whole upload history
 ```
 
-The repo ships one: [`catalog/hermitcraft-and-friends.json`](catalog/hermitcraft-and-friends.json), with every Hermitcraft season (1 to 11), the Life series, the April Fools specials and Empires SMP seasons 1 and 2: 73 creators, 95 channels and the title rules that sort their uploads. Channel ids and season dates come from public sources and the channels' own upload lists. Fixes are welcome, in the file or in the app.
+The repo ships one: [`catalog/hermitcraft-and-friends.json`](catalog/hermitcraft-and-friends.json), with every Hermitcraft season (1 to 11), the Life series, the April Fools specials, Empires SMP seasons 1 and 2, and the X Life, Afterlife, New Life, Vampires, Misadventures, Festivale and Pantheon SMPs: 105 creators, 133 channels and the title rules that sort their uploads. Channel ids and season dates come from public sources and the channels' own upload lists. Fixes are welcome, in the file or in the app.
 
 ```sh
 npm run catalog:import -- catalog/hermitcraft-and-friends.json
