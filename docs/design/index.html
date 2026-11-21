@@ -381,6 +381,22 @@ ul.plain{list-style:none;margin:0;padding:0}
   .ep,.rail.big .ep{width:300px}
   .tl{grid-template-columns:1fr}
 }
+
+.signin{display:grid;gap:14px;margin-top:18px}
+.signin .opt{border:1px solid var(--line);border-radius:16px;padding:16px}
+.signin .opt h3{margin:0 0 4px;font-size:1rem}
+.signin .opt p{margin:0 0 12px;color:var(--muted);font-size:.875rem}
+.btn.discord{background:#5865f2;color:#fff}
+.btn.google{background:#fff;color:#1f1f1f;border-color:#747775}
+.verified{display:inline-flex;gap:6px;align-items:center;font-size:.8125rem;font-weight:700;color:var(--sea-text);border:1.5px solid var(--sea-text);border-radius:999px;padding:3px 10px}
+.claimlist{list-style:none;margin:20px 0;padding:0;display:grid;gap:14px}
+.claimlist li{display:flex;gap:16px;align-items:center;flex-wrap:wrap;border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.claimlist .nm{flex:1 1 240px}
+.claimlist .nm b{display:block;font-size:1rem}
+.claimlist .nm span{color:var(--muted);font-size:.875rem}
+.narrow{max-width:760px;margin:0 auto;padding:56px 32px}
+.danger{border:2px solid var(--accent-text);border-radius:16px;padding:18px;margin-top:28px}
+.danger h2{margin:0 0 6px}
 </style>
 </head>
 <body data-theme="dark">
@@ -506,6 +522,7 @@ S.concept=['0 · Concept',()=>`<div class="app concept" style="max-width:1000px;
 <tr><th scope="row">Playback</th><td>Embedded YouTube player. Autoplay of the next episode is a setting with a visible countdown that can be paused, cancelled or set to "wait for me".</td></tr>
 <tr><th scope="row">Editors</th><td>At launch only the owner approves suggestions. Trusted editors come later.</td></tr>
 <tr><th scope="row">Creators</th><td>One list without fixed groups. Creators, channels, series, title rules and site texts are all managed in the tool, nothing is hard-coded.</td></tr>
+<tr><th scope="row">Creators claim their profile</th><td>Sign in with Google; Couchcrab asks YouTube which channels the account owns. A matching channel is verified straight away, a new one goes to review. Verified creators edit their own profile and channels, place their own videos and can hide all their videos.</td></tr>
 <tr><th scope="row">Creator requests</th><td>Own form for corrections or removal, always on top of the review queue.</td></tr>
 <tr><th scope="row">Posters</th><td>Every series has its own poster: an illustration without text in it. The title is real text on top, so it scales, follows the theme and gets read out.</td></tr>
 <tr><th scope="row">Not affiliated</th><td>Banner on first visit, line in every footer, "Unofficial" label next to the logo, About page.</td></tr>
@@ -777,7 +794,49 @@ ${hdr('review','Community')}
  </div>
 </div></main>${foot()}`)];
 
-S.mobile=['10 · Mobile',()=>(CUR='hc10',0)||note('Mobile.|Bottom tab bar with text labels under every icon. Touch targets at least 44 px. Frames below are mock phones, so they carry no page landmarks of their own.')+`<main><h1 class="sr-only">Mobile mockups</h1><div class="phones">
+
+S.signin=['11 · Sign in',()=>note('Sign in.|Two clear paths. Viewers and editors use Discord. Creators use Google, because only Google can prove who owns a YouTube channel. The dialog says exactly what we ask YouTube and what we keep.')+`<div class="app"><div class="modal-wrap">
+ <div class="modal" role="dialog" aria-modal="true" aria-labelledby="si-h">
+  <h2 id="si-h">Sign in to Couchcrab</h2>
+  <p class="meta">You can watch without an account. Signing in syncs your list and progress.</p>
+  <div class="signin">
+   <section class="opt" aria-labelledby="si-v"><h3 id="si-v">Viewers and editors</h3><p>Sync who you watch and your progress, and suggest edits.</p><a class="btn discord" href="#">Continue with Discord</a></section>
+   <section class="opt" aria-labelledby="si-c"><h3 id="si-c">Are you a creator?</h3><p>Sign in with the Google account of your YouTube channel to claim your profile. We only ask YouTube which channels you own. We don't post anything and we don't keep your Google token.</p><a class="btn google" href="#">Continue with Google</a></section>
+  </div>
+  <div class="btns" style="justify-content:flex-end;margin-top:18px"><button type="button" class="btn ghost">Close</button></div>
+ </div></div></div>`];
+
+S.claim=['12 · Claim profile',()=>note('Claim your profile.|After Google sign-in we list the channels the account owns. A channel that is already on Couchcrab is verified straight away. A channel that isn\'t yet becomes a creator request for review. Demo creator names here are made up.')+app('claim',`
+${hdr('claim','')}
+<main id="claim-main" class="narrow">
+ <h1 style="font-size:2.25rem;margin:0 0 8px">Claim your creator profile</h1>
+ <p class="meta" style="font-size:1rem">Signed in with Google. This account owns 2 YouTube channels.</p>
+ <ul class="claimlist">
+  <li><span class="av md" style="--c:#7bd3c9" aria-hidden="true">PP</span><div class="nm"><b>PixelPetra</b><span>Matches the creator PixelPetra on Couchcrab</span></div><span class="verified">✓ Verified</span></li>
+  <li><span class="av md" style="--c:#7bd3c9" aria-hidden="true">PP</span><div class="nm"><b>PixelPetra Plays</b><span>Not on Couchcrab yet. We'll add it as your second channel after a quick review.</span></div><span class="pill warn">Needs review</span></li>
+ </ul>
+ <div class="btns"><button type="button" class="btn primary">Claim PixelPetra</button><a class="btn ghost" href="#">This isn't me</a></div>
+ <p class="meta" style="margin-top:20px">After claiming you can edit your profile, manage your channels, place your own videos and hide your videos from Couchcrab if you want.</p>
+</main>${foot()}`)];
+
+S.creatorhome=['13 · Creator dashboard',()=>note('Creator dashboard.|What a verified creator can do: edit their own profile, manage their own channels, place their own videos (logged in history), and opt out. They can\'t edit other creators.')+app('chome',`
+${hdr('chome','')}
+<main id="chome-main" class="settings">
+ <nav aria-label="Creator"><ul class="plain"><li><a href="#" aria-current="page">Profile</a></li><li><a href="#">Channels</a></li><li><a href="#">My videos</a></li><li><a href="#">Requests</a></li></ul></nav>
+ <div>
+  <p><span class="verified">✓ Verified creator</span></p>
+  <h1 style="margin:8px 0 20px;font-size:2rem">PixelPetra</h1>
+  <div class="field"><label for="ch-bio">Short bio</label><textarea id="ch-bio" rows="3">Builder, redstoner, professional over-thinker.</textarea></div>
+  <fieldset class="field"><legend>Profile colour</legend><div class="radios"><label><input type="radio" name="chc" checked>Teal</label><label><input type="radio" name="chc">Coral</label><label><input type="radio" name="chc">Gold</label><label><input type="radio" name="chc">Violet</label></div></fieldset>
+  <section aria-labelledby="ch-chan"><h2 id="ch-chan">Channels</h2>
+   <ul class="claimlist"><li><div class="nm"><b>PixelPetra</b><span>Main channel · synced 10 min ago</span></div><span class="verified">✓ Verified</span></li><li><div class="nm"><b>PixelPetra Plays</b><span>Second channel</span></div><span class="pill warn">Needs review</span></li></ul></section>
+  <section aria-labelledby="ch-vid"><h2 id="ch-vid">Your videos</h2><p class="meta">3 uploads aren't in a series yet.</p><a class="btn sm ghost" href="#">Place my videos</a></section>
+  <section class="danger" aria-labelledby="ch-out"><h2 id="ch-out">Hide my videos from Couchcrab</h2><p class="meta">Your profile and every video of yours disappear from the site. You can undo this at any time.</p><button type="button" class="btn ghost">Hide my videos…</button></section>
+  <div class="btns" style="margin-top:24px"><button type="button" class="btn primary">Save profile</button></div>
+ </div>
+</main>${foot()}`)];
+
+S.mobile=['14 · Mobile',()=>(CUR='hc10',0)||note('Mobile.|Bottom tab bar with text labels under every icon. Touch targets at least 44 px. Frames below are mock phones, so they carry no page landmarks of their own.')+`<main><h1 class="sr-only">Mobile mockups</h1><div class="phones">
  <div class="phone" role="group" aria-label="Phone mockup: home">
   <div class="top"><span class="logo" style="font-size:1.0625rem">${LOGO}Couchcrab</span><span class="unofficial">Unofficial</span><span class="sp"></span><button type="button" class="me" aria-label="Account menu, MK">MK</button></div>
   <div class="hero">${art('hc10',11,90,120)}<p class="kicker">HC Season 10 · Mixed</p><p class="h1">Week 14, 6 POVs.</p><a class="btn primary" href="#">▶ Continue week 14</a></div>

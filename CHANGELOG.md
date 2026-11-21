@@ -16,3 +16,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Demo data (`npm run db:seed`) with fictional creators, series and videos.
 - Data model for creators who claim their profile by signing in with Google (claims, verified channels, opt-out).
 - Automated accessibility checks (axe, WCAG 2.2 AA) in all three themes.
+- Designs for signing in, claiming a creator profile with Google and the creator dashboard.
+
+### Changed
+
+- One creator list without fixed groups; creators are managed in the app.
