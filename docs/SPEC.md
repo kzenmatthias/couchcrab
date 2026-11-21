@@ -53,6 +53,20 @@ There are no fixed creator groups (no "Hermits" vs "Friends"). A creator is simp
 - Livestream VODs belong to the Extras side series of that series.
 - Shorts are excluded.
 
+## Creators claim their profile
+
+- A creator signs in with Google. Couchcrab asks YouTube (scope `youtube.readonly`, `channels.list?mine=true`) which channels that Google account owns.
+- A channel that matches a Couchcrab channel is verified automatically and its creator profile is claimed.
+- A channel that is not on Couchcrab yet becomes a creator request for review.
+- A claimed creator gets a "Verified creator" badge and can:
+  - edit their own profile (bio, avatar, colour, links),
+  - link or unlink their own channels,
+  - change the placement of their own videos directly (logged in the history, revertible by admins),
+  - opt out: hide all their videos from Couchcrab.
+- A claimed creator cannot edit other creators.
+- The Google access token is used once for the ownership check and is not stored.
+- Google sign-in also works as a normal login for creators who don't use Discord.
+
 ## Spoiler-free mode
 
 Per series (and a default for new series). Unwatched episodes show a neutral card, the title becomes "Episode N", and the real title is hidden from screen readers too. "Show real title" reveals one episode.

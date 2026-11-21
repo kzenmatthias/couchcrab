@@ -9,7 +9,7 @@ src/
   lib/
     server/
       db/            schema.ts, client.ts, index.ts (app connection), migrations/, seed.ts
-      auth/          Discord OAuth, sessions, roles
+      auth/          Discord and Google OAuth, sessions, roles, creator claims
       youtube/       API client, sync, rule engine
       audit.ts       write and revert history entries
     components/      shared UI (cards, rails, POV bar, switches, dialogs)
@@ -21,7 +21,7 @@ src/
   routes/
     (site)/          home, series, creators, player, settings
     manage/          management tool (editor/admin)
-    auth/            Discord login and callback
+    auth/            Discord and Google login and callbacks
     prefs/           POST endpoint for language and theme (works without JavaScript)
   env.ts             environment variables (SvelteKit 3 `defineEnvVars`)
 messages/            en.json, nl.json (UI strings)
@@ -39,8 +39,8 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 
 | Table | Purpose |
 | --- | --- |
-| `creators` | id, slug, name, color, avatar_url, bio |
-| `channels` | id, creator_id, youtube_channel_id, title, kind (`main`, `secondary`), sync_enabled, last_synced_at |
+| `creators` | id, slug, name, color, avatar_url, bio, claimed_at (set once a user proved they own a channel), opted_out (hide all their videos) |
+| `channels` | id, creator_id, youtube_channel_id, title, kind (`main`, `secondary`), sync_enabled, last_synced_at, verified_at, verified_by_user_id (the creator who proved ownership) |
 | `series` | id, slug, title, kind (`season`, `live_series`, `event`, `other`), status (`upcoming`, `ongoing`, `ended`), grouping (`week`, `session`, `none`), started_at, ended_at, poster (JSON: generated art settings or image url), parent_id (set for an Extras series) |
 | `series_translations` | series_id, locale, description |
 | `series_creators` | series_id, creator_id |
@@ -48,7 +48,8 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 | `videos` | id, youtube_video_id, channel_id, title, published_at, duration_s, has_creator_captions, is_live_vod, is_short, series_id, group_id, episode_number, status (`placed`, `unsorted`, `ignored`), placed_by (`rule`, `user`, `sync`), fetched_at |
 | `title_rules` | id, series_id, channel_id (nullable = all channels of the series), pattern, match (`contains`, `regex`), target (`main`, `extras`), priority, enabled |
 | `pages` / `page_translations` | `pages`: id, slug. `page_translations`: page_id, locale, title, body (Markdown), updated_at |
-| `users` | id, discord_id, name, avatar_url, role (`viewer`, `editor`, `admin`), trust |
+| `users` | id, discord_id (nullable), google_sub (nullable), name, avatar_url, role (`viewer`, `editor`, `admin`), trust, creator_id (the creator profile this user claimed). At least one of discord_id and google_sub is set. |
+| `claims` | id, user_id, creator_id (null when the channel is not on Couchcrab yet), youtube_channel_id, status (`verified`, `pending_review`, `rejected`), created_at, reviewed_by, reviewed_at |
 | `sessions` | id (hash of the session token), user_id, expires_at |
 | `suggestions` | id, user_id, target_type, target_id, kind (`create`, `update`, `delete`), payload (JSON), note, is_creator_request, status (`open`, `approved`, `rejected`, `withdrawn`), reviewed_by, reviewed_at |
 | `audit_log` | id, actor (`user`, `rule`, `sync`), actor_user_id (set when actor is `user`), entity, entity_id, before, after (JSON), created_at, reverted_by |
@@ -70,6 +71,10 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 ## Auth and roles
 
 - Discord OAuth 2 (scope `identify`) with server-side sessions in SQLite (no third-party auth service).
+- Google OAuth 2 (scope `openid youtube.readonly`) for creators. After sign-in Couchcrab calls `channels.list?mine=true` once with the access token to see which YouTube channels the account owns, then discards the token; it is never stored. The Google account is linked through `users.google_sub`, so Google also works as a normal login for creators without Discord.
+- An owned channel that matches `channels.youtube_channel_id` is verified at once: a `claims` row with status `verified`, `channels.verified_at` and `verified_by_user_id`, `creators.claimed_at`, and `users.creator_id`. An owned channel that is not on Couchcrab yet becomes a `claims` row with status `pending_review` and a creator request in the review queue.
+- A claimed creator gets the "Verified creator" badge and may edit only their own creator profile and channels, change the placement of their own videos without review (written to `audit_log`, revertible by admins) and set `opted_out`, which hides all their videos. Every such write checks `users.creator_id` on the server.
+- `youtube.readonly` is a sensitive scope: the production Google OAuth app needs Google's OAuth verification before it can be used by the public. Local development works with test users.
 - `ADMIN_DISCORD_IDS` bootstraps admins. Editors are promoted by admins.
 - Every write in the management tool checks the role on the server.
 

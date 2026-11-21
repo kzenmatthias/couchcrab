@@ -14,4 +14,5 @@ All notable changes to this project are documented here. The format follows [Kee
 - Site pages (About, Disclaimer, Accessibility statement) managed in the database, with English as fallback.
 - Home page listing the series with generated poster art.
 - Demo data (`npm run db:seed`) with fictional creators, series and videos.
+- Data model for creators who claim their profile by signing in with Google (claims, verified channels, opt-out).
 - Automated accessibility checks (axe, WCAG 2.2 AA) in all three themes.

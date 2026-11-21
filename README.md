@@ -86,6 +86,7 @@ Open http://localhost:5173. The demo data lets you work on the whole app without
 | --- | --- |
 | `YOUTUBE_API_KEY` | Syncing real uploads (`npm run sync`). Free key from the [Google Cloud console](https://console.cloud.google.com/apis/library/youtube.googleapis.com). |
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` | Sign in with Discord. Create an app in the [Discord developer portal](https://discord.com/developers/applications), redirect URL `http://localhost:5173/auth/discord/callback`. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Creators claim their profile by signing in with Google. Create an OAuth client in the [Google Cloud console](https://console.cloud.google.com/apis/credentials), redirect URL `http://localhost:5173/auth/google/callback`. |
 | `ADMIN_DISCORD_IDS` | Comma-separated Discord user ids that get the admin role. |
 
 ### Useful commands
@@ -115,7 +116,7 @@ Please follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## For creators
 
-Are you a creator and want something corrected or removed? Use the "Creator requests" form on the site, or open an issue. Creator requests are always handled first.
+Are you a creator and want something corrected or removed? Use the "Creator requests" form on the site, or open an issue. Creator requests are always handled first. You can also claim your creator profile by signing in with Google: once Couchcrab sees you own the channel, you get a "Verified creator" badge and can manage your own profile and videos.
 
 ## License
 
