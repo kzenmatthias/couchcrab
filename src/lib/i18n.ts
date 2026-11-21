@@ -26,3 +26,18 @@ export function formatDate(
 ): string {
 	return new Intl.DateTimeFormat(locale, options).format(date);
 }
+
+/** A localised date range like "14–20 Sept 2026" (both ends inclusive). */
+export function formatDateRange(
+	start: Date,
+	end: Date,
+	locale: string,
+	options: Intl.DateTimeFormatOptions = {
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric',
+		timeZone: 'UTC'
+	}
+): string {
+	return new Intl.DateTimeFormat(locale, options).formatRange(start, end);
+}

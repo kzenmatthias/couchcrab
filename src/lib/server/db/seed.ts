@@ -83,6 +83,14 @@ const CREATORS = [
 		name: 'Cobalt Wren',
 		color: '#cdb4db',
 		bio: 'Engineer of questionable machines.'
+	},
+	{
+		// Opted out: their videos stay in the database but never appear on the site.
+		slug: 'vesper-moss',
+		name: 'Vesper Moss',
+		color: '#8ecae6',
+		bio: 'Asked to be hidden from Couchcrab.',
+		optedOut: true
 	}
 ] as const;
 
@@ -294,6 +302,21 @@ export function seed(db: DB): SeedSummary {
 			publishedAt: at(SEASON_START, 17, 3),
 			durationS: 1260,
 			seriesId: season
+		});
+
+		// The opted-out creator took part in the season too; none of this may show up publicly.
+		tx.insert(t.seriesCreators)
+			.values({ seriesId: season, creatorId: creatorId.get('vesper-moss')! })
+			.run();
+		[0, 7].forEach((day, i) => {
+			addVideo({
+				channel: mainChannel.get('vesper-moss')!,
+				title: `Lanternfall 3: Hidden Hollow (Ep ${i + 1})`,
+				publishedAt: at(SEASON_START, day + 2, 5),
+				durationS: 1700,
+				seriesId: season,
+				episode: i + 1
+			});
 		});
 
 		/* 2. Extras for the season: livestream VODs */
