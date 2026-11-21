@@ -73,3 +73,39 @@ ul.plain {
 	animation: none !important;
 	scroll-behavior: auto !important;
 }
+
+/* Buttons and button-like links */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	border: 1px solid transparent;
+	border-radius: var(--radius);
+	padding: 11px 18px;
+	min-height: 44px;
+	font-weight: 700;
+	text-decoration: none;
+	text-shadow: none;
+}
+.btn.primary {
+	background: var(--accent);
+	color: var(--on-accent);
+}
+.btn.ghost {
+	background: var(--surface2);
+	border-color: var(--line);
+	color: var(--text);
+}
+.btn:hover {
+	text-decoration: underline;
+}
+
+/* Grid of episode cards (timelines, by creator) */
+.card-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+	gap: 40px 28px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}

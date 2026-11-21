@@ -6,11 +6,19 @@
 
 	const nav = $derived([
 		{ href: resolve('/(site)'), label: m.nav_home() },
-		{ href: resolve('/(site)/[page]', { page: 'series' }), label: m.nav_series() },
-		{ href: resolve('/(site)/[page]', { page: 'creators' }), label: m.nav_creators() },
+		{ href: resolve('/(site)/series'), label: m.nav_series() },
+		{ href: resolve('/(site)/creators'), label: m.nav_creators() },
 		{ href: resolve('/(site)/[page]', { page: 'who-i-watch' }), label: m.nav_who_i_watch() },
 		{ href: resolve('/(site)/[page]', { page: 'community' }), label: m.nav_community() }
 	]);
+
+	/** `page` on the page itself, `true` inside its section (e.g. a series under Series). */
+	function current(href: string): 'page' | 'true' | undefined {
+		const path = page.url.pathname;
+		if (path === href) return 'page';
+		if (href !== resolve('/(site)') && path.startsWith(`${href}/`)) return 'true';
+		return undefined;
+	}
 </script>
 
 <header class="top">
@@ -24,7 +32,7 @@
 		<ul>
 			{#each nav as item (item.href)}
 				<li>
-					<a href={item.href} aria-current={page.url.pathname === item.href ? 'page' : undefined}>
+					<a href={item.href} aria-current={current(item.href)}>
 						{item.label}
 					</a>
 				</li>
@@ -94,7 +102,7 @@
 	nav a:hover {
 		text-decoration: underline;
 	}
-	nav a[aria-current='page'] {
+	nav a[aria-current] {
 		color: var(--text);
 		font-weight: 700;
 		text-decoration: underline;

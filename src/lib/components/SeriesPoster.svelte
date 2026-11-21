@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { formatDate } from '#lib/i18n.js';
@@ -7,14 +8,17 @@
 
 	type Kind = 'season' | 'live_series' | 'event' | 'other';
 	type Props = {
+		slug: string;
 		title: string;
 		kind: Kind;
 		startedAt: Date | null;
 		poster: PosterSettings | null;
 		creatorCount: number;
+		/** Heading level of the title, so it fits the outline of the page. */
+		headingLevel?: 2 | 3;
 	};
 
-	let { title, kind, startedAt, poster, creatorCount }: Props = $props();
+	let { slug, title, kind, startedAt, poster, creatorCount, headingLevel = 3 }: Props = $props();
 
 	const kindLabel: Record<Kind, () => string> = {
 		season: m.series_kind_season,
@@ -36,13 +40,17 @@
 </script>
 
 <article class="poster">
-	{#if poster?.type === 'image'}
-		<img class="image" src={poster.url} alt="" />
-	{:else}
-		<PosterArt palette={poster?.palette} seed={poster?.seed ?? 1} />
-	{/if}
+	<span class="bg" aria-hidden="true">
+		{#if poster?.type === 'image'}
+			<img class="image" src={poster.url} alt="" />
+		{:else}
+			<PosterArt palette={poster?.palette} seed={poster?.seed ?? 1} />
+		{/if}
+	</span>
 	<span class="tag">{kindLabel[kind]()}</span>
-	<h3>{title}</h3>
+	<svelte:element this={`h${headingLevel}`} class="title">
+		<a href={resolve('/(site)/series/[slug]', { slug })}>{title}</a>
+	</svelte:element>
 	<p>
 		{m.series_creator_count({ count: creatorCount })}{#if since}<br />{since}{/if}
 	</p>
@@ -56,16 +64,23 @@
 		aspect-ratio: 2 / 3;
 		border-radius: var(--radius-xl);
 		padding: 20px;
-		background: #000;
 		position: relative;
-		overflow: hidden;
+		isolation: isolate;
 		color: #fff;
 	}
-	.poster::before {
+	/* Art and scrim sit below the text; the title link covers the whole poster. */
+	.bg {
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		overflow: hidden;
+		border-radius: inherit;
+		background: #000;
+	}
+	.bg::after {
 		content: '';
 		position: absolute;
 		inset: 0;
-		z-index: 1;
 		background: linear-gradient(180deg, transparent 30%, var(--scrim) 75%);
 	}
 	.image {
@@ -75,12 +90,8 @@
 		height: 100%;
 		object-fit: cover;
 	}
-	.poster > :not(:global(.art), .image) {
-		position: relative;
-		z-index: 2;
-	}
 	.tag {
-		position: absolute !important;
+		position: absolute;
 		top: 14px;
 		left: 14px;
 		background: #000;
@@ -91,11 +102,32 @@
 		font-size: 0.6875rem;
 		font-weight: 700;
 	}
-	h3 {
+	.title {
 		font-size: 1.5rem;
 		line-height: 1.05;
 		letter-spacing: -0.02em;
 		margin: 0;
+		overflow-wrap: anywhere;
+	}
+	.title a {
+		text-decoration: none;
+	}
+	.title a::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+	.title a:focus-visible {
+		outline: none;
+	}
+	.title a:focus-visible::after {
+		outline: var(--focus-width) solid var(--focus);
+		outline-offset: 3px;
+		border-radius: var(--radius-xl);
+	}
+	.poster:hover .title a {
+		text-decoration: underline;
 	}
 	p {
 		font-size: 0.875rem;
