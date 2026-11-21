@@ -114,7 +114,7 @@ A dry run performs the same writes inside a transaction and rolls it back, so it
 
 - Rules are tried by `priority` (highest first), then by `id`. The first match wins.
 - A rule with `channel_id` set only applies to uploads of that channel.
-- `contains` is a case-insensitive substring match. `regex` is a JavaScript regular expression with the `i` flag; an invalid pattern or one longer than 200 characters never matches (it does not throw).
+- `contains` is a case-insensitive substring match. `regex` is a JavaScript regular expression with the `i` flag; an invalid pattern or one longer than 400 characters never matches (it does not throw).
 - A rule with `within_series_dates` only matches uploads published from the series' `started_at` minus 2 days up to and including its `ended_at` plus 7 days (`inSeriesWindow`; open-ended while `ended_at` is empty). The window is the rule's own series, also when the video goes to its Extras child. A series without `started_at` has no window, so such a rule never matches; the rule form and list say so. This is for creators who never number their seasons: a broad pattern on their channel stays limited to one season. `loadRuleSeries` passes the dates in `RuleSeries`, so the sync, "Test this rule" and "Apply rules to Unsorted" all use it.
 - `target: extras` places the video in the series' Extras child (the series with `parent_id` pointing at it). If the series has no Extras child, the rule is skipped and the next rule gets a chance.
 - A livestream VOD goes to the Extras child even when the matching rule targets the main series, because livestreams are not episodes. Without an Extras child it stays in the main series.

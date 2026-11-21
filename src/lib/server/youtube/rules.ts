@@ -51,7 +51,7 @@ export interface Placement {
 }
 
 /** Longer regex patterns are ignored. Titles are at most 100 characters on YouTube. */
-export const MAX_PATTERN_LENGTH = 200;
+export const MAX_PATTERN_LENGTH = 400;
 const MAX_TITLE_LENGTH = 200;
 
 const regexCache = new Map<string, RegExp | null>();

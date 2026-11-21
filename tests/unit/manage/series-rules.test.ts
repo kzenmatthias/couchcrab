@@ -1,3 +1,4 @@
+import { MAX_PATTERN_LENGTH } from '#lib/server/youtube/rules.js';
 import { and, eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import * as t from '#lib/server/db/schema.js';
@@ -168,7 +169,7 @@ describe('title rules', () => {
 		).toEqual({ pattern: 'invalid_regex' });
 		expect(
 			errorsOf(() =>
-				createRule(env.db, env.editor, row.id, { pattern: 'x'.repeat(201), match: 'contains' })
+				createRule(env.db, env.editor, row.id, { pattern: 'x'.repeat(MAX_PATTERN_LENGTH + 1), match: 'contains' })
 			)
 		).toEqual({ pattern: 'pattern_too_long' });
 		expect(

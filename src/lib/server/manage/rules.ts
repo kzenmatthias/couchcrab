@@ -82,7 +82,7 @@ function hasExtras(db: DB, seriesId: number) {
 
 /**
  * Validates a rule. A regex must compile with the engine's own guard (`compileRulePattern`:
- * at most 200 characters, valid JavaScript syntax); otherwise the engine would never match it.
+ * at most 400 characters, valid JavaScript syntax); otherwise the engine would never match it.
  */
 export function parseRule(
 	db: DB,

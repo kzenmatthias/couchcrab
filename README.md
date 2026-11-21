@@ -154,6 +154,12 @@ npm run catalog:import -- catalog.json             # write it, all in one transa
 npm run sync -- --first-max 20000                  # first sync: each channel's whole upload history
 ```
 
+The repo ships one: [`catalog/hermitcraft-and-friends.json`](catalog/hermitcraft-and-friends.json), with every Hermitcraft season (1 to 11), the Life series, the April Fools specials and Empires SMP seasons 1 and 2: 73 creators, 95 channels and the title rules that sort their uploads. Channel ids and season dates come from public sources and the channels' own upload lists. Fixes are welcome, in the file or in the app.
+
+```sh
+npm run catalog:import -- catalog/hermitcraft-and-friends.json
+```
+
 The import is meant as a one-off. Afterwards the management tool is the source of truth: running the import again is safe (an unchanged file changes nothing, an edited file updates the fields it lists), but it never deletes anything, never changes a claimed creator's profile (it only adds new channels) and leaves opted-out creators alone. Every change goes through the same validation as an edit in the app and shows up in the history (actor "Sync"). The whole file is checked first and every problem is listed; if anything fails, nothing is written.
 
 ```json
