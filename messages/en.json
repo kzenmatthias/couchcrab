@@ -1142,5 +1142,8 @@
 	"together_key_seek": "10 seconds back or forward",
 	"together_link": "Watch together",
 	"together_link_session": "Watch {session} together: {count} POVs",
-	"together_with_others": "Watch together with the other POVs: {count}"
+	"together_with_others": "Watch together with the other POVs: {count}",
+	"together_listen_label": "Play sound of {creator}",
+	"together_remove_label": "Remove {creator}",
+	"together_youtube_label": "Watch on YouTube: {creator} at this moment, opens YouTube"
 }

@@ -1142,5 +1142,8 @@
 	"together_key_seek": "10 seconden terug of vooruit",
 	"together_link": "Samen kijken",
 	"together_link_session": "{session} samen kijken: {count} POV's",
-	"together_with_others": "Samen kijken met de andere POV's: {count}"
+	"together_with_others": "Samen kijken met de andere POV's: {count}",
+	"together_listen_label": "Geluid hiervan: {creator}",
+	"together_remove_label": "Weghalen: {creator}",
+	"together_youtube_label": "Bekijk op YouTube: {creator} op dit moment, opent YouTube"
 }

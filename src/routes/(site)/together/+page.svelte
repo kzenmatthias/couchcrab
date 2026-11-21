@@ -415,7 +415,13 @@
 			{#each selected as video (video.youtubeVideoId)}
 				{@const id = video.youtubeVideoId}
 				{@const hasSound = audio === id}
-				<li class="tile" class:audio={hasSound} data-testid="pov" data-video={id}>
+				<li
+					class="tile"
+					class:audio={hasSound}
+					data-testid="pov"
+					data-video={id}
+					data-creator={video.creator.name}
+				>
 					<TogetherTile
 						videoId={id}
 						title={m.together_player_label({ creator: video.creator.name })}
@@ -456,8 +462,9 @@
 							class="btn ghost small"
 							aria-pressed={hasSound}
 							onclick={() => listen(id)}
+							aria-label={m.together_listen_label({ creator: video.creator.name })}
 						>
-							{m.together_listen()}<span class="sr-only">: {video.creator.name}</span>
+							{m.together_listen()}
 						</button>
 						<label class="nudge">
 							<span>{m.together_shift()}</span>
@@ -472,13 +479,21 @@
 								onchange={(e) => setNudge(id, Number(e.currentTarget.value))}
 							/>
 						</label>
-						<a class="btn ghost small" href={youtubeAt(id)} rel="external noopener">
-							{m.watch_on_youtube()}<span class="sr-only">
-								: {video.creator.name}, {m.opens_youtube()}
-							</span>
+						<a
+							class="btn ghost small"
+							href={youtubeAt(id)}
+							rel="external noopener"
+							aria-label={m.together_youtube_label({ creator: video.creator.name })}
+						>
+							{m.watch_on_youtube()}
 						</a>
-						<button type="button" class="btn ghost small" onclick={() => remove(video)}>
-							{m.together_remove()}<span class="sr-only">: {video.creator.name}</span>
+						<button
+							type="button"
+							class="btn ghost small"
+							onclick={() => remove(video)}
+							aria-label={m.together_remove_label({ creator: video.creator.name })}
+						>
+							{m.together_remove()}
 						</button>
 					</div>
 				</li>

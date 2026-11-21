@@ -45,7 +45,7 @@ test('a session links to all its POVs, lined up by their stream start', async ({
 test('plays all POVs on one clock, with a shift per POV', async ({ page }) => {
 	await openDay1(page);
 	await seek(page, 300);
-	const first = await povs(page).nth(0).getByRole('heading', { level: 2 }).innerText();
+	const first = (await povs(page).nth(0).getAttribute('data-creator'))!;
 	const firstTime = timeOf(page, first);
 	const before = await firstTime.innerText();
 
@@ -72,15 +72,16 @@ test('plays all POVs on one clock, with a shift per POV', async ({ page }) => {
 
 test('sound follows one POV, and POVs can be removed and added again', async ({ page }) => {
 	await openDay1(page);
-	const sound = page.getByRole('button', { name: /^Play sound/ });
+	const sound = page.getByRole('button', { name: /^Play sound of/ });
 	await expect(sound.nth(0)).toHaveAttribute('aria-pressed', 'true');
+	const third = (await povs(page).nth(2).getAttribute('data-creator'))!;
 	await sound.nth(2).click();
 	await expect(sound.nth(2)).toHaveAttribute('aria-pressed', 'true');
 	await expect(sound.nth(0)).toHaveAttribute('aria-pressed', 'false');
 	await expect(page.getByText('Sound on')).toHaveCount(1);
 
-	const second = await povs(page).nth(1).getByRole('heading', { level: 2 }).innerText();
-	await page.getByRole('button', { name: `Remove: ${second}` }).click();
+	const second = (await povs(page).nth(1).getAttribute('data-creator'))!;
+	await page.getByRole('button', { name: `Remove ${second}` }).click();
 	await expect(povs(page)).toHaveCount(3);
 	await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
 	await page.getByRole('button', { name: `Add ${second}` }).click();
@@ -90,7 +91,7 @@ test('sound follows one POV, and POVs can be removed and added again', async ({ 
 	// The address keeps the choice, so a reload shows the same.
 	await page.reload();
 	await expect(povs(page)).toHaveCount(4);
-	await expect(page.getByRole('button', { name: /^Play sound/ }).nth(2)).toHaveAttribute(
+	await expect(page.getByRole('button', { name: `Play sound of ${third}` })).toHaveAttribute(
 		'aria-pressed',
 		'true'
 	);
