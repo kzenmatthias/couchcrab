@@ -36,15 +36,52 @@ import {
 } from './progress.js';
 import {
 	PREFS_STORAGE_KEY,
+	changedItems,
 	defaultPrefs,
 	parsePrefs,
 	serializePrefs,
 	type Prefs
 } from './schema.js';
-import { mergeSnapshots, type PrefsSyncAdapter } from './sync.js';
+import {
+	PROGRESS_BATCH_MAX,
+	mergeSnapshots,
+	prefsDiffer,
+	progressToPush,
+	type PrefsSyncAdapter,
+	type PushOptions
+} from './sync.js';
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 400;
 const PUSH_DELAY_MS = 2000;
+/** Retries after a failed push wait longer each time, up to this. */
+const RETRY_MAX_MS = 60_000;
+/** Which account this browser last synced with, and up to when its progress was pushed. */
+export const SYNC_STORAGE_KEY = 'couchcrab:sync';
+
+type SyncMeta = { userId: number; progressPushedUpTo: number };
+
+function readSyncMeta(): SyncMeta | null {
+	try {
+		const v = JSON.parse(localStorage.getItem(SYNC_STORAGE_KEY) ?? 'null') as unknown;
+		if (typeof v !== 'object' || v === null) return null;
+		const { userId, progressPushedUpTo } = v as Record<string, unknown>;
+		if (typeof userId !== 'number') return null;
+		return {
+			userId,
+			progressPushedUpTo: typeof progressPushedUpTo === 'number' ? progressPushedUpTo : 0
+		};
+	} catch {
+		return null;
+	}
+}
+
+function writeSyncMeta(meta: SyncMeta) {
+	try {
+		localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify(meta));
+	} catch {
+		/* ignore */
+	}
+}
 /** Also the limit of `/api/videos`. */
 export const API_MAX_IDS = 50;
 
@@ -64,7 +101,14 @@ export class ViewingStore {
 	#onMirrorChange: () => void;
 	#lastMirror: string;
 	#adapter: PrefsSyncAdapter | null = null;
+	#userId: number | null = null;
 	#pushTimer: ReturnType<typeof setTimeout> | null = null;
+	#prefsDirty = false;
+	/** Progress entries (YouTube ids) the account does not have yet. Not reactive state. */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
+	#progressDirty = new Set<string>();
+	#flushing = false;
+	#failures = 0;
 	#pendingTitles: string[] = [];
 	#titleTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -115,7 +159,6 @@ export class ViewingStore {
 			/* full or unavailable: the cookie still carries the important part */
 		}
 		this.#checkMirror();
-		this.#schedulePush();
 	}
 
 	#saveProgress() {
@@ -125,7 +168,6 @@ export class ViewingStore {
 		} catch {
 			/* ignore */
 		}
-		this.#schedulePush();
 	}
 
 	#checkMirror() {
@@ -139,41 +181,166 @@ export class ViewingStore {
 
 	/** Changes the prefs through a draft copy, then saves them. */
 	update(change: (draft: Prefs) => void) {
+		const before = $state.snapshot(this.prefs);
 		const draft = $state.snapshot(this.prefs);
 		change(draft);
-		draft.updatedAt = Date.now();
+		const now = Date.now();
+		for (const key of changedItems(before, draft)) draft.stamps[key] = now;
+		draft.updatedAt = now;
 		this.prefs = draft;
 		this.#save();
+		this.#prefsDirty = true;
+		this.#schedulePush();
 	}
 
 	/* ---------- account sync ---------- */
 
-	async connect(adapter: PrefsSyncAdapter) {
+	/**
+	 * Connects to the signed-in account: pulls its copy, merges it with this browser's (the
+	 * first time for this account, creator lists are combined) and pushes what the account
+	 * lacks. After that every change is pushed, debounced. Failures retry quietly.
+	 */
+	async connect(adapter: PrefsSyncAdapter, userId: number) {
+		if (this.#adapter === adapter && this.#userId === userId) return;
+		this.disconnect();
 		this.#adapter = adapter;
-		const merged = mergeSnapshots(
-			{ prefs: $state.snapshot(this.prefs), progress: $state.snapshot(this.progress) },
-			await adapter.pull()
-		);
+		this.#userId = userId;
+		window.addEventListener('pagehide', this.#onPageHide);
+		document.addEventListener('visibilitychange', this.#onVisibility);
+
+		let remote;
+		try {
+			remote = await adapter.pull();
+		} catch {
+			// Offline or a server error: keep the local copy and try again later.
+			if (this.#adapter === adapter)
+				this.#retryConnect = setTimeout(
+					() => void this.#reconnect(adapter, userId),
+					this.#nextDelay()
+				);
+			return;
+		}
+		if (this.#adapter !== adapter) return;
+		this.#failures = 0;
+
+		const meta = readSyncMeta();
+		const first = meta?.userId !== userId;
+		const local = { prefs: $state.snapshot(this.prefs), progress: $state.snapshot(this.progress) };
+		const merged = mergeSnapshots(local, remote, { first });
 		this.prefs = merged.prefs;
 		this.progress = merged.progress;
 		this.#save();
 		this.#saveProgress();
+
+		this.#prefsDirty = !remote || prefsDiffer(merged.prefs, remote.prefs);
+		const since = first ? 0 : (meta?.progressPushedUpTo ?? 0);
+		for (const id of progressToPush(merged.progress, remote?.progress ?? {}, since))
+			this.#progressDirty.add(id);
+		writeSyncMeta({ userId, progressPushedUpTo: first ? 0 : since });
+		void this.#flush();
 	}
 
+	#retryConnect: ReturnType<typeof setTimeout> | null = null;
+
+	async #reconnect(adapter: PrefsSyncAdapter, userId: number) {
+		this.#failures++;
+		this.#adapter = null;
+		this.#userId = null;
+		await this.connect(adapter, userId);
+	}
+
+	/** Stops syncing. The local copy stays (signing out keeps it in this browser). */
 	disconnect() {
 		this.#adapter = null;
+		this.#userId = null;
+		this.#prefsDirty = false;
+		this.#progressDirty.clear();
 		if (this.#pushTimer) clearTimeout(this.#pushTimer);
+		if (this.#retryConnect) clearTimeout(this.#retryConnect);
+		this.#pushTimer = null;
+		this.#retryConnect = null;
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('pagehide', this.#onPageHide);
+			document.removeEventListener('visibilitychange', this.#onVisibility);
+		}
 	}
 
-	#schedulePush() {
+	/** True while changes wait to be pushed to the account. */
+	get syncPending() {
+		return this.#prefsDirty || this.#progressDirty.size > 0;
+	}
+
+	#onPageHide = () => void this.#flush({ keepalive: true });
+	#onVisibility = () => {
+		if (document.visibilityState === 'hidden') void this.#flush({ keepalive: true });
+	};
+
+	#nextDelay() {
+		return Math.min(RETRY_MAX_MS, PUSH_DELAY_MS * 2 ** this.#failures);
+	}
+
+	#schedulePush(delay = PUSH_DELAY_MS) {
 		if (!this.#adapter) return;
 		if (this.#pushTimer) clearTimeout(this.#pushTimer);
 		this.#pushTimer = setTimeout(() => {
-			void this.#adapter?.push({
-				prefs: $state.snapshot(this.prefs),
-				progress: $state.snapshot(this.progress)
-			});
-		}, PUSH_DELAY_MS);
+			this.#pushTimer = null;
+			void this.#flush();
+		}, delay);
+	}
+
+	/** Pushes everything that is dirty. Never throws: a failure schedules a quiet retry. */
+	async #flush(options: PushOptions = {}) {
+		const adapter = this.#adapter;
+		const userId = this.#userId;
+		if (!adapter || userId === null || this.#flushing) return;
+		if (!this.syncPending) return;
+		this.#flushing = true;
+		const startedAt = Date.now();
+		try {
+			if (this.#prefsDirty) {
+				this.#prefsDirty = false;
+				try {
+					await adapter.pushPrefs($state.snapshot(this.prefs), options);
+				} catch (err) {
+					this.#prefsDirty = true;
+					throw err;
+				}
+			}
+			while (this.#progressDirty.size && this.#adapter === adapter) {
+				const ids = [...this.#progressDirty].slice(0, PROGRESS_BATCH_MAX);
+				const batch: ProgressMap = {};
+				for (const id of ids) {
+					const e = this.progress[id];
+					if (e) batch[id] = { ...e };
+					else this.#progressDirty.delete(id);
+				}
+				if (!Object.keys(batch).length) continue;
+				await adapter.pushProgress(batch, options);
+				// An entry that changed during the request stays dirty.
+				for (const [id, e] of Object.entries(batch))
+					if (this.progress[id]?.updatedAt === e.updatedAt) this.#progressDirty.delete(id);
+			}
+			this.#failures = 0;
+			if (!this.#progressDirty.size && this.#adapter === adapter)
+				writeSyncMeta({ userId, progressPushedUpTo: startedAt });
+		} catch {
+			if (this.#adapter === adapter) {
+				this.#failures++;
+				this.#flushing = false;
+				this.#schedulePush(this.#nextDelay());
+				return;
+			}
+		} finally {
+			this.#flushing = false;
+		}
+		// Changes made during the flush.
+		if (this.syncPending && !this.#pushTimer) this.#schedulePush();
+	}
+
+	#markProgress(youtubeId: string) {
+		if (!this.#adapter) return;
+		this.#progressDirty.add(youtubeId);
+		this.#schedulePush();
 	}
 
 	/* ---------- who I watch ---------- */
@@ -256,11 +423,13 @@ export class ViewingStore {
 			Date.now()
 		);
 		this.#saveProgress();
+		this.#markProgress(youtubeId);
 	}
 
 	setWatched(youtubeId: string, watched: boolean) {
 		this.progress[youtubeId] = setWatched(this.progress[youtubeId], watched, Date.now());
 		this.#saveProgress();
+		this.#markProgress(youtubeId);
 	}
 
 	/* ---------- episodes from the API ---------- */
