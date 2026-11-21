@@ -2,7 +2,16 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
+	import type { Theme } from '#lib/prefs/theme.js';
+	import AccountMenu from './AccountMenu.svelte';
 	import LogoMark from './LogoMark.svelte';
+
+	type Props = {
+		user: { name: string; avatarUrl: string | null; creatorId: number | null } | null;
+		theme: Theme;
+	};
+
+	let { user, theme }: Props = $props();
 
 	const nav = $derived([
 		{ href: resolve('/(site)'), label: m.nav_home() },
@@ -52,8 +61,11 @@
 		<input id="site-search" name="q" type="search" placeholder={m.search_placeholder()} />
 	</form>
 
-	<!-- Placeholder: Discord sign-in arrives in a later round. -->
-	<button type="button" class="account">{m.account_sign_in()}</button>
+	{#if user}
+		<AccountMenu {user} {theme} />
+	{:else}
+		<a class="signin" href={resolve('/(site)/signin')}>{m.account_sign_in()}</a>
+	{/if}
 </header>
 
 <style>
@@ -126,7 +138,10 @@
 		color: var(--muted);
 		opacity: 1;
 	}
-	.account {
+	.signin {
+		display: inline-flex;
+		align-items: center;
+		text-decoration: none;
 		min-height: 40px;
 		padding: 6px 14px;
 		border-radius: 999px;

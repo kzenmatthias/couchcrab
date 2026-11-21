@@ -9,12 +9,12 @@
 </script>
 
 <a class="skip" href="#main">{m.skip_to_content()}</a>
-<SiteHeader />
+<SiteHeader user={data.user} theme={data.theme} />
 <FirstVisitNotice />
 <main id="main" tabindex="-1">
 	{@render children()}
 </main>
-<SiteFooter theme={data.theme} />
+<SiteFooter />
 
 <style>
 	.skip {

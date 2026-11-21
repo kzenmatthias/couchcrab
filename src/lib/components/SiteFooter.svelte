@@ -3,20 +3,11 @@
 	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale, locales } from '#lib/paraglide/runtime.js';
-	import { THEMES, type Theme } from '#lib/prefs/theme.js';
-
-	let { theme }: { theme: Theme } = $props();
 
 	const locale = getLocale();
 	const languageName: Record<(typeof locales)[number], () => string> = {
 		en: m.language_en,
 		nl: m.language_nl
-	};
-	const themeName: Record<Theme, () => string> = {
-		system: m.theme_system,
-		dark: m.theme_dark,
-		light: m.theme_light,
-		contrast: m.theme_contrast
 	};
 	const redirectTo = $derived(page.url.pathname + page.url.search);
 	const prefs = resolve('/prefs');
@@ -46,17 +37,6 @@
 			<select id="footer-locale" name="locale">
 				{#each locales as l (l)}
 					<option value={l} lang={l} selected={l === locale}>{languageName[l]()}</option>
-				{/each}
-			</select>
-			<button type="submit">{m.footer_apply()}</button>
-		</form>
-
-		<form method="post" action={prefs}>
-			<input type="hidden" name="redirect_to" value={redirectTo} />
-			<label for="footer-theme">{m.footer_theme()}</label>
-			<select id="footer-theme" name="theme">
-				{#each THEMES as t (t)}
-					<option value={t} selected={t === theme}>{themeName[t]()}</option>
 				{/each}
 			</select>
 			<button type="submit">{m.footer_apply()}</button>
