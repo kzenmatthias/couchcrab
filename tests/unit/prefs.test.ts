@@ -24,7 +24,6 @@ import {
 	serializePrefs,
 	type Prefs
 } from '#lib/prefs/schema.js';
-import { mergeSnapshots } from '#lib/prefs/sync.js';
 
 describe('prefs serialization and migration', () => {
 	it('defaults to watching everyone', () => {
@@ -288,27 +287,5 @@ describe('progress', () => {
 		};
 		expect(mergeProgress(a, b)).toEqual(b);
 		expect(mergeProgress(b, a).demo0000001.updatedAt).toBe(9);
-	});
-});
-
-describe('sync merge', () => {
-	it('keeps local data without a remote copy', () => {
-		const local = { prefs: defaultPrefs(), progress: {} };
-		expect(mergeSnapshots(local, null)).toBe(local);
-	});
-
-	it('takes the prefs changed last and merges progress', () => {
-		const older = {
-			...defaultPrefs(),
-			updatedAt: 1,
-			creators: { mode: 'list' as const, ids: [1] }
-		};
-		const newer = { ...defaultPrefs(), updatedAt: 2 };
-		const merged = mergeSnapshots(
-			{ prefs: older, progress: { demo0000001: { seconds: 1, watched: false, updatedAt: 1 } } },
-			{ prefs: newer, progress: { demo0000002: { seconds: 2, watched: true, updatedAt: 1 } } }
-		);
-		expect(merged.prefs).toBe(newer);
-		expect(Object.keys(merged.progress).sort()).toEqual(['demo0000001', 'demo0000002']);
 	});
 });

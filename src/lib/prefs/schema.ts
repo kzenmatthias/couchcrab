@@ -50,8 +50,13 @@ export type PerSeriesFlag = { default: boolean; series: Record<string, boolean> 
 
 export type Prefs = {
 	version: typeof PREFS_VERSION;
-	/** Unix ms of the last change, used to merge with an account later. */
+	/** Unix ms of the last change. */
 	updatedAt: number;
+	/**
+	 * Unix ms of the last change per item (see `prefItems`), so the copies in two browsers and
+	 * an account can be merged item by item. A missing item was never changed.
+	 */
+	stamps: Record<string, number>;
 	creators: CreatorChoice;
 	series: Record<string, SeriesChoice>;
 	spoilerFree: PerSeriesFlag;
@@ -85,6 +90,7 @@ export function defaultPrefs(): Prefs {
 	return {
 		version: PREFS_VERSION,
 		updatedAt: 0,
+		stamps: {},
 		creators: { mode: 'all' },
 		series: {},
 		spoilerFree: { default: false, series: {} },
@@ -161,14 +167,89 @@ function cleanShortcuts(v: unknown): Prefs['shortcuts'] {
 	return { enabled, keys };
 }
 
+/* ---------- items (the unit of merging) ---------- */
+
+/**
+ * The prefs as separate items, keyed like `creators`, `series.5`, `spoilerFree.default`,
+ * `spoilerFree.5`, `display`. A series without a custom list or a flag without a per-series
+ * value has no item (it follows the global value).
+ */
+export function prefItems(p: Prefs): Record<string, unknown> {
+	const items: Record<string, unknown> = {
+		creators: p.creators,
+		'spoilerFree.default': p.spoilerFree.default,
+		'creatorCaptionsOnly.default': p.creatorCaptionsOnly.default,
+		display: p.display,
+		playback: p.playback,
+		shortcuts: p.shortcuts
+	};
+	for (const [k, choice] of Object.entries(p.series)) items[`series.${k}`] = choice;
+	for (const [k, on] of Object.entries(p.spoilerFree.series)) items[`spoilerFree.${k}`] = on;
+	for (const [k, on] of Object.entries(p.creatorCaptionsOnly.series))
+		items[`creatorCaptionsOnly.${k}`] = on;
+	return items;
+}
+
+const ITEM_KEY =
+	/^(creators|display|playback|shortcuts|(spoilerFree|creatorCaptionsOnly)\.(default|[1-9]\d{0,9})|series\.[1-9]\d{0,9})$/;
+
+export function isItemKey(k: string): boolean {
+	return ITEM_KEY.test(k);
+}
+
+/** Sets one item (undefined removes a per-series item). Mutates `p`. */
+export function setPrefItem(p: Prefs, key: string, value: unknown) {
+	const [head, rest] = key.split('.') as [string, string | undefined];
+	if (head === 'creators') p.creators = value as CreatorChoice;
+	else if (head === 'display') p.display = value as Prefs['display'];
+	else if (head === 'playback') p.playback = value as Prefs['playback'];
+	else if (head === 'shortcuts') p.shortcuts = value as Prefs['shortcuts'];
+	else if (head === 'series' && rest) {
+		if (value === undefined) delete p.series[rest];
+		else p.series[rest] = value as SeriesChoice;
+	} else if ((head === 'spoilerFree' || head === 'creatorCaptionsOnly') && rest) {
+		const flag = p[head];
+		if (rest === 'default') flag.default = value === true;
+		else if (value === undefined) delete flag.series[rest];
+		else flag.series[rest] = value === true;
+	}
+}
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+/** Keys of the items that differ between two copies. */
+export function changedItems(before: Prefs, after: Prefs): string[] {
+	const a = prefItems(before);
+	const b = prefItems(after);
+	return [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => !same(a[k], b[k]));
+}
+
+function cleanStamps(v: unknown): Record<string, number> {
+	const out: Record<string, number> = {};
+	if (!isObj(v)) return out;
+	for (const [k, t] of Object.entries(v))
+		if (isItemKey(k) && typeof t === 'number' && Number.isFinite(t) && t > 0) out[k] = t;
+	return out;
+}
+
 /** Validates a version-1 object field by field; anything unknown or invalid gets its default. */
 function sanitize(v: Obj): Prefs {
+	const prefs = sanitizeFields(v);
+	// Saved before items had their own stamps: everything that was changed counts as changed
+	// at the last update.
+	if (!isObj(v.stamps) && prefs.updatedAt > 0)
+		for (const k of changedItems(defaultPrefs(), prefs)) prefs.stamps[k] = prefs.updatedAt;
+	return prefs;
+}
+
+function sanitizeFields(v: Obj): Prefs {
 	const d = defaultPrefs();
 	const display = isObj(v.display) ? v.display : {};
 	const playback = isObj(v.playback) ? v.playback : {};
 	return {
 		version: PREFS_VERSION,
 		updatedAt: Number.isFinite(v.updatedAt) ? Number(v.updatedAt) : 0,
+		stamps: cleanStamps(v.stamps),
 		creators: cleanCreators(v.creators),
 		series: cleanSeries(v.series),
 		spoilerFree: cleanFlag(v.spoilerFree),
