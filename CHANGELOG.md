@@ -8,3 +8,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - Project documentation: README, product spec, architecture, accessibility rules, contributing guide.
 - Design board with screenshots of every main screen.
+- SvelteKit app with the app shell on every public page: skip link, header with the "Unofficial" label, main navigation and search field, a dismissible first-visit notice and a footer with the disclaimer and links to the site pages.
+- Dark, light and high contrast themes with a System default, chosen in the footer.
+- English and Dutch interface. The language follows your browser and can be changed in the footer.
+- Site pages (About, Disclaimer, Accessibility statement) managed in the database, with English as fallback.
+- Home page listing the series with generated poster art.
+- Demo data (`npm run db:seed`) with fictional creators, series and videos.
+- Automated accessibility checks (axe, WCAG 2.2 AA) in all three themes.
