@@ -176,7 +176,7 @@ export function seed(db: DB): SeedSummary {
 				.get();
 			mainChannel.set(c.slug, ch.id);
 		}
-		for (const slug of ['pebblewick', 'brassmoth', 'driftwood-dot'] as const) {
+		for (const slug of ['pebblewick', 'brassmoth', 'driftwood-dot', 'tidecaller-juno'] as const) {
 			const ch = tx
 				.insert(t.channels)
 				.values({
@@ -537,6 +537,24 @@ export function seed(db: DB): SeedSummary {
 				title,
 				publishedAt: at(SEASON_START, 10 + i * 5, 12),
 				durationS: 900 + i * 120,
+				seriesId: null
+			});
+		});
+
+		/*
+		 * The claimed creator has uploads of their own to sort on the creator dashboard: two on
+		 * the main channel and one on the second channel (which still needs review).
+		 */
+		[
+			[mainChannel, 'Tide pool tour, part one'],
+			[mainChannel, 'Answering your sea questions'],
+			[secondChannel, 'Late night building chat']
+		].forEach(([channels, title], i) => {
+			addVideo({
+				channel: (channels as Map<Slug, number>).get('tidecaller-juno')!,
+				title: title as string,
+				publishedAt: at(SEASON_START, 12 + i * 4, 18),
+				durationS: 1100 + i * 90,
 				seriesId: null
 			});
 		});

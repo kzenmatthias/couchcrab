@@ -1,0 +1,1 @@
+ALTER TABLE `creators` ADD `links` text DEFAULT '[]' NOT NULL;

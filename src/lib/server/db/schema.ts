@@ -33,6 +33,11 @@ export const creators = sqliteTable('creators', {
 	color: text('color').notNull(),
 	avatarUrl: text('avatar_url'),
 	bio: text('bio'),
+	/** Links the creator added to their profile (http(s) URLs), shown on the creator page. */
+	links: text('links', { mode: 'json' })
+		.$type<string[]>()
+		.notNull()
+		.default(sql`'[]'`),
 	/** Set when a user proved they own one of this creator's channels. */
 	claimedAt: integer('claimed_at', { mode: 'timestamp' }),
 	/** The creator asked to hide all their videos from Couchcrab. */
@@ -344,8 +349,11 @@ export const auditLog = sqliteTable(
 	'audit_log',
 	{
 		id: integer('id').primaryKey({ autoIncrement: true }),
-		/** Who made the change: a person, a title rule or the sync. */
-		actor: text('actor', { enum: ['user', 'rule', 'sync'] }).notNull(),
+		/**
+		 * Who made the change: a person in the management tool (`user`), a claimed creator on
+		 * their own profile, channels or videos (`creator`), a title rule or the sync.
+		 */
+		actor: text('actor', { enum: ['user', 'creator', 'rule', 'sync'] }).notNull(),
 		actorUserId: integer('actor_user_id').references(() => users.id, { onDelete: 'set null' }),
 		entity: text('entity').notNull(),
 		entityId: integer('entity_id').notNull(),

@@ -8,8 +8,9 @@ import { auditLog } from './db/schema.js';
 export type Executor = DB | Parameters<Parameters<DB['transaction']>[0]>[0];
 
 export interface AuditEntry {
-	actor: 'user' | 'rule' | 'sync';
-	/** Required when `actor` is `user`. */
+	/** `creator`: a claimed creator changing their own profile, channels or videos. */
+	actor: 'user' | 'creator' | 'rule' | 'sync';
+	/** Required when `actor` is `user` or `creator`. */
 	actorUserId?: number | null;
 	entity: string;
 	entityId: number;
@@ -19,8 +20,8 @@ export interface AuditEntry {
 }
 
 export function writeAudit(db: Executor, entry: AuditEntry): number {
-	if (entry.actor === 'user' && entry.actorUserId == null) {
-		throw new Error('An audit entry by a user needs actorUserId.');
+	if ((entry.actor === 'user' || entry.actor === 'creator') && entry.actorUserId == null) {
+		throw new Error('An audit entry by a person needs actorUserId.');
 	}
 	const row = db
 		.insert(auditLog)

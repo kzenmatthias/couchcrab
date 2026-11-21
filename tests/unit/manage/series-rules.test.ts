@@ -210,7 +210,7 @@ describe('title rules', () => {
 		});
 		const before = auditRows(env.db).length;
 		const dry = applyRulesToUnsorted(env.db, env.editor, { dryRun: true });
-		expect(dry.checked).toBe(3);
+		expect(dry.checked).toBe(6);
 		expect(dry.placed).toMatchObject([
 			{ title: 'My new texture pack', seriesId: row.id, ruleId: rule.id }
 		]);
