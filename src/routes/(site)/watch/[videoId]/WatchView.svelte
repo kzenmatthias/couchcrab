@@ -163,7 +163,12 @@
 				{testHooks}
 			/>
 			{#if showUpNext && next}
-				<div class="upnext-slot">
+				<!-- On narrow screens the box is below the player: bring it into view, above the
+					bottom tab bar (scroll-padding-bottom). No-op when it is already visible. -->
+				<div
+					class="upnext-slot"
+					{@attach (el: HTMLElement) => el.scrollIntoView({ block: 'nearest' })}
+				>
 					<UpNext
 						label={nextLabel}
 						countdown={viewing.prefs.playback.countdown}
