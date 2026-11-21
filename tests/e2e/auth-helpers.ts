@@ -95,3 +95,48 @@ export async function signIn(context: BrowserContext, baseURL: string, userId: n
 	]);
 	return session;
 }
+
+export function creatorIdBySlug(slug: string): number {
+	return withDb(
+		(db) => (db.prepare('SELECT id FROM creators WHERE slug = ?').get(slug) as { id: number }).id
+	);
+}
+
+/** The account's global who-I-watch list (`user_creators`). */
+export function accountCreatorIds(userId: number): number[] {
+	return withDb((db) =>
+		(
+			db
+				.prepare('SELECT creator_id AS id FROM user_creators WHERE user_id = ? ORDER BY 1')
+				.all(userId) as { id: number }[]
+		).map((r) => r.id)
+	);
+}
+
+/** The account's progress rows, by YouTube id. */
+export function accountProgress(userId: number) {
+	return withDb(
+		(db) =>
+			db
+				.prepare(
+					`SELECT v.youtube_video_id AS youtubeId, p.seconds, p.watched_at AS watchedAt
+					 FROM progress p JOIN videos v ON v.id = p.video_id WHERE p.user_id = ?`
+				)
+				.all(userId) as { youtubeId: string; seconds: number; watchedAt: number | null }[]
+	);
+}
+
+/** The prefs JSON the account keeps in `user_settings`, or null. */
+export function accountSettings(userId: number): Record<string, unknown> | null {
+	return withDb((db) => {
+		const row = db.prepare('SELECT settings FROM user_settings WHERE user_id = ?').get(userId) as
+			{ settings: string } | undefined;
+		return row ? (JSON.parse(row.settings) as Record<string, unknown>) : null;
+	});
+}
+
+export async function addSessionCookie(context: BrowserContext, baseURL: string, token: string) {
+	await context.addCookies([
+		{ name: 'couchcrab_session', value: token, url: baseURL, httpOnly: true, sameSite: 'Lax' }
+	]);
+}

@@ -11,8 +11,9 @@ import {
 const UNKNOWN_CHANNEL = 'UCe2eNotOnCouchcrab00001';
 
 test.describe('signed out', () => {
-	test('the header links to the sign-in page', async ({ page }) => {
+	test('the header menu links to the sign-in page', async ({ page }) => {
 		await page.goto('/');
+		await page.locator('summary', { hasText: 'Menu' }).click();
 		await page.getByRole('link', { name: 'Sign in', exact: true }).click();
 		await expect(page).toHaveURL(/\/signin$/);
 		await expect(
@@ -149,6 +150,7 @@ test.describe('account menu', () => {
 		await page.locator('summary', { hasText: 'Account menu' }).click();
 		await page.getByRole('button', { name: 'Sign out' }).click();
 		await expect(page).toHaveURL(/\/series$/);
+		await page.locator('summary', { hasText: 'Menu' }).click();
 		await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible();
 		expect(sessionExists(session.id)).toBe(false);
 		const cookies = await context.cookies();
@@ -210,7 +212,7 @@ test.describe('claim', () => {
 		await page.goto('/claim');
 		await page.getByRole('button', { name: "This isn't me" }).click();
 		await expect(page).toHaveURL(/\/$/);
-		await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible();
+		await expect(page.locator('summary', { hasText: 'Menu' })).toBeVisible();
 		expect(sessionExists(session.id)).toBe(false);
 	});
 });

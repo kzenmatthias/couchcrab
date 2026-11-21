@@ -350,3 +350,23 @@ test('the Who I watch link leads to the creator settings', async ({ page }) => {
 	await page.goto('/who-i-watch');
 	await expect(page).toHaveURL(/\/settings\/creators$/);
 });
+
+test('creator pages show the real title of watched spoiler-free episodes', async ({
+	page,
+	context,
+	baseURL
+}) => {
+	await context.addCookies([{ name: 'viewing', value: '1~s1', url: baseURL! }]);
+	await page.goto('/creators/pebblewick');
+	await hydrated(page);
+	const uploads = page.getByRole('region', { name: 'Latest uploads' });
+	await expect(uploads).not.toContainText('Lanternfall 3:');
+	await page.evaluate(() =>
+		localStorage.setItem(
+			'couchcrab:progress',
+			JSON.stringify({ demo0000001: { seconds: 900, watched: true, updatedAt: Date.now() } })
+		)
+	);
+	await page.reload();
+	await expect(uploads.getByRole('link', { name: /^Lanternfall 3: / })).toHaveCount(1);
+});

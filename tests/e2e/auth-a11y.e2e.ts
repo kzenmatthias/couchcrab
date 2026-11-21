@@ -27,6 +27,12 @@ async function openMenu(page: Page, context: BrowserContext, baseURL: string) {
 	await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
 }
 
+async function openSignedOutMenu(page: Page) {
+	await page.goto('/');
+	await page.locator('summary', { hasText: 'Menu' }).click();
+	await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible();
+}
+
 const PAGES: { name: string; setup: Setup }[] = [
 	{ name: 'sign-in', setup: async (page) => void (await page.goto('/signin')) },
 	{
@@ -34,7 +40,8 @@ const PAGES: { name: string; setup: Setup }[] = [
 		setup: async (page) => void (await page.goto('/signin?error=state'))
 	},
 	{ name: 'claim', setup: openClaim },
-	{ name: 'open account menu', setup: openMenu }
+	{ name: 'open account menu', setup: openMenu },
+	{ name: 'open signed-out menu', setup: openSignedOutMenu }
 ];
 
 for (const theme of THEMES) {
