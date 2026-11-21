@@ -1,0 +1,60 @@
+{
+	"creators": [
+		{
+			"slug": "dewlark",
+			"name": "Dewlark",
+			"color": "#5fb3ff",
+			"channels": [
+				{ "youtubeChannelId": "UCdewlark0000000000000aa", "title": "Dewlark", "kind": "main" },
+				{
+					"youtubeChannelId": "UCdewlark0000000000000bb",
+					"title": "Dewlark Live",
+					"kind": "secondary"
+				}
+			]
+		},
+		{
+			"slug": "lanternmoss",
+			"name": "Lanternmoss",
+			"channels": [
+				{ "youtubeChannelId": "UClanternmoss000000000aa", "title": null, "kind": "main" }
+			]
+		}
+	],
+	"series": [
+		{
+			"slug": "glimmerdeep-life",
+			"title": "Glimmerdeep Life",
+			"kind": "live_series",
+			"status": "ended",
+			"grouping": "session",
+			"startedAt": "2026-01-05",
+			"endedAt": "2026-02-02",
+			"creators": ["dewlark", "lanternmoss"],
+			"description_en": "A fictional life series for the import tests.",
+			"description_nl": "Een verzonnen life-reeks voor de importtests.",
+			"extras": true,
+			"sessions": [
+				{ "number": 1, "startsAt": "2026-01-05", "title": null },
+				{ "number": 2, "startsAt": "2026-01-12", "title": "Second session" },
+				{ "number": 3, "startsAt": "2026-01-19", "title": null }
+			],
+			"rules": [
+				{
+					"pattern": "Glimmerdeep Life",
+					"match": "contains",
+					"target": "main",
+					"channel": null,
+					"priority": 0
+				},
+				{
+					"pattern": "^LIVE",
+					"match": "regex",
+					"target": "extras",
+					"channel": "dewlark",
+					"priority": 5
+				}
+			]
+		}
+	]
+}
