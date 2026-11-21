@@ -327,15 +327,18 @@ export const claimChecks = sqliteTable('claim_checks', {
 	createdAt: createdAt()
 });
 
+/**
+ * A suggested edit (or a creator request) waiting for review. `payload` describes the intended
+ * change in a structured way (see `src/lib/server/community/suggestions.ts`).
+ */
 export const suggestions = sqliteTable(
 	'suggestions',
 	{
 		id: integer('id').primaryKey({ autoIncrement: true }),
-		userId: integer('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
+		/** Null for a creator request sent without an account (then `contact_email` is set). */
+		userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
 		targetType: text('target_type', {
-			enum: ['video', 'series', 'group', 'creator', 'channel', 'rule', 'page']
+			enum: ['video', 'series', 'group', 'creator', 'channel', 'rule', 'page', 'other']
 		}).notNull(),
 		/** Null for a suggestion that creates something new. */
 		targetId: integer('target_id'),
@@ -343,14 +346,22 @@ export const suggestions = sqliteTable(
 		payload: text('payload', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
 		note: text('note'),
 		isCreatorRequest: bool('is_creator_request').notNull().default(false),
-		status: text('status', { enum: ['open', 'approved', 'rejected', 'withdrawn'] })
+		/** How to reach someone who sent a creator request without signing in. */
+		contactEmail: text('contact_email'),
+		/** `question`: a reviewer asked something; the sender sees `review_message`. */
+		status: text('status', { enum: ['open', 'question', 'approved', 'rejected', 'withdrawn'] })
 			.notNull()
 			.default('open'),
+		/** The reviewer's reason (reject) or question (ask), shown to the sender. */
+		reviewMessage: text('review_message'),
 		reviewedBy: integer('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
 		reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
 		createdAt: createdAt()
 	},
-	(t) => [index('suggestions_queue_idx').on(t.status, t.isCreatorRequest, t.createdAt)]
+	(t) => [
+		index('suggestions_queue_idx').on(t.status, t.isCreatorRequest, t.createdAt),
+		index('suggestions_user_idx').on(t.userId, t.createdAt)
+	]
 );
 
 export const auditLog = sqliteTable(
@@ -371,9 +382,20 @@ export const auditLog = sqliteTable(
 		/** Set when this entry was reverted; points at the audit entry of the revert. */
 		revertedBy: integer('reverted_by').references((): AnySQLiteColumn => auditLog.id, {
 			onDelete: 'set null'
+		}),
+		/** Set on the entries a revert wrote; points at the entry that was reverted. */
+		revertOf: integer('revert_of').references((): AnySQLiteColumn => auditLog.id, {
+			onDelete: 'set null'
+		}),
+		/** Set on the entries written when a reviewer approved a suggestion. */
+		suggestionId: integer('suggestion_id').references(() => suggestions.id, {
+			onDelete: 'set null'
 		})
 	},
-	(t) => [index('audit_log_entity_idx').on(t.entity, t.entityId)]
+	(t) => [
+		index('audit_log_entity_idx').on(t.entity, t.entityId),
+		index('audit_log_created_idx').on(t.createdAt)
+	]
 );
 
 /* ---------- preferences and progress ---------- */

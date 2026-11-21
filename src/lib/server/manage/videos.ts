@@ -171,3 +171,34 @@ export function setVideoStatus(
 	assertRole(actor, 'editor');
 	return writeVideoStatus(db, loadVideo(db, videoId), status, editorAudit(actor));
 }
+
+/**
+ * Corrects the "creator captions" flag of a video (a reviewed suggestion or a revert). The sync
+ * refreshes this flag from YouTube, so a later sync can set it back.
+ */
+export function setVideoCaptions(
+	db: DB,
+	actor: Actor,
+	videoId: number,
+	hasCreatorCaptions: boolean
+): VideoRow {
+	assertRole(actor, 'editor');
+	const before = loadVideo(db, videoId);
+	return db.transaction((tx) => {
+		const row = tx
+			.update(t.videos)
+			.set({ hasCreatorCaptions })
+			.where(eq(t.videos.id, videoId))
+			.returning()
+			.get();
+		auditUser(
+			tx,
+			actor,
+			'video',
+			videoId,
+			{ hasCreatorCaptions: before.hasCreatorCaptions },
+			{ hasCreatorCaptions: row.hasCreatorCaptions }
+		);
+		return row;
+	});
+}

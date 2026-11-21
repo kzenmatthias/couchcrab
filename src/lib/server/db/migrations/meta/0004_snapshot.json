@@ -2,7 +2,7 @@
   "version": "6",
   "dialect": "sqlite",
   "id": "8beae375-1e1a-4e75-b75e-e2789a59bd66",
-  "prevId": "9c8eb647-2c0c-4dbb-b45a-198b1cf673c8",
+  "prevId": "57799078-bbe9-4ca0-941f-cadb5b353255",
   "tables": {
     "audit_log": {
       "name": "audit_log",
@@ -70,6 +70,20 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "revert_of": {
+          "name": "revert_of",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "suggestion_id": {
+          "name": "suggestion_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -78,6 +92,13 @@
           "columns": [
             "entity",
             "entity_id"
+          ],
+          "isUnique": false
+        },
+        "audit_log_created_idx": {
+          "name": "audit_log_created_idx",
+          "columns": [
+            "created_at"
           ],
           "isUnique": false
         }
@@ -102,6 +123,32 @@
           "tableTo": "audit_log",
           "columnsFrom": [
             "reverted_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "audit_log_revert_of_audit_log_id_fk": {
+          "name": "audit_log_revert_of_audit_log_id_fk",
+          "tableFrom": "audit_log",
+          "tableTo": "audit_log",
+          "columnsFrom": [
+            "revert_of"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "audit_log_suggestion_id_suggestions_id_fk": {
+          "name": "audit_log_suggestion_id_suggestions_id_fk",
+          "tableFrom": "audit_log",
+          "tableTo": "suggestions",
+          "columnsFrom": [
+            "suggestion_id"
           ],
           "columnsTo": [
             "id"
@@ -1171,7 +1218,7 @@
           "name": "user_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "target_type": {
@@ -1217,6 +1264,13 @@
           "autoincrement": false,
           "default": false
         },
+        "contact_email": {
+          "name": "contact_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "status": {
           "name": "status",
           "type": "text",
@@ -1224,6 +1278,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": "'open'"
+        },
+        "review_message": {
+          "name": "review_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "reviewed_by": {
           "name": "reviewed_by",
@@ -1254,6 +1315,14 @@
           "columns": [
             "status",
             "is_creator_request",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "suggestions_user_idx": {
+          "name": "suggestions_user_idx",
+          "columns": [
+            "user_id",
             "created_at"
           ],
           "isUnique": false
