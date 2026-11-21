@@ -75,11 +75,17 @@ export interface CatalogRule {
 	pattern: string;
 	match: 'contains' | 'regex';
 	target: 'main' | 'extras';
-	/** A creator slug: the rule only applies to that creator's main channel. Null: all channels. */
+	/**
+	 * A creator slug (the rule only applies to that creator's main channel) or a YouTube channel
+	 * id (`UC...`, only that channel, which must belong to one of the series' creators).
+	 * Null: all channels.
+	 */
 	channel: string | null;
 	priority: number;
 	/** Null: on for a new rule, unchanged for a known one. */
 	enabled: boolean | null;
+	/** Only match uploads inside the series' dates. Null: off for a new rule, unchanged for a known one. */
+	withinSeriesDates: boolean | null;
 }
 
 export type CatalogPoster =
@@ -350,13 +356,18 @@ export function parseCatalog(raw: unknown, locales: readonly string[]): ParseRes
 			if (target === 'extras' && !extras)
 				rr.fail('target', 'targets Extras, so the series needs "extras": true');
 			const channel = rr.str('channel', SLUG_MAX, { optional: true });
-			if (channel && !members.includes(channel))
+			if (channel && CHANNEL_ID_RE.test(channel)) {
+				const owner = channelIds.get(channel);
+				if (owner !== undefined && !members.includes(owner))
+					rr.fail('channel', `channel ${channel} belongs to ${owner}, who is not in this series`);
+			} else if (channel && !members.includes(channel))
 				rr.fail('channel', `creator ${channel} is not in this series' creators`);
 			const priority = rr.int('priority', -1000, 1000, 0);
 			const enabled = rr.bool('enabled');
+			const withinSeriesDates = rr.bool('withinSeriesDates');
 			if (rules.some((x) => x.pattern === pattern && x.match === match && x.channel === channel))
 				rr.fail('pattern', 'the same rule is listed twice');
-			rules.push({ pattern, match, target, channel, priority, enabled });
+			rules.push({ pattern, match, target, channel, priority, enabled, withinSeriesDates });
 		});
 
 		let poster: CatalogPoster | null = null;
@@ -729,7 +740,18 @@ function writeCatalog(
 		file.rules.forEach((rule, j) => {
 			const at = `${where}rules[${j}].`;
 			let channelId: number | null = null;
-			if (rule.channel) {
+			if (rule.channel && CHANNEL_ID_RE.test(rule.channel)) {
+				const ch = tx
+					.select({ id: t.channels.id, creatorId: t.channels.creatorId })
+					.from(t.channels)
+					.where(eq(t.channels.youtubeChannelId, rule.channel))
+					.get();
+				if (!ch || !members.includes(ch.creatorId)) {
+					problems.push(`${at}channel: ${rule.channel} is not a channel of this series' creators`);
+					return;
+				}
+				channelId = ch.id;
+			} else if (rule.channel) {
 				const owner = creatorId(rule.channel)!;
 				const main = tx
 					.select({ id: t.channels.id })
@@ -758,20 +780,23 @@ function writeCatalog(
 				)
 				.get();
 			const enabled = rule.enabled ?? known?.enabled ?? true;
+			const withinSeriesDates = rule.withinSeriesDates ?? known?.withinSeriesDates ?? false;
 			const ruleInput: Input = {
 				pattern: rule.pattern,
 				match: rule.match,
 				target: rule.target,
 				channel_id: channelId === null ? '' : String(channelId),
 				priority: String(rule.priority),
-				enabled: enabled ? 'on' : ''
+				enabled: enabled ? 'on' : '',
+				within_series_dates: withinSeriesDates ? 'on' : ''
 			};
 			if (!known) {
 				if (attempt(at, () => createRule(db, actor, seriesId, ruleInput))) counts.rules.created++;
 			} else if (
 				known.target !== rule.target ||
 				known.priority !== rule.priority ||
-				known.enabled !== enabled
+				known.enabled !== enabled ||
+				known.withinSeriesDates !== withinSeriesDates
 			) {
 				if (attempt(at, () => updateRule(db, actor, seriesId, known.id, ruleInput)))
 					counts.rules.updated++;

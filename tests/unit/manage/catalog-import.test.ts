@@ -128,6 +128,62 @@ describe('catalog import', () => {
 		expect(rules.find((r) => r.pattern === 'Glimmerdeep Life')?.channelId).toBeNull();
 	});
 
+	it('binds a rule to an exact YouTube channel and keeps the date window flag', () => {
+		const raw = fixture();
+		const s = (raw.series as Record<string, unknown>[])[0];
+		s.rules = [
+			{
+				pattern: 'glimmer',
+				match: 'contains',
+				target: 'main',
+				channel: 'UCdewlark0000000000000bb',
+				priority: 0,
+				withinSeriesDates: true
+			}
+		];
+		expect(run(db, raw).problems).toEqual([]);
+		const live = db
+			.select()
+			.from(t.channels)
+			.where(eq(t.channels.youtubeChannelId, 'UCdewlark0000000000000bb'))
+			.get()!;
+		const rule = () =>
+			db.select().from(t.titleRules).where(eq(t.titleRules.pattern, 'glimmer')).get()!;
+		expect(rule()).toMatchObject({ channelId: live.id, withinSeriesDates: true });
+
+		// Left out: unchanged. Set to false: updated in place (same rule, no new one).
+		delete (s.rules as Record<string, unknown>[])[0].withinSeriesDates;
+		expect(run(db, raw).counts.rules).toMatchObject({ created: 0, updated: 0, unchanged: 1 });
+		(s.rules as Record<string, unknown>[])[0].withinSeriesDates = false;
+		expect(run(db, raw).counts.rules).toMatchObject({ created: 0, updated: 1 });
+		expect(rule().withinSeriesDates).toBe(false);
+		expect(db.select().from(t.titleRules).all()).toHaveLength(1);
+	});
+
+	it('refuses a rule channel id that is not a channel of the series creators', () => {
+		const raw = fixture();
+		const creators = raw.creators as Record<string, unknown>[];
+		creators.push({
+			slug: 'outsider',
+			name: 'Outsider',
+			channels: [{ youtubeChannelId: 'UCoutsider00000000000000', kind: 'main' }]
+		});
+		const s = (raw.series as Record<string, unknown>[])[0];
+		s.rules = [{ pattern: 'x', channel: 'UCoutsider00000000000000' }];
+		const checked = parseCatalog(raw, LOCALES);
+		expect(checked.ok ? [] : checked.problems).toEqual([
+			'series[0] glimmerdeep-life: rules[0].channel: channel UCoutsider00000000000000 belongs to outsider, who is not in this series'
+		]);
+		// A channel only in the database is checked while writing.
+		creators.pop();
+		s.rules = [{ pattern: 'x', channel: 'UCunknown000000000000000' }];
+		const summary = run(db, raw);
+		expect(summary.problems).toEqual([
+			"series[0] glimmerdeep-life: rules[0].channel: UCunknown000000000000000 is not a channel of this series' creators"
+		]);
+		expect(db.select().from(t.creators).all()).toHaveLength(0);
+	});
+
 	it('changes nothing when run twice', () => {
 		run(db);
 		const before = auditRows(db).length;
