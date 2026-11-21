@@ -12,7 +12,15 @@ import {
 	redactForViewer
 } from '#lib/viewing.js';
 
-const video = (id: number, creator: number, series = 1, captions = true) => ({
+type TestVideo = {
+	id: number;
+	title: string;
+	titleHidden?: boolean;
+	creator: { id: number };
+	povSeriesId: number;
+	hasCreatorCaptions: boolean;
+};
+const video = (id: number, creator: number, series = 1, captions = true): TestVideo => ({
 	id,
 	title: `Video ${id}`,
 	creator: { id: creator },
