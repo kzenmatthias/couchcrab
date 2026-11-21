@@ -86,6 +86,7 @@ npm run sync                              # all channels with sync_enabled, then
 npm run sync -- --channel UCxxxxxxxx      # one channel (and only its videos for retention)
 npm run sync -- --dry-run                 # fetch and evaluate, write nothing, list each video
 npm run sync -- --refresh-only            # retention only
+npm run sync -- --first-max 20000         # a first sync takes up to 20000 uploads per channel
 ```
 
 Without `YOUTUBE_API_KEY` the script prints a short note and exits with code 0, so the demo data works without a key. It exits with 1 when a channel or the retention step failed.
@@ -94,7 +95,7 @@ Without `YOUTUBE_API_KEY` the script prints a short note and exits with code 0, 
 
 1. Channels of creators with `opted_out` are skipped (no API call). Channels with `sync_enabled` off are not read at all.
 2. `channels.list` (`contentDetails,snippet`) gives the uploads playlist.
-3. `playlistItems.list` pages through it (50 per page, newest first). An incremental sync stops at the first item published before `last_synced_at` minus a safety margin of 3 days (`SAFETY_MARGIN_S`), for late or rescheduled uploads. A first sync takes at most the 200 newest uploads (`FIRST_SYNC_MAX`, `firstSyncMax` option).
+3. `playlistItems.list` pages through it (50 per page, newest first). An incremental sync stops at the first item published before `last_synced_at` minus a safety margin of 3 days (`SAFETY_MARGIN_S`), for late or rescheduled uploads. A first sync takes at most the 200 newest uploads (`FIRST_SYNC_MAX`); `--first-max <n>` (the `firstSyncMax` option) raises that, for example to fetch a channel's whole history after the catalog import. YouTube lists at most about 20,000 items of an uploads playlist. A full history costs about 2 quota units per 50 uploads (one `playlistItems.list` page and one `videos.list` batch), so 10,000 uploads are about 400 of the 10,000 daily units. The ids and details of one channel stay in memory until its transaction is written, which is a few MB even for a large channel; a quota error before that writes nothing for the channel, and the next run starts its first sync again.
 4. `videos.list` (`contentDetails,snippet,liveStreamingDetails`) in batches of 50 gives the details. Durations are ISO 8601 (`PT32M15S`) and stored in seconds.
 5. Classification: `has_creator_captions` when `contentDetails.caption` is `"true"`; `is_live_vod` when `liveStreamingDetails.actualEndTime` is set; `is_short` when the duration is 180 seconds or less (`SHORT_MAX_SECONDS`) and the video is not a live VOD. The API has no Shorts flag, so a regular upload of three minutes or less also counts as a Short; an editor can still place it by hand.
 6. Upcoming items (scheduled streams and premieres) and streams that are live right now are skipped. `last_synced_at` is then set no later than the earliest skipped item, so a later sync picks it up once it has ended. Otherwise `last_synced_at` becomes the time of the sync.
@@ -218,6 +219,10 @@ The theme and the language stay in their cookies and are not part of the account
 | `sync.ts` | "Sync now" and dry run: `runSync` with a client for `YOUTUBE_API_KEY`; without a key the page explains and the buttons are disabled | admin |
 
 Slugs are made from the name (`src/lib/slug.ts`, also used for the live suggestion in the forms) and get `-2`, `-3`, ... when taken; a slug typed by hand must be free.
+
+### Catalog import
+
+`npm run catalog:import -- <file> [--dry-run]` (`scripts/import-catalog.ts`, logic in `manage/catalog-import.ts`) loads a starter catalog from JSON (format in the README). `parseCatalog` checks the whole file and returns every problem; `importCatalog` then calls the service functions above (`createCreator`, `addChannel`, `createSeries`, `createExtras`, `createGroup`, `createRule` and their update counterparts) inside one transaction, where their own transactions become savepoints. A refused call is recorded and the run goes on, so all problems are reported; any problem, or a dry run, rolls the whole transaction back. The import acts as an editor with `Actor.system = 'sync'`, so `auditUser` writes history entries with actor `sync` and no user. It matches existing rows (creators by slug or channel, series by slug, sessions by number, rules by pattern, match and channel), only writes when something differs, never deletes, skips claimed creators' profiles (channels can still be added) and leaves opted-out creators alone. Missing colours and posters are picked stably from the slug (`PROFILE_COLORS`, the poster palettes).
 
 ### Site texts
 

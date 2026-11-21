@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- `npm run catalog:import -- <file> [--dry-run]`: load a starter catalog of creators, channels, series, sessions and title rules from a JSON file. Safe to run again; it never deletes and keeps claimed and opted-out creators as they are.
+- `npm run sync -- --first-max <n>`: let a channel's first sync take more than the 200 latest uploads, up to its whole history.
+
 ## [0.1.0] - 2026-11-21
 
 First version: feature complete, running locally with demo data, not online yet.

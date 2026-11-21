@@ -144,6 +144,56 @@ The management tool lives at `/manage`. Editors manage creators, channels, serie
 
 Promote others to editor or admin on `/manage/users`. The last admin can't be demoted.
 
+### Starter catalog
+
+A fresh install has no creators or series. Instead of typing them all into `/manage`, you can load a starter catalog once from a JSON file: creators with their YouTube channels, series with their participants, descriptions, sessions and title rules. The sync then fills in the episodes.
+
+```sh
+npm run catalog:import -- catalog.json --dry-run   # check the file and show what would change
+npm run catalog:import -- catalog.json             # write it, all in one transaction
+npm run sync -- --first-max 20000                  # first sync: each channel's whole upload history
+```
+
+The import is meant as a one-off. Afterwards the management tool is the source of truth: running the import again is safe (an unchanged file changes nothing, an edited file updates the fields it lists), but it never deletes anything, never changes a claimed creator's profile (it only adds new channels) and leaves opted-out creators alone. Every change goes through the same validation as an edit in the app and shows up in the history (actor "Sync"). The whole file is checked first and every problem is listed; if anything fails, nothing is written.
+
+```json
+{
+  "creators": [
+    {
+      "slug": "example-creator",
+      "name": "Example Creator",
+      "color": "#2ec4b6",
+      "channels": [{ "youtubeChannelId": "UC...", "title": "Example Creator", "kind": "main" }]
+    }
+  ],
+  "series": [
+    {
+      "slug": "example-life",
+      "title": "Example Life",
+      "kind": "live_series",
+      "status": "ongoing",
+      "grouping": "session",
+      "startedAt": "2026-01-05",
+      "endedAt": null,
+      "creators": ["example-creator"],
+      "description_en": "...",
+      "description_nl": "...",
+      "extras": true,
+      "sessions": [{ "number": 1, "startsAt": "2026-01-05", "title": null }],
+      "rules": [
+        { "pattern": "Example Life", "match": "contains", "target": "main", "channel": null, "priority": 0 }
+      ]
+    }
+  ]
+}
+```
+
+- Creators match by `slug` (or, for an unknown slug, by one of their channels); channels by `youtubeChannelId`; series by `slug`; sessions by `number`; rules by `pattern`, `match` and `channel`.
+- `color` is optional: a new creator without one gets a profile colour picked from the slug. A series without `poster` (`{ "palette", "seed", "motif" }` or `{ "url" }`) gets generated art with a palette and seed picked from the slug. Fields left out (`color`, `poster`, a channel `title`, a session `title`, `description_nl`) keep their stored value on a known row.
+- `extras: true` creates the Extras child series (as "Create Extras series" in the app). Sessions are also added to an Extras child grouped by session, where the livestreams go.
+- `sessions` need `"grouping": "session"`. Each session ends where the next one starts; the last stays open while the series runs and ends at `endedAt` once it has ended.
+- A rule's `channel` is a creator slug: the rule only applies to that creator's main channel. `null` means every channel of the series' creators. `enabled` is optional.
+
 ### Useful commands
 
 | Command | Does |
@@ -155,7 +205,8 @@ Promote others to editor or admin on `/manage/users`. The last admin can't be de
 | `npm run test:e2e` | Browser tests, including accessibility checks |
 | `npm run db:migrate` / `npm run db:seed` | Database setup and demo data |
 | `npm run make-admin -- <user id>` | Give a user the admin role |
-| `npm run sync` | Fetch new uploads from YouTube, sort them with the title rules and refresh stored data older than 25 days. Flags (after `--`): `--channel <youtube id>`, `--dry-run`, `--refresh-only`. Needs `YOUTUBE_API_KEY`; without it, it exits with a note |
+| `npm run catalog:import -- <file> [--dry-run]` | Load a starter catalog from a JSON file (see "Starter catalog") |
+| `npm run sync` | Fetch new uploads from YouTube, sort them with the title rules and refresh stored data older than 25 days. Flags (after `--`): `--channel <youtube id>`, `--dry-run`, `--refresh-only`, `--first-max <n>` (how many uploads a channel's first sync takes, 200 by default). Needs `YOUTUBE_API_KEY`; without it, it exits with a note |
 
 ## Documentation
 
