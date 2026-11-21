@@ -192,7 +192,7 @@ The import is meant as a one-off. Afterwards the management tool is the source o
 - `color` is optional: a new creator without one gets a profile colour picked from the slug. A series without `poster` (`{ "palette", "seed", "motif" }` or `{ "url" }`) gets generated art with a palette and seed picked from the slug. Fields left out (`color`, `poster`, a channel `title`, a session `title`, `description_nl`) keep their stored value on a known row.
 - `extras: true` creates the Extras child series (as "Create Extras series" in the app). Sessions are also added to an Extras child grouped by session, where the livestreams go.
 - `sessions` need `"grouping": "session"`. Each session ends where the next one starts; the last stays open while the series runs and ends at `endedAt` once it has ended.
-- A rule's `channel` is a creator slug: the rule only applies to that creator's main channel. `null` means every channel of the series' creators. `enabled` is optional.
+- A rule's `channel` is a creator slug (the rule only applies to that creator's main channel) or a YouTube channel id `UC...` (exactly that channel, which must belong to one of the series' creators). `null` means every channel of the series' creators. `enabled` is optional. `"withinSeriesDates": true` limits the rule to uploads from 2 days before the series starts up to 7 days after it ends, for creators who never number their seasons.
 
 ### Useful commands
 

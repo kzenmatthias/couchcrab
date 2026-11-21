@@ -7,6 +7,8 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Added
 
 - `npm run catalog:import -- <file> [--dry-run]`: load a starter catalog of creators, channels, series, sessions and title rules from a JSON file. Safe to run again; it never deletes and keeps claimed and opted-out creators as they are.
+- Title rules can be limited to the series dates ("Only during the series dates"): they then only match uploads from 2 days before the series starts up to 7 days after it ends. For creators who never number their seasons.
+- The catalog import accepts a YouTube channel id as a rule's `channel` and a rule's `withinSeriesDates`.
 - `npm run sync -- --first-max <n>`: let a channel's first sync take more than the 200 latest uploads, up to its whole history.
 
 ## [0.1.0] - 2026-11-21
