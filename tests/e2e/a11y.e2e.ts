@@ -12,7 +12,11 @@ const PAGES = [
 	{ name: 'watch', path: '/watch/demo0000001' },
 	{ name: 'settings: who I watch', path: '/settings/creators' },
 	{ name: 'settings: series creators', path: '/settings/creators/lanternfall-season-3' },
-	{ name: 'settings: display', path: '/settings/display' }
+	{ name: 'settings: display', path: '/settings/display' },
+	{ name: 'search results', path: '/search?q=lanternfall' },
+	{ name: 'search without a query', path: '/search' },
+	{ name: 'search without results', path: '/search?q=zzqxv' },
+	{ name: 'community', path: '/community' }
 ];
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'];
 

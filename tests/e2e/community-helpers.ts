@@ -84,3 +84,48 @@ export function insertUnsortedOn(channelTitle: string, title: string) {
 		).run(`e2e${randomBytes(4).toString('hex')}`, channel.id, title, now - 300, now);
 	});
 }
+
+/**
+ * Writes a history entry that places a video (by YouTube id) in its current series, as the
+ * management tool would, by the named user.
+ */
+export function insertPlacementEntry(youtubeId: string, userName: string) {
+	withDb((db) => {
+		const video = db
+			.prepare(
+				'SELECT id, series_id AS seriesId, group_id AS groupId FROM videos WHERE youtube_video_id = ?'
+			)
+			.get(youtubeId) as { id: number; seriesId: number; groupId: number | null };
+		const user = db.prepare('SELECT id FROM users WHERE name = ?').get(userName) as { id: number };
+		db.prepare(
+			`INSERT INTO audit_log (actor, actor_user_id, entity, entity_id, before, after, created_at)
+			 VALUES ('user', ?, 'video', ?, ?, ?, ?)`
+		).run(
+			user.id,
+			video.id,
+			JSON.stringify({ seriesId: null, groupId: null, status: 'unsorted', placedBy: 'rule' }),
+			JSON.stringify({
+				seriesId: video.seriesId,
+				groupId: video.groupId,
+				status: 'placed',
+				placedBy: 'user'
+			}),
+			Math.floor(Date.now() / 1000)
+		);
+	});
+}
+
+/** The English body of a managed site page, as stored. */
+export function pageBody(slug: string): string {
+	return withDb(
+		(db) =>
+			(
+				db
+					.prepare(
+						`SELECT pt.body FROM page_translations pt JOIN pages p ON p.id = pt.page_id
+						 WHERE p.slug = ? AND pt.locale = 'en'`
+					)
+					.get(slug) as { body: string }
+			).body
+	);
+}
