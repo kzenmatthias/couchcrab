@@ -148,14 +148,10 @@
 					</p>
 					<ChangeList changes={item.changes} />
 					{#if item.block === null}
+						{@const rh = withQuery({ revert: String(item.id) })}
+						{@const al = m.community_revert() + m.community_item_name({ title: what(item) })}
 						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- withQuery() starts from resolve() -->
-						<a
-							class="btn ghost"
-							href={withQuery({ revert: String(item.id) })}
-							aria-label={m.community_revert() + m.community_item_name({ title: what(item) })}
-						>
-							{m.community_revert()}
-						</a>
+						<a class="btn ghost" href={rh} aria-label={al}>{m.community_revert()}</a>
 					{:else if item.block !== 'already_reverted'}
 						<p class="muted small">
 							{m.community_hist_cant_revert({ reason: blockLabel(item.block) })}

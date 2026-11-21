@@ -8,6 +8,10 @@
 <div class="cform">{@render children()}</div>
 
 <style>
+	/* Parts of the form hidden after hydration (see the suggest page). */
+	.cform :global([hidden]) {
+		display: none !important;
+	}
 	.cform :global(.field) {
 		display: flex;
 		flex-direction: column;
