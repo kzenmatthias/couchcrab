@@ -65,7 +65,7 @@ export const channels = sqliteTable(
 
 /** Settings for the generated poster art, or an uploaded image. */
 export type PosterSettings =
-	{ type: 'art'; palette: string; seed: number } | { type: 'image'; url: string };
+	{ type: 'art'; palette: string; seed: number; motif?: string } | { type: 'image'; url: string };
 
 export const series = sqliteTable(
 	'series',
@@ -210,6 +210,23 @@ export const pageTranslations = sqliteTable(
 			.default(sql`(unixepoch())`)
 	},
 	(t) => [primaryKey({ columns: [t.pageId, t.locale] })]
+);
+
+/**
+ * Short site texts managed in the app (the first-visit notice, the footer disclaimer), per
+ * locale. The public layout falls back to English and then to the message strings.
+ */
+export const siteTexts = sqliteTable(
+	'site_texts',
+	{
+		key: text('key').notNull(),
+		locale: text('locale').notNull(),
+		value: text('value').notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(t) => [primaryKey({ columns: [t.key, t.locale] })]
 );
 
 /* ---------- people ---------- */

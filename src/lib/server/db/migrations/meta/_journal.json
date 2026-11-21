@@ -15,6 +15,13 @@
       "when": 1795274824154,
       "tag": "0001_claim_checks",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795276498216,
+      "tag": "0002_site_texts",
+      "breakpoints": true
     }
   ]
 }

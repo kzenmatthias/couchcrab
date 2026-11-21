@@ -132,6 +132,7 @@ export function clearDatabase(db: DB) {
 			t.claimChecks,
 			t.sessions,
 			t.users,
+			t.siteTexts,
 			t.pageTranslations,
 			t.pages,
 			t.titleRules,
@@ -486,6 +487,45 @@ export function seed(db: DB): SeedSummary {
 			.values({ discordId: '100000000000000001', name: 'Demo Viewer', createdAt: claimedAt })
 			.run();
 
+		/* An editor and an admin (fictional Discord ids), for development and the e2e tests. */
+		tx.insert(t.users)
+			.values([
+				{
+					discordId: '100000000000000002',
+					name: 'Demo Editor',
+					role: 'editor',
+					createdAt: claimedAt
+				},
+				{ discordId: '100000000000000003', name: 'Demo Admin', role: 'admin', createdAt: claimedAt }
+			])
+			.run();
+
+		/* A creator whose channel is not on Couchcrab yet waits for review. */
+		const requester = tx
+			.insert(t.users)
+			.values({ googleSub: 'demo-google-sub-0002', name: 'Mossy Lantern', createdAt: claimedAt })
+			.returning({ id: t.users.id })
+			.get();
+		tx.insert(t.claims)
+			.values({
+				userId: requester.id,
+				creatorId: null,
+				youtubeChannelId: fakeChannelId('mossylantern'),
+				status: 'pending_review',
+				createdAt: claimedAt
+			})
+			.run();
+		tx.insert(t.suggestions)
+			.values({
+				userId: requester.id,
+				targetType: 'channel',
+				kind: 'create',
+				payload: { youtubeChannelId: fakeChannelId('mossylantern'), title: 'Mossy Lantern' },
+				isCreatorRequest: true,
+				createdAt: claimedAt
+			})
+			.run();
+
 		/* Uploads no rule could place */
 		[
 			['quillby', 'My new texture pack'],
@@ -519,6 +559,15 @@ export function seed(db: DB): SeedSummary {
 				)
 				.run();
 		}
+
+		/* Site texts: the first-visit notice and the footer disclaimer, managed in the app. */
+		tx.insert(t.siteTexts)
+			.values(
+				Object.entries(SITE_TEXTS).flatMap(([key, byLocale]) =>
+					Object.entries(byLocale).map(([locale, value]) => ({ key, locale, value }))
+				)
+			)
+			.run();
 	});
 
 	return {
@@ -528,6 +577,18 @@ export function seed(db: DB): SeedSummary {
 		pages: PAGES.length
 	};
 }
+
+/** The current message strings, so the site reads the same once the texts are managed in the app. */
+const SITE_TEXTS: Record<string, Record<string, string>> = {
+	notice: {
+		en: "Couchcrab is a fan-made project. We are not affiliated with Hermitcraft or any creator. Every video plays from YouTube on the creator's own channel.",
+		nl: 'Couchcrab is een fanproject. We zijn niet verbonden met Hermitcraft of met een maker. Elke video speelt af via YouTube op het kanaal van de maker zelf.'
+	},
+	footer_disclaimer: {
+		en: 'Couchcrab is an independent fan project. It is not affiliated with, endorsed by or connected to Hermitcraft, its members, any creator listed here, Mojang or Microsoft. All videos are embedded from YouTube and belong to their creators. Minecraft is a trademark of Mojang.',
+		nl: "Couchcrab is een onafhankelijk fanproject. Het is niet verbonden met, goedgekeurd door of gelinkt aan Hermitcraft, de leden ervan, een maker op deze site, Mojang of Microsoft. Alle video's worden ingesloten vanaf YouTube en zijn van hun makers. Minecraft is een handelsmerk van Mojang."
+	}
+};
 
 const PAGES: { slug: string; translations: Record<string, { title: string; body: string }> }[] = [
 	{
@@ -620,6 +681,51 @@ The YouTube player and the captions inside videos belong to YouTube and the crea
 ## Wat we niet kunnen oplossen
 
 De YouTube-speler en de ondertitels in video's zijn van YouTube en de makers.
+
+*Deze pagina is demo-inhoud.*`
+			}
+		}
+	},
+	{
+		slug: 'privacy',
+		translations: {
+			en: {
+				title: 'Privacy',
+				body: `Couchcrab keeps as little about you as it can.
+
+## Without an account
+
+Your viewing settings and watch progress stay in your browser (\`localStorage\` and a small cookie). Nothing is sent to us.
+
+## With an account
+
+- From Discord we keep your user id, name and avatar.
+- From Google we keep your account id and, once, which YouTube channels you own. We never keep your Google token.
+- Your settings and lists are saved so they follow you to other devices.
+
+## YouTube
+
+Videos play in the YouTube player (\`youtube-nocookie.com\`). YouTube's own privacy policy applies to the player.
+
+*This page is demo content.*`
+			},
+			nl: {
+				title: 'Privacy',
+				body: `Couchcrab bewaart zo weinig mogelijk over jou.
+
+## Zonder account
+
+Je kijkinstellingen en je voortgang blijven in je browser (\`localStorage\` en een kleine cookie). Er gaat niets naar ons.
+
+## Met een account
+
+- Van Discord bewaren we je gebruikers-id, naam en avatar.
+- Van Google bewaren we je account-id en, één keer, welke YouTube-kanalen van jou zijn. Je Google-token bewaren we nooit.
+- Je instellingen en lijsten worden bewaard, zodat ze je volgen naar andere toestellen.
+
+## YouTube
+
+Video's spelen af in de YouTube-speler (\`youtube-nocookie.com\`). Voor de speler geldt het privacybeleid van YouTube.
 
 *Deze pagina is demo-inhoud.*`
 			}
