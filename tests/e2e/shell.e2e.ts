@@ -4,7 +4,10 @@ test('home lists the demo series as posters', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 	const series = page.getByRole('region', { name: 'Series' });
-	await expect(series.getByRole('heading', { level: 3 })).toHaveCount(3);
+	// By name, not by count: the management e2e test may add a series at the same time.
+	for (const title of ['Lanternfall Season 3', 'Ember Hearts', 'Skyforge Games 2026']) {
+		await expect(series.getByRole('heading', { level: 3, name: title })).toBeVisible();
+	}
 	await expect(page.getByRole('link', { name: 'Home', exact: true })).toHaveAttribute(
 		'aria-current',
 		'page'
