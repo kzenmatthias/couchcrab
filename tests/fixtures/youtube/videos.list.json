@@ -1,0 +1,100 @@
+{
+	"kind": "youtube#videoListResponse",
+	"etag": "fixture-etag-videos",
+	"items": [
+		{
+			"kind": "youtube#video",
+			"id": "fxPeb000010",
+			"snippet": {
+				"publishedAt": "2026-10-20T16:00:00Z",
+				"channelId": "UCfixturePebblewick00001",
+				"title": "Season 1 Episode 5: The big build",
+				"liveBroadcastContent": "none"
+			},
+			"contentDetails": { "duration": "PT32M15S", "caption": "true" }
+		},
+		{
+			"kind": "youtube#video",
+			"id": "fxPeb000009",
+			"snippet": {
+				"publishedAt": "2026-10-17T19:00:00Z",
+				"channelId": "UCfixturePebblewick00001",
+				"title": "Season 1 Livestream: chill building",
+				"liveBroadcastContent": "none"
+			},
+			"contentDetails": { "duration": "PT3H2M", "caption": "false" },
+			"liveStreamingDetails": {
+				"actualStartTime": "2026-10-17T19:01:00Z",
+				"actualEndTime": "2026-10-17T22:03:00Z",
+				"scheduledStartTime": "2026-10-17T19:00:00Z"
+			}
+		},
+		{
+			"kind": "youtube#video",
+			"id": "fxPeb000008",
+			"snippet": {
+				"publishedAt": "2026-10-15T12:00:00Z",
+				"channelId": "UCfixturePebblewick00001",
+				"title": "Quick tip: hidden doors",
+				"liveBroadcastContent": "none"
+			},
+			"contentDetails": { "duration": "PT45S", "caption": "false" }
+		},
+		{
+			"kind": "youtube#video",
+			"id": "fxPeb000007",
+			"snippet": {
+				"publishedAt": "2026-10-12T15:00:00Z",
+				"channelId": "UCfixturePebblewick00001",
+				"title": "[S1] Bonus: Season 1 bloopers",
+				"liveBroadcastContent": "none"
+			},
+			"contentDetails": { "duration": "PT9M", "caption": "false" }
+		},
+		{
+			"kind": "youtube#video",
+			"id": "fxPeb000006",
+			"snippet": {
+				"publishedAt": "2026-10-08T10:00:00Z",
+				"channelId": "UCfixturePebblewick00001",
+				"title": "Season 1 Finale stream",
+				"liveBroadcastContent": "upcoming"
+			},
+			"contentDetails": { "duration": "P0D", "caption": "false" },
+			"liveStreamingDetails": { "scheduledStartTime": "2026-10-24T19:00:00Z" }
+		},
+		{
+			"kind": "youtube#video",
+			"id": "fxPeb000005",
+			"snippet": {
+				"publishedAt": "2026-10-04T14:00:00Z",
+				"channelId": "UCfixturePebblewick00001",
+				"title": "Cooking with friends",
+				"liveBroadcastContent": "none"
+			},
+			"contentDetails": { "duration": "PT21M7S", "caption": "false" }
+		},
+		{
+			"kind": "youtube#video",
+			"id": "fxPeb000004",
+			"snippet": {
+				"publishedAt": "2026-10-01T16:00:00Z",
+				"channelId": "UCfixturePebblewick00001",
+				"title": "Season 1 Episode 1: A new world",
+				"liveBroadcastContent": "none"
+			},
+			"contentDetails": { "duration": "PT28M40S", "caption": "true" }
+		},
+		{
+			"kind": "youtube#video",
+			"id": "fxMar000001",
+			"snippet": {
+				"publishedAt": "2026-10-10T18:00:00Z",
+				"channelId": "UCfixtureMarrowfen000001",
+				"title": "My redstone machine",
+				"liveBroadcastContent": "none"
+			},
+			"contentDetails": { "duration": "PT14M2S", "caption": "false" }
+		}
+	]
+}

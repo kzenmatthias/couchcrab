@@ -1,0 +1,25 @@
+{
+	"kind": "youtube#channelListResponse",
+	"etag": "fixture-etag-channels",
+	"pageInfo": { "totalResults": 2, "resultsPerPage": 2 },
+	"items": [
+		{
+			"kind": "youtube#channel",
+			"etag": "fixture-etag-pebble",
+			"id": "UCfixturePebblewick00001",
+			"snippet": { "title": "Pebblewick", "description": "Fictional fixture channel." },
+			"contentDetails": {
+				"relatedPlaylists": { "likes": "", "uploads": "UUfixturePebblewick00001" }
+			}
+		},
+		{
+			"kind": "youtube#channel",
+			"etag": "fixture-etag-marrow",
+			"id": "UCfixtureMarrowfen000001",
+			"snippet": { "title": "Marrowfen", "description": "Fictional fixture channel." },
+			"contentDetails": {
+				"relatedPlaylists": { "likes": "", "uploads": "UUfixtureMarrowfen000001" }
+			}
+		}
+	]
+}
