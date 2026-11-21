@@ -1,0 +1,21 @@
+name: Bug report
+description: Something on Couchcrab doesn't work as it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: And what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Go to ...\n2. Click ...\n3. See ..."
+  - type: input
+    id: env
+    attributes:
+      label: Browser and device
+      placeholder: Firefox 130 on Windows 11

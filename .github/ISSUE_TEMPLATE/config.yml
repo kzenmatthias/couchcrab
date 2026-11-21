@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Wrong video, series or session?
+    url: https://github.com/kzenmatthias/couchcrab/blob/main/CONTRIBUTING.md#fixing-data-no-code-needed
+    about: Data fixes go through "Suggest an edit" on the site, not through issues.

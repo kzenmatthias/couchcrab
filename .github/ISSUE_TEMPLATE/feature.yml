@@ -1,0 +1,11 @@
+name: Idea or feature request
+description: Suggest something new for Couchcrab
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: What problem does it solve for viewers or editors?
+    validations:
+      required: true

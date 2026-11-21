@@ -1,0 +1,19 @@
+name: Accessibility problem
+description: Something is hard or impossible to use with your setup
+labels: [accessibility]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What went wrong?
+    validations:
+      required: true
+  - type: input
+    id: tech
+    attributes:
+      label: What do you use?
+      description: For example NVDA with Firefox, VoiceOver on iPhone, keyboard only, 200% zoom, high contrast.
+  - type: input
+    id: page
+    attributes:
+      label: Page or screen

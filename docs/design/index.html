@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Couchcrab · design board v4</title>
+<style>
+/* ---------- themes ---------- */
+:root,[data-theme=dark]{
+  --board:#030a0e; --bg:#07131a; --surface:#132b36; --surface2:#0f232c; --line:#3a5a68;
+  --text:#eef5f7; --muted:#b3c6cd; --accent:#ff7a59; --on-accent:#1b0c07; --accent-text:#ffb39e;
+  --sea-text:#9ff1ec; --sand:#f3d9a4; --focus:#ffe08a; --ghost:#ffffff14; --ghost-line:#ffffff4d;
+  --sw-off:#5b7a87; --sw-on:#3fd0c9; --sw-knob:#06292b;
+  --hero:linear-gradient(90deg,#07131a 25%,#07131a00 70%),radial-gradient(900px 400px at 75% 30%,#1f6f7a 0%,transparent 60%),radial-gradient(700px 380px at 95% 80%,#ff7a5955 0%,transparent 60%),linear-gradient(160deg,#0f3340,#07131a 70%);
+  --h-green:linear-gradient(90deg,#07131a 25%,#07131a0 70%),radial-gradient(800px 360px at 80% 20%,#3a7d44aa,transparent 60%),linear-gradient(170deg,#173a2a,#07131a 75%);
+  --h-red:linear-gradient(90deg,#07131a 25%,#07131a0 70%),radial-gradient(800px 360px at 80% 20%,#a3333399,transparent 60%),linear-gradient(170deg,#3a1218,#07131a 75%);
+  --h-purple:linear-gradient(90deg,#07131a 25%,#07131a0 70%),radial-gradient(700px 320px at 20% 0%,#7b5cff55,transparent 60%),linear-gradient(170deg,#1b1f3d,#07131a 75%);
+}
+[data-theme=light]{
+  --board:#d9d4cc; --bg:#faf7f2; --surface:#ffffff; --surface2:#f1ece4; --line:#8f857a;
+  --text:#13232b; --muted:#44545b; --accent:#b93a14; --on-accent:#ffffff; --accent-text:#9a2f0f;
+  --sea-text:#0a5e5a; --sand:#6e4f0c; --focus:#0b57d0; --ghost:#13232b0d; --ghost-line:#13232b59;
+  --sw-off:#7d8b91; --sw-on:#0a7a74; --sw-knob:#ffffff;
+  --hero:linear-gradient(90deg,#faf7f2 25%,#faf7f200 70%),radial-gradient(900px 400px at 75% 30%,#b9e6e2 0%,transparent 60%),radial-gradient(700px 380px at 95% 80%,#ffd2c2 0%,transparent 60%),linear-gradient(160deg,#e6f1f0,#faf7f2 70%);
+  --h-green:linear-gradient(90deg,#faf7f2 25%,#faf7f20 70%),radial-gradient(800px 360px at 80% 20%,#cfe8cf,transparent 60%),linear-gradient(170deg,#e7f2e6,#faf7f2 75%);
+  --h-red:linear-gradient(90deg,#faf7f2 25%,#faf7f20 70%),radial-gradient(800px 360px at 80% 20%,#f6cfcf,transparent 60%),linear-gradient(170deg,#f6e4e4,#faf7f2 75%);
+  --h-purple:linear-gradient(90deg,#faf7f2 25%,#faf7f20 70%),radial-gradient(700px 320px at 20% 0%,#ddd5ff,transparent 60%),linear-gradient(170deg,#ece9fb,#faf7f2 75%);
+}
+[data-theme=contrast]{
+  --board:#000; --bg:#000; --surface:#000; --surface2:#000; --line:#fff;
+  --text:#fff; --muted:#fff; --accent:#ffd400; --on-accent:#000; --accent-text:#ffd400;
+  --sea-text:#7ffcff; --sand:#ffd400; --focus:#00e5ff; --ghost:transparent; --ghost-line:#fff;
+  --sw-off:#fff; --sw-on:#ffd400; --sw-knob:#000;
+  --hero:#000; --h-green:#000; --h-red:#000; --h-purple:#000;
+}
+[data-size=large]{font-size:112.5%}
+[data-size=larger]{font-size:125%}
+
+/* ---------- base ---------- */
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--board);color:var(--text);font:0.9375rem/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:inherit;text-underline-offset:.15em}
+[data-links=underline] .app a{text-decoration:underline}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+ul.plain{list-style:none;margin:0;padding:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+[data-motion=reduce] *{transition:none!important;animation:none!important}
+
+/* ---------- design-board chrome ---------- */
+.board-nav{position:sticky;top:0;z-index:50;display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;padding:10px 16px;background:var(--board);border-bottom:1px solid var(--line)}
+.board-nav .ttl{font-weight:700;color:var(--accent-text)}
+.board-nav ul{display:flex;gap:6px;flex-wrap:wrap;list-style:none;margin:0;padding:0}
+.board-nav button{background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.8125rem;min-height:32px}
+.board-nav button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.board-nav fieldset{border:0;margin:0 0 0 auto;padding:0;display:flex;gap:6px;align-items:center;font-size:.8125rem}
+.board-nav legend{float:left;margin-right:6px;color:var(--muted)}
+.board-nav label{border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer}
+.board-nav label:has(input:checked){background:var(--text);color:var(--bg);font-weight:700}
+.board-nav input{position:absolute;opacity:0}
+.board-nav label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.screen{padding:24px 16px 60px}
+.screen[hidden]{display:none}
+.note{max-width:1280px;margin:0 auto 16px;background:var(--surface2);border:1px dashed var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:.875rem}
+.note strong{color:var(--text)}
+.note ul{margin:6px 0 0;padding-left:18px}
+
+/* ---------- app frame ---------- */
+.app{max-width:1280px;margin:0 auto;background:var(--bg);border-radius:18px;overflow:hidden;border:1px solid var(--line);position:relative}
+.skip{position:absolute;left:12px;top:-60px;z-index:10;background:var(--accent);color:var(--on-accent);padding:10px 14px;border-radius:8px;font-weight:700;text-decoration:none}
+.skip:focus{top:12px}
+.top{display:flex;align-items:center;gap:10px 22px;padding:14px 28px;flex-wrap:wrap;position:relative;z-index:2}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:1.25rem;letter-spacing:-.02em;text-decoration:none}
+.shell{width:26px;height:26px;border-radius:50% 50% 45% 55%;background:conic-gradient(from 200deg,#ff7a59,#f3d9a4,#ff7a59);flex:0 0 auto}
+.unofficial{font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;color:var(--sand);border:1px solid var(--sand);border-radius:6px;padding:2px 6px;font-weight:700}
+.top nav ul{display:flex;gap:4px 16px;flex-wrap:wrap;list-style:none;margin:0;padding:0}
+.top nav a{text-decoration:none;color:var(--muted);display:inline-block;padding:6px 2px;font-size:.875rem}
+.top nav a[aria-current=page]{color:var(--text);font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
+.top .sp{flex:1}
+.search input{background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;width:240px;font-size:.8125rem}
+.search input::placeholder{color:var(--muted);opacity:1}
+.me{width:40px;height:40px;border-radius:50%;background:#5865f2;color:#fff;border:2px solid var(--line);font-size:.75rem;font-weight:800}
+.menu-wrap{position:relative}
+.menu{position:absolute;right:0;top:48px;width:300px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 20px 50px #0007;z-index:5}
+.menu h2{font-size:.8125rem;margin:4px 6px 8px;color:var(--muted);font-weight:600}
+.menu a{display:block;padding:9px 8px;border-radius:8px;text-decoration:none}
+.menu a:hover{background:var(--ghost)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:8px 0}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;border:0;margin:0;padding:0}
+.seg legend{font-size:.8125rem;color:var(--muted);margin:0 6px 6px;padding:0}
+.seg label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.8125rem;cursor:pointer;min-height:40px}
+.seg label:has(input:checked){background:var(--text);color:var(--bg);font-weight:700}
+.seg input{accent-color:var(--accent);margin:0}
+
+.hero{position:relative;margin-top:-68px;padding:120px 28px 40px;min-height:400px;background:var(--hero)}
+.hero h1{font-size:2.875rem;line-height:1.05;margin:10px 0;letter-spacing:-.03em;max-width:640px}
+.hero p{color:var(--muted);max-width:540px;margin:0 0 18px}
+.kicker{color:var(--sea-text);font-weight:700;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;margin:0}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:10px;padding:11px 18px;font-weight:700;min-height:44px;text-decoration:none}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:var(--ghost);border-color:var(--ghost-line)}
+.btn.sm{padding:6px 12px;font-size:.8125rem;border-radius:8px;min-height:36px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+
+.banner{margin:0 28px 6px;background:var(--surface2);border:1px solid var(--sand);border-radius:12px;padding:10px 14px;font-size:.8125rem;display:flex;gap:12px;align-items:center}
+.banner p{margin:0}
+.banner .x{margin-left:auto;background:none;border:1px solid var(--ghost-line);border-radius:8px;min-width:36px;min-height:36px}
+
+/* rails */
+.row{padding:8px 28px 18px}
+.row-h{display:flex;align-items:center;gap:10px}
+.row h2{font-size:1.125rem;margin:14px 0 10px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.row h2 small{color:var(--muted);font-weight:400;font-size:.8125rem}
+.rail-btns{margin-left:auto;display:flex;gap:6px}
+.rail-btns button{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:1px solid var(--line);font-size:1.1rem;line-height:1}
+.rail{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 4px 10px;margin:-4px -4px 0;list-style:none;scrollbar-width:thin}
+.rail>li{scroll-snap-align:start;flex:0 0 auto}
+
+/* episode card */
+.ep{display:block;width:240px;text-decoration:none;border-radius:12px;padding:0 0 4px}
+.ep:hover .t{text-decoration:underline}
+.thumb{position:relative;display:block;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:var(--g)}
+.thumb::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,#000c)}
+.thumb .lbl{position:absolute;left:10px;bottom:8px;font-weight:800;font-size:1.25rem;color:#fff;letter-spacing:-.02em}
+.thumb .dur{position:absolute;right:8px;bottom:8px;background:#000;color:#fff;font-size:.75rem;padding:2px 6px;border-radius:4px}
+.thumb .prog{position:absolute;left:0;bottom:0;height:5px;background:#ff7a59;box-shadow:0 -1px 0 #000}
+.thumb.spoil{background:repeating-linear-gradient(135deg,#1d3440 0 12px,#183039 12px 24px)}
+.thumb.spoil::before{background:none}
+.ep .t{display:block;margin-top:7px;font-size:.875rem;font-weight:700}
+.ep .m{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:.8125rem;color:var(--muted);margin-top:2px}
+.badge{font-size:.75rem;border:1px solid var(--ghost-line);border-radius:6px;padding:0 6px;color:var(--text)}
+.badge.prog{border-color:var(--accent-text);color:var(--accent-text)}
+.cc{font-size:.6875rem;font-weight:800;border:1.5px solid var(--text);color:var(--text);border-radius:4px;padding:0 4px;line-height:1.4}
+.av{width:22px;height:22px;border-radius:50%;background:var(--c);display:inline-grid;place-items:center;font-size:.6rem;font-weight:800;color:#0a0a0a;flex:0 0 auto}
+.av.md{width:40px;height:40px;font-size:.8125rem}
+.av.xl{width:88px;height:88px;font-size:1.5rem}
+.av.xxl{width:120px;height:120px;font-size:2.1rem}
+
+.poster{display:flex;flex-direction:column;justify-content:flex-end;width:200px;aspect-ratio:2/3;border-radius:12px;padding:14px;background:var(--g);position:relative;overflow:hidden;color:#fff;text-decoration:none}
+.poster::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,#000d)}
+.poster>*{position:relative}
+.poster b{font-size:1.3rem;line-height:1.1}
+.poster span{font-size:.8125rem}
+.poster .tag{position:absolute;top:10px;left:10px;background:#000;border-radius:5px;padding:2px 6px;text-transform:uppercase;letter-spacing:.06em;font-size:.6875rem;font-weight:700}
+
+.creator{display:flex;flex-direction:column;align-items:center;gap:4px;width:116px;background:none;border:2px solid transparent;border-radius:14px;padding:8px 4px;text-align:center;font-size:.8125rem}
+.creator .av{outline:3px solid transparent;outline-offset:3px}
+.creator[aria-pressed=true] .av{outline-color:var(--sea-text)}
+.creator[aria-pressed=false] .av{filter:grayscale(1)}
+.creator .st{font-size:.75rem;font-weight:700;border-radius:999px;padding:1px 8px;border:1px solid var(--ghost-line)}
+.creator[aria-pressed=true] .st{color:var(--sea-text);border-color:var(--sea-text)}
+.creator[aria-pressed=false] .st{color:var(--muted)}
+
+.footer{border-top:1px solid var(--line);margin-top:20px;padding:22px 28px;color:var(--muted);font-size:.8125rem;display:flex;gap:16px 30px;flex-wrap:wrap}
+.footer p{margin:0;max-width:640px}
+.footer b{color:var(--text)}
+.footer ul{display:flex;gap:6px 16px;flex-wrap:wrap;list-style:none;margin:0;padding:0}
+
+/* series */
+.shead{padding:110px 28px 26px;margin-top:-68px}
+.shead h1{font-size:2.5rem;margin:6px 0;letter-spacing:-.03em}
+.meta{display:flex;gap:6px 14px;color:var(--muted);font-size:.8125rem;flex-wrap:wrap;align-items:center}
+.povbar{display:flex;align-items:center;gap:12px;margin-top:18px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;flex-wrap:wrap}
+.stack{display:flex}.stack .av{margin-left:-6px;border:2px solid var(--surface2);width:30px;height:30px}
+.stack .av:first-child{margin-left:0}
+.pill{font-size:.75rem;border-radius:999px;padding:2px 9px;border:1px solid var(--ghost-line);color:var(--text)}
+.pill.sea{color:var(--sea-text);border-color:var(--sea-text)}
+.pill.coral{color:var(--accent-text);border-color:var(--accent-text)}
+.pill.warn{color:var(--sand);border-color:var(--sand)}
+.subnav ul{display:flex;gap:4px;padding:0 28px;border-bottom:1px solid var(--line);list-style:none;margin:0;overflow-x:auto}
+.subnav a{display:block;padding:12px 14px;text-decoration:none;color:var(--muted);font-size:.875rem;border-bottom:3px solid transparent;white-space:nowrap}
+.subnav a[aria-current=page]{color:var(--text);border-color:var(--accent);font-weight:700}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:28px;padding:20px 28px}
+.week{margin-bottom:22px}
+.week h2,.week h3{font-size:.8125rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:0 0 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tl{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;list-style:none;margin:0;padding:0}
+.tl .ep{width:auto}
+.side{display:flex;flex-direction:column;gap:14px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.box h2,.box h3{margin:0 0 8px;font-size:.9375rem}
+.box p{margin:0 0 8px;color:var(--muted);font-size:.8125rem}
+.toggle{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:8px 4px;text-align:left;font-size:.875rem;min-height:44px;border-radius:8px}
+.toggle .lb{flex:1}
+.toggle .lb small{display:block;color:var(--muted);font-size:.75rem}
+.sw{width:42px;height:24px;border-radius:999px;background:var(--sw-off);position:relative;flex:0 0 auto;border:2px solid var(--sw-off)}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--bg);transition:.2s}
+.toggle[aria-checked=true] .sw{background:var(--sw-on);border-color:var(--sw-on)}
+.toggle[aria-checked=true] .sw::after{left:20px;background:var(--sw-knob)}
+.toggle .st{width:2.2em;font-size:.75rem;font-weight:700;color:var(--muted)}
+.bar{height:8px;border-radius:999px;background:var(--ghost);border:1px solid var(--ghost-line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--sea-text)}
+.session{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.session.next{border:2px solid var(--accent-text)}
+.session header{display:flex;align-items:center;gap:8px 10px;margin-bottom:12px;flex-wrap:wrap}
+.session h2{font-size:1.0625rem;margin:0}
+.session .tl{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+
+/* player */
+.player{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;padding:18px 28px}
+.video{aspect-ratio:16/9;border-radius:14px;background:#000;color:#ccc;display:grid;place-items:center;position:relative;overflow:hidden;border:1px solid var(--line)}
+.video .yt{display:flex;flex-direction:column;align-items:center;gap:10px}
+.video .yt i{width:68px;height:48px;border-radius:12px;background:#f00;display:grid;place-items:center;font-style:normal;font-size:1.25rem;color:#fff}
+.upnext{position:absolute;right:16px;bottom:16px;left:16px;max-width:460px;margin-left:auto;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.8125rem}
+.upnext p{margin:0;flex:1 1 180px}
+.queue ol{list-style:none;margin:0;padding:0}
+.queue li a{display:flex;gap:10px;padding:8px;border-radius:10px;align-items:center;text-decoration:none}
+.queue li a[aria-current=true]{background:var(--ghost);border:1px solid var(--accent-text)}
+.queue .thumb{width:120px;flex:0 0 120px}
+.queue .thumb .lbl{font-size:.875rem}
+.vt h1{font-size:1.375rem;margin:14px 0 6px}
+.kbd{font-family:ui-monospace,Menlo,monospace;border:1px solid var(--ghost-line);border-bottom-width:2px;border-radius:5px;padding:0 5px;font-size:.75rem}
+
+/* prefs */
+.grid-cr{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:12px 6px;list-style:none;margin:0;padding:0}
+.grp{font-size:.8125rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:22px 0 10px}
+.override{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.override .nm{flex:1 1 200px}
+.override .nm b{display:block}
+.override .nm span{font-size:.8125rem;color:var(--muted)}
+.override .seg{display:inline-grid;grid-template-columns:auto auto}
+.chip-sw{width:46px;height:46px;border-radius:8px;background:var(--g);flex:0 0 auto}
+
+/* forms */
+.modal-wrap{position:relative;padding:28px;min-height:640px;background:var(--bg)}
+.modal-wrap::before{content:"";position:absolute;inset:0;background:#000a}
+.modal{position:relative;max-width:580px;margin:20px auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px}
+.modal h2{margin:0 0 4px;font-size:1.25rem}
+.field{margin:16px 0;border:0;padding:0}
+.field>label,.field legend{display:block;font-size:.8125rem;font-weight:700;margin-bottom:6px;padding:0}
+.field .hint{font-size:.75rem;color:var(--muted);margin:-2px 0 6px}
+.field select,.field textarea,.field input[type=text]{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+.radios{display:flex;gap:8px;flex-wrap:wrap}
+.radios label{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:.8125rem;cursor:pointer;min-height:40px}
+.radios label:has(input:checked){border:2px solid var(--sea-text);font-weight:700}
+.radios input{accent-color:var(--accent);margin:0}
+.review{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;padding:22px 28px}
+.ritem{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.ritem.creatorreq{border:2px solid var(--sand)}
+.ritem h3{font-size:.9375rem;margin:8px 0 0}
+.ritem .hd{display:flex;gap:8px 10px;align-items:center;font-size:.8125rem;color:var(--muted);flex-wrap:wrap}
+.ritem .hd b{color:var(--text)}
+.diff{margin:10px 0;font-family:ui-monospace,Menlo,monospace;font-size:.8125rem;background:var(--surface2);border-radius:10px;padding:10px 12px;border:1px solid var(--line)}
+.diff p{margin:0}
+.diff del{text-decoration:line-through}
+.diff ins{text-decoration:none;font-weight:700}
+.trust{display:flex;align-items:center;gap:8px;font-size:.75rem}
+.trust .bar{width:100px}
+.hist li{padding:8px 0;border-bottom:1px solid var(--line);font-size:.8125rem;color:var(--muted);display:flex;gap:10px;justify-content:space-between}
+.hist li b{color:var(--text)}
+.settings{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;padding:24px 28px}
+.settings nav a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--muted)}
+.settings nav a[aria-current=page]{background:var(--ghost);color:var(--text);font-weight:700}
+.settings section{margin-bottom:22px}
+.settings>div{max-width:620px}
+.settings h2{font-size:1.0625rem;margin:0 0 6px}
+.kb-table{width:100%;border-collapse:collapse;font-size:.8125rem}
+.kb-table th,.kb-table td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.chead{display:flex;gap:22px;align-items:center;padding:110px 28px 26px;margin-top:-68px;background:var(--h-purple);flex-wrap:wrap}
+.chead h1{font-size:2.375rem;margin:4px 0}
+.textlist{list-style:none;margin:0;padding:0}
+.textlist li a{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none;align-items:center;flex-wrap:wrap}
+.concept table{border-collapse:collapse;width:100%;font-size:.875rem}
+.concept th{padding:8px 12px 8px 0;color:var(--sand);width:190px;vertical-align:top;text-align:left}
+.concept td{padding:8px 0;border-bottom:1px solid var(--line)}
+
+/* phones */
+.phones{display:flex;gap:28px;justify-content:center;flex-wrap:wrap}
+.phone{width:380px;max-width:100%;height:800px;overflow:auto;background:var(--bg);border-radius:36px;border:10px solid #111;position:relative}
+.phone .top{padding:12px 14px;gap:10px}
+.phone .hero{padding:84px 16px 24px;min-height:0}
+.phone .hero h1,.phone .hero .h1{font-size:1.875rem;font-weight:800;line-height:1.1;margin:8px 0 12px}
+.phone .row{padding:6px 16px 12px}
+.phone .ep{width:200px}
+.phone .poster{width:130px;padding:10px}
+.phone .poster b{font-size:1rem}
+.tabbar{position:sticky;bottom:0;display:flex;justify-content:space-around;background:var(--surface);border-top:1px solid var(--line);padding:6px 0 14px;list-style:none;margin:0}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.75rem;color:var(--muted);text-decoration:none;min-width:60px;padding:6px 0}
+.tabbar a[aria-current=page]{color:var(--accent-text);font-weight:700}
+.tabbar i{font-style:normal;font-size:1.125rem}
+.mrow a{display:flex;gap:12px;align-items:center;padding:8px 16px;text-decoration:none}
+.mrow .thumb{width:150px;flex:0 0 150px}
+
+/* reflow */
+@media (max-width:900px){
+  .cols,.player,.review,.settings{grid-template-columns:1fr}
+  .hero h1{font-size:2rem}
+  .shead h1,.chead h1{font-size:1.875rem}
+  .search input{width:100%}
+  .search{flex:1 1 100%}
+  .top,.row,.cols,.player,.review,.settings,.footer{padding-left:16px;padding-right:16px}
+  .hero,.shead,.chead{padding-left:16px;padding-right:16px}
+  .banner{margin:0 16px 6px}
+  .subnav ul{padding:0 8px}
+  .board-nav fieldset{margin-left:0}
+}
+
+/* ---------- v3: more air, bigger images, poster art ---------- */
+.app{border-radius:24px}
+.top{padding:22px 56px}
+.art{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hero{min-height:640px;padding:200px 56px 72px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;background:var(--bg)}
+.hero>.art,.shead>.art{z-index:0}
+.hero::after,.shead::after,.chead::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,var(--bg) 0,transparent 160px),linear-gradient(90deg,var(--bg) 18%,transparent 70%),linear-gradient(0deg,var(--bg) 2%,transparent 45%)}
+.chead>.art{z-index:0}
+.hero>*:not(.art),.shead>*:not(.art),.chead>*:not(.art){position:relative;z-index:2}
+.hero h1{font-size:4rem;max-width:760px;margin:14px 0 16px}
+.hero p{font-size:1.125rem;max-width:560px;margin-bottom:28px}
+.banner{margin:8px 56px 16px;padding:14px 18px;border-radius:16px}
+.row{padding:32px 56px 40px}
+.row h2{font-size:1.5rem;margin:0 0 20px;letter-spacing:-.01em}
+.rail{gap:24px;padding:6px 6px 14px;margin:-6px -6px 0}
+.ep{width:380px}
+.rail.big .ep{width:520px}
+.thumb{border-radius:16px}
+.thumb .art{z-index:0}
+.thumb::before{z-index:1}
+.thumb .lbl,.thumb .dur,.thumb .prog{z-index:2}
+.thumb .lbl{font-size:1.625rem;left:16px;bottom:12px}
+.thumb .dur{right:12px;bottom:12px;font-size:.8125rem;padding:3px 8px}
+.thumb .prog{height:6px}
+.ep .t{font-size:1.0625rem;margin-top:14px}
+.ep .m{margin-top:6px;gap:8px}
+.poster{width:260px;border-radius:20px;padding:20px;background:#000}
+.poster .art{z-index:0}
+.poster::before{z-index:1}
+.poster>*:not(.art){z-index:2}
+.poster b{font-size:1.625rem;line-height:1.05;letter-spacing:-.02em}
+.poster span:not(.tag){font-size:.875rem;margin-top:6px}
+.poster .tag{top:14px;left:14px}
+.creator{width:130px}
+.footer{padding:40px 56px;margin-top:40px}
+.shead{position:relative;overflow:hidden;min-height:540px;padding:200px 56px 48px;display:flex;flex-direction:column;justify-content:flex-end;background:var(--bg)!important}
+.shead h1{font-size:3.75rem;margin:10px 0 12px}
+.povbar{margin-top:28px;padding:16px 20px;border-radius:18px;gap:16px;background:color-mix(in srgb,var(--surface2) 88%,transparent)}
+.subnav ul{padding:0 56px;gap:12px}
+.subnav a{font-size:1rem;padding:16px 6px}
+.cols{padding:48px 56px;gap:56px;grid-template-columns:minmax(0,1fr) 300px}
+.week{margin-bottom:64px}
+.week h2{font-size:.9375rem;margin-bottom:20px}
+.tl{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:40px 28px}
+.side{gap:36px}
+.side .box{background:none;border:0;padding:0}
+.side .box h2{font-size:1.0625rem;margin-bottom:10px}
+.side .toggle{border-bottom:1px solid var(--line);border-radius:0;padding:12px 0;min-height:56px}
+.sessions{padding:48px 56px 8px}
+.session{background:none;border:0;padding:0;margin-bottom:72px}
+.session.next{border:0}
+.session header{margin-bottom:20px}
+.session h2{font-size:1.5rem}
+.session .tl{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.player{padding:32px 56px;gap:40px;grid-template-columns:minmax(0,1fr) 360px}
+.video{border-radius:20px}
+.vt h1{font-size:1.75rem;margin:24px 0 10px}
+.queue{background:none!important;border:0!important;padding:0!important}
+.queue .thumb{width:150px;flex:0 0 150px}
+.chead{position:relative;overflow:hidden;min-height:440px;padding:200px 56px 48px;gap:32px}
+.chead h1{font-size:3.5rem}
+.settings{padding:48px 56px;gap:56px}
+.review{padding:40px 56px;gap:40px}
+#prefs-main{padding:48px 56px!important}
+.grid-cr{gap:28px 12px;grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+.phone .hero{min-height:440px;padding:140px 20px 28px}
+.phone .hero .h1{font-size:2.125rem}
+.phone .row{padding:20px 20px 16px}
+.phone .ep{width:290px}
+.phone .shead{min-height:360px;padding:120px 20px 24px!important}
+.mrow a{padding:12px 20px}
+.mrow .thumb{width:170px;flex:0 0 170px}
+.tabbar{z-index:10}
+.phone .hero .h1,.phone .shead .h1{color:var(--text)}
+@media (max-width:900px){
+  .top,.row,.cols,.player,.review,.settings,.footer,.hero,.shead,.chead,#prefs-main,.sessions{padding-left:20px!important;padding-right:20px!important}
+  .banner{margin:8px 20px 16px}
+  .subnav ul{padding:0 12px}
+  .hero{min-height:520px;padding-top:160px}
+  .hero h1{font-size:2.5rem}
+  .shead h1,.chead h1{font-size:2.5rem}
+  .ep,.rail.big .ep{width:300px}
+  .tl{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<nav class="board-nav" aria-label="Design board">
+  <span class="ttl">Couchcrab · design v4</span>
+  <ul id="screen-buttons"></ul>
+  <fieldset>
+    <legend>Preview theme</legend>
+    <label><input type="radio" name="board-theme" value="dark" checked>Dark</label>
+    <label><input type="radio" name="board-theme" value="light">Light</label>
+    <label><input type="radio" name="board-theme" value="contrast">High contrast</label>
+  </fieldset>
+</nav>
+
+<div id="screens"></div>
+
+<script>
+const LOGO=`<svg class="logo-mark" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect x="3" y="8" width="18" height="8" fill="#2f8f8a"/><rect x="1" y="12" width="4" height="8" fill="#3fd0c9"/><rect x="19" y="12" width="4" height="8" fill="#3fd0c9"/><rect x="4" y="15" width="16" height="5" fill="#3fd0c9"/><rect x="3" y="20" width="2" height="2" fill="#1d5a57"/><rect x="19" y="20" width="2" height="2" fill="#1d5a57"/><rect x="4" y="7" width="3" height="3" fill="#ff7a59"/><rect x="17" y="7" width="3" height="3" fill="#ff7a59"/><rect x="6" y="10" width="2" height="2" fill="#ff7a59"/><rect x="16" y="10" width="2" height="2" fill="#ff7a59"/><rect x="7" y="10" width="10" height="6" fill="#ff7a59"/><rect x="8" y="9" width="8" height="2" fill="#ff9b80"/><rect x="9" y="6" width="1" height="3" fill="#ff7a59"/><rect x="14" y="6" width="1" height="3" fill="#ff7a59"/><rect x="8" y="3" width="3" height="3" fill="#fff"/><rect x="13" y="3" width="3" height="3" fill="#fff"/><rect x="9" y="4" width="1" height="1" fill="#111"/><rect x="14" y="4" width="1" height="1" fill="#111"/></svg>`;
+/* ---------- data ---------- */
+const C={GR:['Grian','#e05d5d','Grian'],MJ:['MumboJumbo','#ffd166','Mumbo'],SC:['GoodTimesWithScar','#7bd389','Scar'],TT:['TangoTek','#9ad0ff','TangoTek'],PL:['PearlescentMoon','#f78fb3','Pearl'],IM:['ImpulseSV','#ff9f43','Impulse'],LZ:['Lizzie','#c792ea','Lizzie'],ET:['EthosLab','#a0e7e5','Etho'],BD:['Bdubs','#b4f8c8','Bdubs'],ZD:['Zedaph','#fbe7c6','Zedaph'],GM:['Gem','#ffaebc','Gem'],XS:['Xisuma','#cdb4db','Xisuma'],CB:['Cubfan135','#bde0fe','Cub'],MT:['Martyn','#ffb4a2','Martyn'],JL:['Smallishbeans','#e5989b','Joel'],JS:['Solidarity','#d4a5b0','Jimmy'],SM:['Smajor','#90e0ef','Smajor']};
+const G={red:'linear-gradient(135deg,#bf5b3b,#2b120b)',green:'linear-gradient(135deg,#3b8d5a,#16352a)',blue:'linear-gradient(135deg,#3f6fb3,#0e1a2e)',teal:'linear-gradient(135deg,#2f7d7a,#0b2524)',steel:'linear-gradient(135deg,#4f7fa8,#0e1d2c)',pink:'linear-gradient(135deg,#a86f9c,#2a1226)',gold:'linear-gradient(135deg,#b78232,#2b1c07)',purple:'linear-gradient(135deg,#7a3f8f,#1f0f26)',violet:'linear-gradient(135deg,#8a5cc2,#1d1230)',navy:'linear-gradient(135deg,#465a9c,#121a33)',crimson:'linear-gradient(135deg,#a33,#2a0f14)',olive:'linear-gradient(135deg,#8a8f3a,#22240c)',indigo:'linear-gradient(135deg,#5d4b9c,#16112b)',grey:'linear-gradient(135deg,#666,#222)',
+  pGreen:'linear-gradient(160deg,#3b8d5a,#0d2219)',pRed:'linear-gradient(160deg,#a33,#1e070b)',pGold:'linear-gradient(160deg,#e0a93b,#2a1b04)',pBlue:'linear-gradient(160deg,#2f6c99,#0a1724)',pPurple:'linear-gradient(160deg,#6d3f8f,#170b20)',pNavy:'linear-gradient(160deg,#465a9c,#0f1530)',pBrown:'linear-gradient(160deg,#a36b2f,#22140a)'};
+
+
+/* ---------- poster art: own artwork per series, no text in the image ---------- */
+const PAL={
+ hc10:{name:'Hermitcraft Season 10',sky:['#8fd6ea','#e3f6cf'],sun:'#fff3b0',far:'#5aa564',near:'#2f6b3a',motif:'tree',acc:'#245a2c'},
+ hc9:{name:'Hermitcraft Season 9',sky:['#2e2160','#c77fa3'],sun:'#ffe9c7',far:'#5a3d7a',near:'#24183a',motif:'tree',acc:'#1a1230',moon:1},
+ secret:{name:'Secret Life',sky:['#22070e','#b03a46'],sun:'#ffd1d1',far:'#6b1d2a',near:'#2c0a12',motif:'heart',acc:'#ff6b7f',moon:1},
+ limited:{name:'Limited Life',sky:['#0b1f3a','#5b92d0'],sun:'#e6f2ff',far:'#24507f',near:'#0d2644',motif:'hourglass',acc:'#ffd166'},
+ double:{name:'Double Life',sky:['#33190a','#e0974f'],sun:'#fff0d6',far:'#7a4a1e',near:'#341d0a',motif:'hearts2',acc:'#ff6b6b'},
+ empires:{name:'Empires SMP S2',sky:['#3f2700','#f3c85f'],sun:'#fff7da',far:'#a8741f',near:'#4f3306',motif:'crown',acc:'#ffe08a'},
+ decked:{name:'Decked Out 2',sky:['#080c26','#3c4f9c'],sun:'#c9d4ff',far:'#2a3570',near:'#0f1638',motif:'card',acc:'#8ff0e0',moon:1},
+ third:{name:'3rd Life',sky:['#0c3324','#62b984'],sun:'#f6ffe0',far:'#2f7a4f',near:'#123a26',motif:'hearts3',acc:'#ff5d73'},
+ last:{name:'Last Life',sky:['#0f0a18','#5e3c72'],sun:'#e8d7ff',far:'#3b2650',near:'#170e22',motif:'heart',acc:'#c792ff',moon:1}
+};
+const PIX={heart:['.XX.XX.','XXXXXXX','XXXXXXX','.XXXXX.','..XXX..','...X...'],crown:['X..X..X','XX.X.XX','XXXXXXX','XXXXXXX','XXXXXXX'],hourglass:['XXXXXXX','.XXXXX.','..XXX..','...X...','..XXX..','.XXXXX.','XXXXXXX'],card:['XXXXX','X...X','X.X.X','X...X','X.X.X','X...X','XXXXX'],tree:['..XXX..','.XXXXX.','XXXXXXX','XXXXXXX','.XXXXX.','...X...','...X...']};
+let ARTN=0;
+function rnd(seed){let x=(seed*2654435761)%4294967296;return()=>{x=(x*1664525+1013904223)%4294967296;return x/4294967296}}
+function pix(pat,x,y,u,col){let o='';pat.forEach((row,j)=>[...row].forEach((c,i)=>{if(c==='X')o+=`<rect x="${(x+i*u).toFixed(1)}" y="${(y+j*u).toFixed(1)}" width="${(u+.3).toFixed(1)}" height="${(u+.3).toFixed(1)}" fill="${col}"/>`}));return o}
+function hill(W,H,base,amp,bw,r,col){let d=`M0 ${H}`;for(let x=0;x<W+bw;x+=bw){const y=(H*base-r()*H*amp).toFixed(1);d+=` L${x} ${y} L${x+bw} ${y}`}return `<path d="${d} L${W} ${H} Z" fill="${col}"/>`}
+function art(k,seed=1,W=100,H=150,tint){
+  const p=PAL[k]||PAL.hc10,r=rnd(seed*7+k.length),id='a'+(ARTN++),m=Math.min(W,H),wide=W>H;
+  let g=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p.sky[0]}"/><stop offset="1" stop-color="${p.sky[1]}"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#${id})"/>`;
+  const sx=W*(wide?.55+r()*.3:.25+r()*.5),sy=H*(.16+r()*.1),sr=m*.13,sun=tint||p.sun;
+  if(p.moon){for(let i=0;i<14;i++)g+=`<rect x="${(r()*W).toFixed(1)}" y="${(r()*H*.45).toFixed(1)}" width="${(m*.012).toFixed(2)}" height="${(m*.012).toFixed(2)}" fill="#fff" opacity=".8"/>`;
+    g+=`<circle cx="${sx}" cy="${sy}" r="${sr}" fill="${sun}"/><circle cx="${sx+sr*.45}" cy="${sy-sr*.2}" r="${sr*.85}" fill="${p.sky[0]}"/>`}
+  else g+=`<rect x="${sx-sr}" y="${sy-sr}" width="${sr*2}" height="${sr*2}" fill="${sun}" opacity=".95"/>`;
+  g+=hill(W,H,.66,.12,W/14,r,p.far);
+  const u=m*(wide?.045:.06),pat=PIX[p.motif==='hearts2'||p.motif==='hearts3'?'heart':p.motif];
+  const n=p.motif==='hearts2'?2:p.motif==='hearts3'?3:1,pw=pat[0].length*u,gap=u*1.5,tot=n*pw+(n-1)*gap;
+  let mx=wide?W*.72-tot/2:W/2-tot/2,my=H*(wide?.2:.3);
+  if(p.motif==='tree'){for(let t=0;t<5;t++){const tu=u*(.5+r()*.5),tx=wide?W*(.4+r()*.58):r()*W,ty=H*(.6+r()*.08);g+=pix(pat,tx,ty-pat.length*tu,tu,p.acc)}}
+  else for(let i=0;i<n;i++)g+=pix(pat,mx+i*(pw+gap),my,u,p.acc);
+  g+=hill(W,H,.82,.1,W/10,r,p.near);
+  return `<svg class="art" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">${g}</svg>`;
+}
+let CUR='hc10',SEED=1;
+/* ---------- helpers ---------- */
+const av=(id,s='')=>`<span class="av ${s}" style="--c:${C[id][1]}" aria-hidden="true">${id}</span>`;
+function say(d){const p=d.split(':').map(Number);if(p.length===3)return `${p[0]} hour ${p[1]} minutes`;return `${p[0]} minutes`;}
+function ep(o){
+  const n=o.c?C[o.c][2]:'';
+  const title=o.spoil?o.lbl:o.t;
+  let badges='';
+  if(o.cc)badges+='<span class="cc" aria-hidden="true">CC</span>';
+  if(o.watched)badges+='<span class="badge">✓ Watched</span>';
+  else if(o.prog)badges+=`<span class="badge prog">${o.prog}% watched</span>`;
+  if(o.spoil)badges+='<span class="badge">Title hidden</span>';
+  return `<li><a class="ep" href="#">
+  <span class="thumb${o.spoil?' spoil':''}" aria-hidden="true">${o.spoil?'':art(o.s||CUR,SEED++,160,90,o.c?C[o.c][1]:null)}<span class="lbl">${o.lbl}</span>${o.dur?`<span class="dur">${o.dur}</span>`:''}${o.prog?`<span class="prog" style="width:${o.prog}%"></span>`:''}</span>
+  <span class="t">${title}</span>
+  <span class="m">${o.c?av(o.c):''}<span>${n}${o.sub?' · '+o.sub:''}</span>${badges}</span>${o.dur?`<span class="sr-only">, ${say(o.dur)}</span>`:''}${o.cc?'<span class="sr-only">, creator captions</span>':''}</a></li>`;
+}
+const poster=o=>`<li><a class="poster" href="#">${art(o.k,o.seed||3)}<span class="tag">${o.tag}</span><b>${o.t}</b><span>${o.s}</span></a></li>`;
+const cr=(id,on)=>`<li><button type="button" class="creator" aria-pressed="${on}">${av(id,'xl')}<span>${C[id][0]}</span><span class="st" aria-hidden="true">${on?'✓ Watching':'+ Add'}</span></button></li>`;
+const sw=(label,on,hint='')=>`<button type="button" class="toggle" role="switch" aria-checked="${on}"><span class="lb">${label}${hint?`<small>${hint}</small>`:''}</span><span class="sw" aria-hidden="true"></span><span class="st" aria-hidden="true">${on?'On':'Off'}</span></button>`;
+function rail(k,title,small,items){
+  return `<section class="row" aria-labelledby="${k}-h"><div class="row-h"><h2 id="${k}-h">${title}${small?` <small>${small}</small>`:''}</h2>
+  <div class="rail-btns"><button type="button" data-scroll="${k}" data-dir="-1" aria-label="Scroll ${title} back">‹</button><button type="button" data-scroll="${k}" data-dir="1" aria-label="Scroll ${title} forward">›</button></div></div>
+  <ul class="rail${k.endsWith('cont')?' big':''}" id="${k}">${items}</ul></section>`;
+}
+const NAV=['Home','Series','Creators','Who I watch','Community'];
+function hdr(p,cur,opt={}){
+  const menu=opt.menu?accountMenu(p):'';
+  return `<header class="top">
+  <a class="logo" href="#">${LOGO}Couchcrab</a><span class="unofficial">Unofficial</span>
+  ${opt.back?`<span class="sp"></span><a href="#">← ${opt.back}</a>`:`<nav aria-label="Main"><ul>${NAV.map(n=>`<li><a href="#"${n===cur?' aria-current="page"':''}>${n}</a></li>`).join('')}</ul></nav>
+  <span class="sp"></span><form class="search" role="search" onsubmit="return false"><label class="sr-only" for="${p}-q">Search series, creators and episodes</label><input id="${p}-q" type="search" placeholder="Search series, creators, episodes"></form>`}
+  <div class="menu-wrap"><button type="button" class="me" aria-expanded="${opt.menu?'true':'false'}" aria-controls="${p}-menu" aria-label="Account menu, MK">MK</button>${menu}</div>
+  </header>`;
+}
+function accountMenu(p){
+  return `<div class="menu" id="${p}-menu"><h2>Signed in with Discord as MK</h2>
+  <fieldset class="seg"><legend>Theme</legend>
+  <label><input type="radio" name="${p}-th" checked>System</label><label><input type="radio" name="${p}-th">Dark</label>
+  <label><input type="radio" name="${p}-th">Light</label><label><input type="radio" name="${p}-th">High contrast</label></fieldset>
+  <hr><a href="#">Who I watch</a><a href="#" aria-current="page">Display &amp; accessibility</a><a href="#">My suggestions</a><hr><a href="#">Sign out</a></div>`;
+}
+const foot=(x='')=>`<footer class="footer"><p><b>Unofficial.</b> Couchcrab is an independent fan project. It is not affiliated with, endorsed by or connected to Hermitcraft, its members or any creator listed here. All videos are embedded from YouTube and belong to their creators. ${x}Minecraft is a trademark of Mojang.</p>
+<ul><li><a href="#">About</a></li><li><a href="#">Accessibility statement</a></li><li><a href="#">Report an accessibility problem</a></li><li><a href="#">Creator requests</a></li><li><a href="#">Privacy</a></li></ul></footer>`;
+const app=(p,inner)=>`<div class="app"><a class="skip" href="#${p}-main">Skip to content</a>${inner}</div>`;
+const note=(t,items=[])=>`<aside class="note" aria-label="Design note"><strong>${t.split('|')[0]}</strong> ${t.split('|')[1]||''}${items.length?`<ul>${items.map(i=>`<li>${i}</li>`).join('')}</ul>`:''}</aside>`;
+
+/* ---------- screens ---------- */
+const S={};
+
+S.concept=['0 · Concept',()=>`<div class="app concept" style="max-width:1000px;padding:36px 40px">
+<main id="concept-main">
+<div class="logo" style="font-size:1.75rem">${LOGO}Couchcrab <span class="unofficial">unofficial fan project</span></div>
+<p style="color:var(--muted);max-width:720px">A Netflix-style way to binge Minecraft YouTube series from the Hermitcraft community and friends. Every video plays from YouTube itself, so views and ad revenue stay with the creator.</p>
+<h1 class="sr-only">Couchcrab concept</h1>
+<h2 style="font-size:1.125rem;margin-top:28px">What we decided</h2>
+<table><tbody>
+<tr><th scope="row">Data</th><td>YouTube Data API pulls creator channels and playlists. Title rules place videos in a series and season. The community corrects whatever lands in the wrong spot.</td></tr>
+<tr><th scope="row">Community</th><td>Signed-in users suggest edits, trusted editors approve them, trust grows with each approved suggestion. Full history, everything can be reverted.</td></tr>
+<tr><th scope="row">Accounts</th><td>Optional, Discord login only. Watching, preferences and display settings work without an account (stored in the browser).</td></tr>
+<tr><th scope="row">Who I watch</th><td>One global creator list, each series can follow it or override it. Inside a series you watch your chosen POVs mixed on one timeline.</td></tr>
+<tr><th scope="row">Timeline</th><td>Upload date by default. Live series are grouped into sessions by the community.</td></tr>
+<tr><th scope="row">Content</th><td>Episodes and second channels in the main series. Livestream VODs in an "Extras" side series. No Shorts.</td></tr>
+<tr><th scope="row">Spoilers</th><td>Spoiler-free mode per series: unwatched episodes get a neutral card and a plain "Episode 12" title.</td></tr>
+<tr><th scope="row">Playback</th><td>Embedded YouTube player. Autoplay of the next episode is a setting with a visible countdown that can be paused, cancelled or set to "wait for me".</td></tr>
+<tr><th scope="row">Editors</th><td>At launch only the owner approves suggestions. Trusted editors come later.</td></tr>
+<tr><th scope="row">Creators</th><td>One list without fixed groups. Creators, channels, series, title rules and site texts are all managed in the tool, nothing is hard-coded.</td></tr>
+<tr><th scope="row">Creator requests</th><td>Own form for corrections or removal, always on top of the review queue.</td></tr>
+<tr><th scope="row">Posters</th><td>Every series has its own poster: an illustration without text in it. The title is real text on top, so it scales, follows the theme and gets read out.</td></tr>
+<tr><th scope="row">Not affiliated</th><td>Banner on first visit, line in every footer, "Unofficial" label next to the logo, About page.</td></tr>
+</tbody></table>
+
+<h2 style="font-size:1.125rem;margin-top:28px">Accessibility (new in v2)</h2>
+<table><tbody>
+<tr><th scope="row">Target</th><td>WCAG 2.2 level AA on every screen, in every theme. Measured each release with axe, keyboard-only runs, 200% zoom, 320 px reflow and reduced motion. Screen reader runs (NVDA, VoiceOver) are done by people: a test group of fans after launch.</td></tr>
+<tr><th scope="row">Captions first</th><td>Each episode shows a <span class="cc">CC</span> badge when the creator uploaded real captions (not only YouTube's auto captions, which struggle with Minecraft words and names). Filter: "only episodes with creator captions". Captions can be switched on by default in the player.</td></tr>
+<tr><th scope="row">Display</th><td>Theme in the account menu: System, Dark, Light, High contrast. Text size (default, large, larger), reduced motion (follows the system), underlined links, and a text-only list view without thumbnails.</td></tr>
+<tr><th scope="row">No surprises</th><td>Nothing moves or plays on its own without a setting. Autoplay countdown is announced once to screen readers and pauses on hover or focus. No carousels that rotate by themselves.</td></tr>
+<tr><th scope="row">Keyboard</th><td>Skip link, visible focus everywhere, every rail scrollable with buttons and Tab. Single-key shortcuts can be turned off or changed (WCAG 2.1.4).</td></tr>
+<tr><th scope="row">Not colour alone</th><td>Selected creators show "✓ Watching", watched episodes "✓ Watched", progress as "62% watched", not just a colour, opacity or bar.</td></tr>
+<tr><th scope="row">Spoilers and screen readers</th><td>The hidden title is also hidden from screen readers. Thumbnails are decorative (the title is right next to them), so YouTube thumbnails with text in them don't need to be read out.</td></tr>
+<tr><th scope="row">Limits we say out loud</th><td>The YouTube player itself and the quality of the videos and captions belong to YouTube and the creators. The accessibility statement says so and points to "Report an accessibility problem".</td></tr>
+</tbody></table>
+
+<h2 style="font-size:1.125rem;margin-top:28px">Name</h2>
+<p><b>Couchcrab</b>: a hermit crab on the couch, bingeing. A wink to fans without using any Hermitcraft or Minecraft name. couchcrab.com was free on 21 Nov 2026 (checked with the .com registry).</p>
+
+<h2 style="font-size:1.125rem;margin-top:28px">Later</h2>
+<ol style="font-size:.875rem;padding-left:18px">
+<li>After launch: a test group of fans who use a screen reader, captions or only a keyboard.</li>
+<li>Domain and hosting for the public version (after dev.lan).</li>
+</ol>
+</main></div>`];
+
+S.home=['1 · Home',()=>(CUR='hc10',0)||note('Home.|Rows only show creators you watch. Every rail scrolls with the ‹ › buttons, Tab or swipe; nothing rotates on its own. Progress and watched state are written out, not only drawn.')+app('home',`
+${hdr('home','Home')}
+<main id="home-main">
+<section class="hero" aria-labelledby="home-h1">${art('hc10',11,160,90)}
+  <p class="kicker">Hermitcraft · Season 10 · Mixed timeline</p>
+  <h1 id="home-h1">Season 10, from 6 points of view, in the order it happened.</h1>
+  <p>You're at week 14. Next up: Grian, then Scar, then Mumbo, all uploaded on the same day.</p>
+  <div class="btns"><a class="btn primary" href="#">▶ Continue week 14</a><a class="btn ghost" href="#">Change POVs</a></div>
+</section>
+<aside class="banner" aria-label="Unofficial project notice"><p>ⓘ Couchcrab is a fan-made project. We are not affiliated with Hermitcraft or any creator. Every video plays from YouTube on the creator's own channel. <a href="#">About Couchcrab</a></p><button type="button" class="x" aria-label="Dismiss notice">✕</button></aside>
+${rail('home-cont','Continue watching','',[
+ ep({t:'Hermitcraft 10, mixed timeline',c:'GR',sub:'episode 41',lbl:'S10 · W14',dur:'31:20',prog:62,s:'hc10',cc:1}),
+ ep({c:'SC',sub:'Secret Life',lbl:'Session 4',dur:'1:12:00',prog:20,g:G.crimson,spoil:1}),
+ ep({t:'Empires SMP S2',c:'LZ',sub:'episode 9',lbl:'Empires 2',dur:'24:05',prog:85,s:'empires'}),
+ ep({t:'Decked Out 2 runs',c:'TT',sub:'run 22',lbl:'Decked Out',dur:'48:40',prog:10,s:'decked',cc:1}),
+ ep({t:'Hermitcraft 9, mixed timeline',c:'MJ',sub:'episode 3',lbl:'S9 · W2',dur:'27:10',prog:40,s:'hc9'})].join(''))}
+${rail('home-new','New from your creators','last 7 days',[
+ ep({t:'The Mega Base Gets a Roof',c:'MJ',sub:'HC S10 · 2 h ago',lbl:'EP 52',dur:'35:02',g:G.teal}),
+ ep({t:'Prank War, Round Three',c:'GR',sub:'HC S10 · 1 day ago',lbl:'EP 49',dur:'29:44',g:G.red,cc:1}),
+ ep({t:'Shopping District Redesign',c:'SC',sub:'HC S10 · 2 days ago',lbl:'EP 47',dur:'41:15',g:G.blue}),
+ ep({t:'Stream: building all night',c:'TT',sub:'Extras · 3 days ago',lbl:'VOD',dur:'3:05:00',g:G.olive}),
+ ep({t:'Too: Fixing Things',c:'GR',sub:'Grian Too · 4 days ago',lbl:'EP 50',dur:'22:30',g:G.indigo,cc:1})].join(''))}
+${rail('home-series','Series','Hermitcraft seasons · Life series · Events',[
+ poster({t:'Hermitcraft Season 10',s:'26 creators · 1,240 episodes',tag:'Watching',k:'hc10'}),
+ poster({t:'Secret Life',s:'14 creators · 8 sessions',tag:'Life series',k:'secret'}),
+ poster({t:'Empires SMP S2',s:'12 creators',tag:'Event',k:'empires'}),
+ poster({t:'Limited Life',s:'14 creators · 8 sessions',tag:'Life series',k:'limited'}),
+ poster({t:'Hermitcraft Season 9',s:'24 creators',tag:'Hermitcraft',k:'hc9'}),
+ poster({t:'Decked Out 2',s:'community-tracked',tag:'Event',k:'decked'}),
+ poster({t:'Double Life',s:'14 creators · 8 sessions',tag:'Life series',k:'double'}),
+ poster({t:'Last Life',s:'14 creators · 8 sessions',tag:'Life series',k:'last'}),
+ poster({t:'3rd Life',s:'14 creators · 8 sessions',tag:'Life series',k:'third'})].join(''))}
+${rail('home-cr','Your creators','6 of 41',['GR','MJ','SC','TT','LZ','PL'].map(i=>cr(i,true)).join('')+`<li><a class="creator" href="#" style="text-decoration:none"><span class="av xl" style="--c:#ccc" aria-hidden="true">+</span><span>Edit who I watch</span></a></li>`)}
+</main>${foot()}`)];
+
+S.season=['2 · Series: Hermitcraft S10',()=>(CUR='hc10',0)||note('Series page, mixed timeline.|Weeks are headings, so screen reader users can jump week by week. The CC filter hides episodes without creator captions. Sub-pages are links with aria-current, not fake tabs.')+app('season',`
+${hdr('season','Series')}
+<main id="season-main">
+<section class="shead" aria-labelledby="season-h1">${art('hc10',5,160,90)}
+  <p class="kicker">Hermitcraft · Season 10</p>
+  <h1 id="season-h1">Hermitcraft Season 10</h1>
+  <p class="meta"><span>Started March 2024</span><span>26 creators</span><span>1,240 episodes</span><span>Ongoing</span><span class="pill">Synced 12 min ago</span></p>
+  <div class="povbar">
+    <div class="stack" aria-hidden="true">${['GR','MJ','SC','TT','PL','IM'].map(i=>av(i)).join('')}</div>
+    <div><b>Watching 6 of 26 POVs</b><div class="meta">Custom for this series · your global list has 5</div></div>
+    <span class="pill coral">Custom here</span><span class="sp" style="flex:1"></span>
+    <div class="btns"><a class="btn sm ghost" href="#">Change POVs</a><button type="button" class="btn sm ghost">Reset to global list</button><a class="btn sm primary" href="#">▶ Continue week 14</a></div>
+  </div>
+</section>
+<nav class="subnav" aria-label="Hermitcraft Season 10"><ul><li><a href="#" aria-current="page">Mixed timeline</a></li><li><a href="#">By creator</a></li><li><a href="#">Extras: livestream VODs (38)</a></li><li><a href="#">About and history</a></li></ul></nav>
+<div class="cols">
+ <div>
+  <section class="week" aria-labelledby="w14"><h2 id="w14">Week 14 · 8 to 14 June 2024 <span class="pill sea">You're here</span></h2>
+   <ul class="tl">${[
+    ep({t:'The Big Reveal',c:'GR',sub:'8 Jun',lbl:'EP 41',dur:'31:20',prog:62,g:G.red,cc:1}),
+    ep({t:'Mountain Village',c:'SC',sub:'8 Jun',lbl:'EP 39',dur:'38:02',g:G.blue}),
+    ep({t:'Redstone Gone Wrong',c:'MJ',sub:'9 Jun',lbl:'EP 37',dur:'29:15',g:G.teal}),
+    ep({t:'Decked Out Update',c:'TT',sub:'11 Jun',lbl:'EP 22',dur:'44:50',g:G.steel,cc:1}),
+    ep({t:'Fairy Garden',c:'PL',sub:'12 Jun',lbl:'EP 30',dur:'26:40',g:G.pink,cc:1}),
+    ep({t:'Sand Everywhere',c:'IM',sub:'13 Jun',lbl:'EP 33',dur:'33:00',g:G.gold})].join('')}</ul></section>
+  <section class="week" aria-labelledby="w13"><h2 id="w13">Week 13 · 1 to 7 June 2024 <span class="pill">All watched</span></h2>
+   <ul class="tl">${[
+    ep({t:'Getting Ready',c:'GR',sub:'2 Jun',lbl:'EP 40',dur:'28:10',watched:1,prog:100,g:G.red,cc:1}),
+    ep({t:'Storage Tour',c:'MJ',sub:'3 Jun',lbl:'EP 36',dur:'30:30',watched:1,prog:100,g:G.teal}),
+    ep({t:'Terraforming Day',c:'SC',sub:'5 Jun',lbl:'EP 38',dur:'35:45',watched:1,prog:100,g:G.blue})].join('')}</ul></section>
+ </div>
+ <aside class="side" aria-label="Series options">
+  <div class="box"><h2>Viewing options</h2>
+   ${sw('Spoiler-free mode',false,'Hide titles of unwatched episodes')}
+   ${sw('Autoplay next on timeline',true,'15 s countdown, pauses on focus')}
+   ${sw('Only creator captions',false,'Hide episodes without CC')}
+   ${sw('Include second channels',true)}
+   ${sw('Hide watched weeks',false)}
+  </div>
+  <div class="box"><h2>Your progress</h2><p>Week 14 of 38 · 212 of 690 episodes from your POVs (31%)</p><div class="bar" aria-hidden="true"><i style="width:31%"></i></div></div>
+  <div class="box"><h2>Something wrong?</h2><p>A video in the wrong season, a missing episode, a wrong CC badge?</p><a class="btn sm ghost" href="#">Suggest an edit</a></div>
+ </aside>
+</div></main>${foot()}`)];
+
+S.life=['3 · Series: Secret Life',()=>(CUR='secret',0)||note('Live series grouped by session.|Spoiler-free mode is on: unwatched episodes get a neutral striped card instead of a blur (a blur still leaks colours and shapes, and lowers contrast). The hidden title is also hidden from screen readers.')+app('life',`
+${hdr('life','Series')}
+<main id="life-main">
+<section class="shead" aria-labelledby="life-h1">${art('secret',4,160,90)}
+  <p class="kicker">Life series · 2023</p>
+  <h1 id="life-h1">Secret Life</h1>
+  <p class="meta"><span>8 sessions</span><span>14 creators</span><span class="pill warn">Spoiler-free on</span></p>
+  <div class="povbar">
+    <div class="stack" aria-hidden="true">${['GR','SC','PL','LZ','IM'].map(i=>av(i)).join('')}</div>
+    <div><b>Watching 5 of 14 POVs</b><div class="meta">Follows your global list</div></div>
+    <span class="pill sea">Global list</span><span class="sp" style="flex:1"></span>
+    <div class="btns"><a class="btn sm ghost" href="#">Customize for this series</a><a class="btn sm primary" href="#">▶ Session 4, Grian</a></div>
+  </div>
+</section>
+<nav class="subnav" aria-label="Secret Life"><ul><li><a href="#" aria-current="page">Sessions</a></li><li><a href="#">By creator</a></li><li><a href="#">Extras: VODs (12)</a></li><li><a href="#">Unsorted (3)</a></li></ul></nav>
+<div class="sessions">
+ <section class="session" aria-labelledby="s3"><header><h2 id="s3">Session 3</h2><span class="pill">All watched</span><span class="meta">5 POVs · about 2 h 40</span></header>
+  <ul class="tl">${[
+   ep({t:"Grian's quest goes sideways",c:'GR',lbl:'EP 3',watched:1,prog:100,g:G.red,cc:1}),
+   ep({t:'Scar and the hearts',c:'SC',lbl:'EP 3',watched:1,prog:100,g:G.green}),
+   ep({t:"Pearl's secret",c:'PL',lbl:'EP 3',watched:1,prog:100,g:G.pink,cc:1})].join('')}</ul></section>
+ <section class="session next" aria-labelledby="s4"><header><h2 id="s4">Session 4</h2><span class="pill coral">Up next</span><span class="meta">5 POVs · about 3 h 05</span><span class="sp" style="flex:1"></span><a class="btn sm primary" href="#">▶ Play session 4</a></header>
+  <ul class="tl">${[['GR','38:00',1],['SC','41:00',0],['PL','33:00',1],['LZ','36:00',0],['IM','37:00',0]].map(([c,d,cc])=>ep({c,lbl:'Episode 4',dur:d,spoil:1,cc})).join('')}</ul></section>
+ <section class="session" aria-labelledby="s5"><header><h2 id="s5">Session 5</h2><span class="meta">5 POVs</span></header>
+  <ul class="tl">${['GR','SC','PL'].map(c=>ep({c,lbl:'Episode 5',spoil:1})).join('')}</ul></section>
+</div></main>${foot()}`)];
+
+S.player=['4 · Player',()=>(CUR='secret',0)||note('Player.|The countdown never surprises anyone:',['Off when "Autoplay next" is off, or set to "Wait for me" in settings.','Pauses while the pointer or focus is on it; "Play now" and "Cancel" are real buttons.','Announced once to screen readers via a polite live region, not every second.','No animated ring; the remaining time is text.','Captions start on by default when that setting is on (YouTube player parameter).'])+app('player',`
+${hdr('player','',{back:'Secret Life · Session 4'})}
+<main id="player-main"><div class="player">
+ <div>
+  <div class="video"><div class="yt" aria-hidden="true"><i>▶</i><span>YouTube embed</span></div>
+   <div class="upnext"><p><b>Up next in 15 s:</b> Scar, episode 4</p><div class="btns"><button type="button" class="btn sm primary">Play now</button><button type="button" class="btn sm ghost">Cancel</button></div></div>
+   <p class="sr-only" aria-live="polite">Up next in 15 seconds: Scar, episode 4.</p>
+  </div>
+  <div class="vt">
+   <h1>Secret Life, session 4: Grian, episode 4</h1>
+   <p class="meta">${av('GR','md')}<span>Grian · 38 minutes</span><span class="cc">CC</span><span>Creator captions</span><span class="pill warn">Title hidden (spoiler-free)</span></p>
+   <div class="btns"><button type="button" class="btn sm ghost" aria-pressed="false">Mark as watched</button><button type="button" class="btn sm ghost">Show real title</button><a class="btn sm ghost" href="#">Watch on YouTube<span class="sr-only"> (opens YouTube)</span> ↗</a><a class="btn sm ghost" href="#">Suggest an edit</a></div>
+   <p class="meta" style="margin-top:10px">Shortcuts: <span class="kbd">N</span> next · <span class="kbd">S</span> show title · <span class="kbd">M</span> mark watched · <a href="#">change or turn off</a></p>
+  </div>
+ </div>
+ <section class="box queue" aria-labelledby="q-h"><h2 id="q-h">Session 4 · your 5 POVs</h2>
+  <ol>${[['GR','Playing',1],['SC','41 min'],['PL','33 min'],['LZ','36 min'],['IM','37 min']].map(([c,s,cur])=>`<li><a href="#"${cur?' aria-current="true"':''}><span class="thumb spoil" style="--g:${G.grey}" aria-hidden="true"><span class="lbl">Ep 4</span></span><span><b>${C[c][2]}</b><br><span class="meta">${s}</span></span></a></li>`).join('')}</ol>
+  <p style="margin-top:10px">Then: session 5</p>
+ </section>
+</div></main>${foot('Couchcrab does not host, download or monetise any video. ')}`)];
+
+S.creator=['5 · Creator',()=>(CUR='hc10',0)||note('Creator page.|Links to the creator\'s own channels say that they leave the site. The "not their page" line is plain text, not small print hidden in a tooltip. The text-only list (setting) is shown under "Latest uploads".')+app('creator',`
+${hdr('creator','Creators')}
+<main id="creator-main">
+<section class="chead" aria-labelledby="cr-h1">${art('hc9',9,160,90,'#e05d5d')}${av('GR','xxl')}
+ <div><p class="kicker">Hermit since Season 5 · Life series</p><h1 id="cr-h1">Grian</h1>
+  <ul class="plain btns"><li><a class="pill" href="#">YouTube: Grian<span class="sr-only"> (opens YouTube)</span> ↗</a></li><li><a class="pill" href="#">YouTube: Grian Too<span class="sr-only"> (opens YouTube)</span> ↗</a></li><li><a class="pill" href="#">Twitch<span class="sr-only"> (opens Twitch)</span> ↗</a></li></ul>
+  <div class="btns" style="margin-top:12px"><button type="button" class="btn sm primary" aria-pressed="true">✓ In my list</button><a class="btn sm ghost" href="#">Suggest an edit</a></div>
+  <p class="meta" style="margin-top:10px">Fan-maintained overview. Not run by or affiliated with Grian.</p></div>
+</section>
+${rail('cr-series','Series','11',[
+ poster({t:'Hermitcraft Season 10',s:'52 episodes · 8 on Grian Too',tag:'Ongoing',k:'hc10'}),
+ poster({t:'Secret Life',s:'8 episodes',tag:'Life series',k:'secret'}),
+ poster({t:'Limited Life',s:'8 episodes',tag:'Life series',k:'limited'}),
+ poster({t:'Hermitcraft Season 9',s:'74 episodes',tag:'Hermitcraft',k:'hc9'}),
+ poster({t:'Double Life',s:'8 episodes',tag:'Life series',k:'double'})].join(''))}
+<section class="row" aria-labelledby="cr-latest"><h2 id="cr-latest">Latest uploads <small>text-only view</small></h2>
+ <ul class="textlist">
+  <li><a href="#"><b>Prank War, Round Three</b><span class="meta">HC S10 · episode 49 · 29 min · 1 day ago</span><span class="cc" aria-hidden="true">CC</span><span class="sr-only">, creator captions</span></a></li>
+  <li><a href="#"><b>Too: Fixing Things</b><span class="meta">Grian Too · HC S10 · 22 min · 4 days ago</span><span class="cc" aria-hidden="true">CC</span><span class="sr-only">, creator captions</span></a></li>
+  <li><a href="#"><b>Something Different</b><span class="meta">12 min · 9 days ago</span><span class="pill coral">Not in a series yet</span></a></li>
+ </ul></section>
+</main>${foot('Creators can ask for changes or removal via Creator requests. ')}`)];
+
+S.prefs=['6 · Who I watch',()=>note('Who I watch.|One list, no fixed groups: creators are added and edited in the tool. Each creator is a toggle button (aria-pressed) with a written state, "✓ Watching" or "+ Add", plus greyscale for the rest. Per-series choice is a real radio group.')+app('prefs',`
+${hdr('prefs','Who I watch')}
+<main id="prefs-main" style="padding:24px 28px">
+ <h1 style="margin:0 0 4px;font-size:1.875rem">Who I watch</h1>
+ <p style="color:var(--muted);margin:0">Pick the creators whose POV you want. Series follow this list unless you change it there.</p>
+ <div class="btns" style="margin:14px 0;align-items:center"><span class="pill sea" aria-live="polite">5 selected</span><button type="button" class="btn sm ghost">Select all</button><button type="button" class="btn sm ghost">Clear all</button><span class="meta">Synced with Discord</span></div>
+ <div class="field" style="max-width:420px"><label for="pf-q">Find a creator</label><input id="pf-q" type="text" placeholder="Name or channel"></div>
+ <h2 class="grp" id="g-h">All creators <span style="text-transform:none;letter-spacing:0">(41, managed by the community)</span></h2>
+ <ul class="grid-cr" aria-labelledby="g-h">${[['GR',1],['MJ',1],['SC',1],['TT',1],['IM',0],['PL',1],['LZ',0],['ET',0],['BD',0],['MT',0],['ZD',0],['JL',0],['GM',0],['JS',0],['XS',0],['SM',0],['CB',0]].map(([i,o])=>cr(i,!!o)).join('')}<li><a class="creator" href="#" style="text-decoration:none"><span class="av xl" style="--c:#ccc" aria-hidden="true">+</span><span>Suggest a creator</span></a></li></ul>
+ <h2 style="font-size:1.125rem;margin:34px 0 6px">Per series</h2>
+ <p style="color:var(--muted);margin:0 0 10px;font-size:.875rem">Series where you watch a different set than your global list.</p>
+ ${[['Hermitcraft Season 10','Adds ImpulseSV','hc10',1],['Empires SMP S2','Only Lizzie, Pearl and Smajor','empires',1],['Secret Life','Follows global list, 5 POVs','secret',0]].map(([n,d,g,c],k)=>`<div class="override"><span class="chip-sw" aria-hidden="true" style="position:relative;overflow:hidden">${art(g,2,60,60)}</span><div class="nm"><b id="ov${k}">${n}</b><span>${d}</span></div>
+ <fieldset class="seg" aria-labelledby="ov${k}"><label><input type="radio" name="ov${k}"${c?'':' checked'}>Global list</label><label><input type="radio" name="ov${k}"${c?' checked':''}>Custom</label></fieldset><a class="btn sm ghost" href="#">Edit<span class="sr-only"> ${n}</span></a></div>`).join('')}
+</main>${foot()}`)];
+
+S.display=['7 · Display & accessibility',()=>note('Display &amp; accessibility.|New screen. The theme lives in the account menu only (one place, full labels); this page holds everything else. All settings work without an account and are stored in the browser.')+app('display',`
+${hdr('display','',{menu:1})}
+<main id="display-main" class="settings">
+ <nav aria-label="Settings"><ul class="plain"><li><a href="#">Who I watch</a></li><li><a href="#" aria-current="page">Display &amp; accessibility</a></li><li><a href="#">Playback</a></li><li><a href="#">Account</a></li></ul></nav>
+ <div>
+  <h1 style="margin:0 0 16px;font-size:1.75rem">Display &amp; accessibility</h1>
+  <section aria-labelledby="d-text"><h2 id="d-text">Text and layout</h2>
+   <fieldset class="field"><legend>Text size</legend><div class="radios"><label><input type="radio" name="ts" checked>Default</label><label><input type="radio" name="ts">Large</label><label><input type="radio" name="ts">Larger</label></div></fieldset>
+   ${sw('Underline all links',false)}
+   ${sw('Text-only lists',false,'Show episodes as a list of titles, without thumbnails')}
+  </section>
+  <section aria-labelledby="d-motion"><h2 id="d-motion">Motion</h2>
+   <fieldset class="field"><legend>Animations</legend><div class="radios"><label><input type="radio" name="mo" checked>Follow my system</label><label><input type="radio" name="mo">Reduce</label><label><input type="radio" name="mo">Allow</label></div></fieldset>
+  </section>
+  <section aria-labelledby="d-play"><h2 id="d-play">Playback</h2>
+   ${sw('Autoplay next episode',true)}
+   <fieldset class="field"><legend>Countdown before the next episode</legend><div class="radios"><label><input type="radio" name="cd">10 s</label><label><input type="radio" name="cd" checked>15 s</label><label><input type="radio" name="cd">30 s</label><label><input type="radio" name="cd">Wait for me</label></div></fieldset>
+   ${sw('Spoiler-free for new series',false)}
+  </section>
+  <section aria-labelledby="d-cc"><h2 id="d-cc">Captions</h2>
+   ${sw('Turn captions on when a video starts',true)}
+   <div class="field"><label for="cc-lang">Preferred caption language</label><select id="cc-lang"><option>English</option><option>Dutch</option><option>French</option><option>German</option><option>Spanish</option></select></div>
+   ${sw('Only show episodes with creator captions',false,'Applies to every series. Auto-generated captions don\'t count.')}
+  </section>
+  <section aria-labelledby="d-kb"><h2 id="d-kb">Keyboard shortcuts</h2>
+   ${sw('Single-key shortcuts',true,'Turn off if you use speech input or a screen reader that conflicts')}
+   <table class="kb-table"><caption class="sr-only">Keyboard shortcuts</caption><thead><tr><th scope="col">Key</th><th scope="col">Action</th><th scope="col"><span class="sr-only">Change</span></th></tr></thead><tbody>
+   <tr><td><span class="kbd">N</span></td><td>Next episode on the timeline</td><td><button type="button" class="btn sm ghost">Change<span class="sr-only"> shortcut for next episode</span></button></td></tr>
+   <tr><td><span class="kbd">S</span></td><td>Show or hide the real title</td><td><button type="button" class="btn sm ghost">Change<span class="sr-only"> shortcut for show title</span></button></td></tr>
+   <tr><td><span class="kbd">M</span></td><td>Mark as watched</td><td><button type="button" class="btn sm ghost">Change<span class="sr-only"> shortcut for mark as watched</span></button></td></tr>
+   </tbody></table>
+  </section>
+ </div>
+</main>${foot()}`)];
+
+S.suggest=['8 · Suggest an edit',()=>note('Suggest an edit.|A real dialog (focus moves in, Escape closes, focus returns to the button that opened it). Every field has a visible label. The CC badge can be corrected too.')+`<div class="app"><div class="modal-wrap">
+ <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sg-h" aria-describedby="sg-d">
+  <h2 id="sg-h">Suggest an edit</h2>
+  <p id="sg-d" class="meta">Grian · "Something Different" · uploaded 12 Nov</p>
+  <fieldset class="field"><legend>What's wrong?</legend><div class="radios">
+   <label><input type="radio" name="sg" checked>Wrong or no series</label><label><input type="radio" name="sg">Wrong session or week</label><label><input type="radio" name="sg">It's a livestream VOD</label><label><input type="radio" name="sg">Captions badge is wrong</label><label><input type="radio" name="sg">Not part of any series</label><label><input type="radio" name="sg">Other</label></div></fieldset>
+  <div class="field"><label for="sg-series">Series</label><select id="sg-series"><option>Secret Life</option><option>Hermitcraft Season 10</option></select></div>
+  <div class="field"><label for="sg-session">Session</label><select id="sg-session"><option>Session 4</option><option>Session 5</option></select></div>
+  <div class="field"><label for="sg-note">Note for reviewers (optional)</label><p class="hint" id="sg-note-h">For example where you saw the session number.</p><textarea id="sg-note" rows="3" aria-describedby="sg-note-h">The description says "Session 4".</textarea></div>
+  <div class="btns" style="justify-content:flex-end;margin-top:18px"><button type="button" class="btn ghost">Cancel</button><button type="button" class="btn primary">Send suggestion</button></div>
+  <p class="meta" style="margin-top:12px">Your trust: 14 approved, 1 rejected. From 25 approved you can apply edits directly.</p>
+ </div></div></div>`];
+
+S.review=['9 · Review queue',()=>note('Review queue (trusted editors).|The diff uses del/ins with written "Before" and "After", so it doesn\'t rely on red and green. Each Approve or Reject button names the item it belongs to for screen readers.')+app('review',`
+${hdr('review','Community')}
+<main id="review-main">
+<h1 class="sr-only">Review queue</h1>
+<nav class="subnav" aria-label="Community"><ul><li><a href="#" aria-current="page">Suggestions (9)</a></li><li><a href="#">Unsorted uploads (23)</a></li><li><a href="#">Title rules</a></li><li><a href="#">History</a></li><li><a href="#">Editors</a></li></ul></nav>
+<div class="review">
+ <div><h2 class="sr-only">Open suggestions</h2>
+  <article class="ritem creatorreq" aria-labelledby="r1"><div class="hd"><span class="pill warn">Creator request</span><span>2 h ago</span></div><h3 id="r1">Remove an old unlisted video</h3>
+   <div class="diff"><p>Before: <del>HC S7 · "Old test upload" (Zedaph)</del></p><p>After: <ins>removed</ins></p></div>
+   <div class="btns"><button type="button" class="btn sm primary">Approve<span class="sr-only">: remove old unlisted video</span></button><button type="button" class="btn sm ghost">Reject<span class="sr-only">: remove old unlisted video</span></button><button type="button" class="btn sm ghost">Ask a question</button></div></article>
+  <article class="ritem" aria-labelledby="r2"><div class="hd"><span class="av" style="--c:#8ea1ff" aria-hidden="true">CR</span><b>crabby_joe</b><span class="trust"><span class="bar" aria-hidden="true"><i style="width:56%"></i></span>14 approved</span><span>20 min ago</span></div>
+   <h3 id="r2">Grian · "Something Different"</h3>
+   <div class="diff"><p>Before: <del>no series</del></p><p>After: <ins>Secret Life · Session 4</ins></p></div>
+   <p class="meta">"The description says Session 4."</p>
+   <div class="btns" style="margin-top:8px"><button type="button" class="btn sm primary">Approve<span class="sr-only">: Something Different to Secret Life</span></button><button type="button" class="btn sm ghost">Reject<span class="sr-only">: Something Different to Secret Life</span></button><a class="btn sm ghost" href="#">Open video<span class="sr-only"> on YouTube</span> ↗</a></div></article>
+  <article class="ritem" aria-labelledby="r3"><div class="hd"><span class="av" style="--c:#7fe0a8" aria-hidden="true">SN</span><b>snailmail</b><span class="trust"><span class="bar" aria-hidden="true"><i style="width:12%"></i></span>3 approved</span><span>1 h ago</span></div>
+   <h3 id="r3">TangoTek · "Stream: building all night"</h3>
+   <div class="diff"><p>Before: <del>HC S10 · main series</del></p><p>After: <ins>HC S10 · Extras (livestream VOD)</ins></p></div>
+   <div class="btns"><button type="button" class="btn sm primary">Approve<span class="sr-only">: stream to Extras</span></button><button type="button" class="btn sm ghost">Reject<span class="sr-only">: stream to Extras</span></button></div></article>
+ </div>
+ <div class="side">
+  <section class="box" aria-labelledby="as-h"><h2 id="as-h">Auto-sync</h2><p>Last run 12 min ago: 41 new uploads, 38 placed by rules, 3 to unsorted.</p><a class="btn sm ghost" href="#">Open unsorted</a></section>
+  <section class="box" aria-labelledby="hi-h"><h2 id="hi-h">Recent history</h2>
+   <ul class="hist plain">
+    <li><span><b>mk</b> approved: Impulse ep 33 to HC S10 week 14</span><button type="button" class="btn sm ghost">Revert<span class="sr-only"> Impulse ep 33</span></button></li>
+    <li><span><b>rule</b> "Hermitcraft 10" in title to HC S10 (+38)</span><button type="button" class="btn sm ghost">Revert<span class="sr-only"> rule Hermitcraft 10</span></button></li>
+    <li><span><b>pearlfan</b> created session 8 in Secret Life</span><button type="button" class="btn sm ghost">Revert<span class="sr-only"> session 8</span></button></li>
+   </ul></section>
+ </div>
+</div></main>${foot()}`)];
+
+S.mobile=['10 · Mobile',()=>(CUR='hc10',0)||note('Mobile.|Bottom tab bar with text labels under every icon. Touch targets at least 44 px. Frames below are mock phones, so they carry no page landmarks of their own.')+`<main><h1 class="sr-only">Mobile mockups</h1><div class="phones">
+ <div class="phone" role="group" aria-label="Phone mockup: home">
+  <div class="top"><span class="logo" style="font-size:1.0625rem">${LOGO}Couchcrab</span><span class="unofficial">Unofficial</span><span class="sp"></span><button type="button" class="me" aria-label="Account menu, MK">MK</button></div>
+  <div class="hero">${art('hc10',11,90,120)}<p class="kicker">HC Season 10 · Mixed</p><p class="h1">Week 14, 6 POVs.</p><a class="btn primary" href="#">▶ Continue week 14</a></div>
+  <div class="banner" style="margin:0 16px 6px"><p>ⓘ Fan project. Not affiliated with Hermitcraft or any creator.</p></div>
+  <div class="row"><p style="font-weight:700;margin:8px 0">Continue watching</p><ul class="rail">${[ep({t:'HC 10, mixed',c:'GR',lbl:'S10 · W14',prog:62,g:G.green,cc:1}),ep({c:'SC',sub:'Secret Life',lbl:'Session 4',g:G.crimson,spoil:1})].join('')}</ul></div>
+  <div class="row"><p style="font-weight:700;margin:8px 0">New from your creators</p></div>
+  <ul class="plain">
+   <li class="mrow"><a href="#"><span class="thumb" aria-hidden="true">${art('hc10',21,160,90,C.MJ[1])}<span class="lbl">EP 52</span></span><span><b>The Mega Base Gets a Roof</b><br><span class="meta">Mumbo · 2 h ago</span></span></a></li>
+   <li class="mrow"><a href="#"><span class="thumb" aria-hidden="true">${art('hc10',22,160,90,C.GR[1])}<span class="lbl">EP 49</span></span><span><b>Prank War, Round Three</b><br><span class="meta">Grian · 1 day ago · <span class="cc">CC</span></span></span></a></li>
+  </ul>
+  <ul class="tabbar"><li><a href="#" aria-current="page"><i aria-hidden="true">⌂</i>Home</a></li><li><a href="#"><i aria-hidden="true">▤</i>Series</a></li><li><a href="#"><i aria-hidden="true">☺</i>Creators</a></li><li><a href="#"><i aria-hidden="true">✓</i>Who I watch</a></li></ul>
+ </div>
+ <div class="phone" role="group" aria-label="Phone mockup: Hermitcraft Season 10">
+  <div class="top"><a href="#" style="font-size:1.25rem;min-width:44px;min-height:44px;display:grid;place-items:center" aria-label="Back to series">←</a><span class="sp"></span><button type="button" class="me" aria-label="Account menu, MK">MK</button></div>
+  <div class="shead">${art('hc10',5,90,100)}<p class="kicker">Hermitcraft</p><p class="h1" style="font-size:1.75rem;font-weight:800;margin:4px 0">Season 10</p>
+   <div class="povbar" style="padding:8px 10px"><div class="stack" aria-hidden="true">${['GR','MJ','SC','TT'].map(i=>av(i)).join('')}</div><span>6 POVs · custom</span><a class="btn sm ghost" href="#">Change POVs</a></div></div>
+  <div class="subnav"><ul><li><a href="#" aria-current="page">Timeline</a></li><li><a href="#">By creator</a></li><li><a href="#">Extras</a></li></ul></div>
+  <p class="week" style="padding:14px 16px 0;margin:0;font-weight:700">Week 14</p>
+  <ul class="plain">${[['The Big Reveal','Grian · 8 Jun · 62% watched',G.red,'EP 41'],['Mountain Village','Scar · 8 Jun',G.blue,'EP 39'],['Redstone Gone Wrong','Mumbo · 9 Jun',G.teal,'EP 37'],['Decked Out Update','TangoTek · 11 Jun',G.steel,'EP 22']].map(([t,m,g,l],i)=>`<li class="mrow"><a href="#"><span class="thumb" aria-hidden="true">${art('hc10',30+i,160,90,[C.GR,C.SC,C.MJ,C.TT][i][1])}<span class="lbl">${l}</span></span><span><b>${t}</b><br><span class="meta">${m}</span></span></a></li>`).join('')}</ul>
+  <ul class="tabbar"><li><a href="#"><i aria-hidden="true">⌂</i>Home</a></li><li><a href="#" aria-current="page"><i aria-hidden="true">▤</i>Series</a></li><li><a href="#"><i aria-hidden="true">☺</i>Creators</a></li><li><a href="#"><i aria-hidden="true">✓</i>Who I watch</a></li></ul>
+ </div>
+</div></main>`];
+
+/* ---------- render board ---------- */
+const btnWrap=document.getElementById('screen-buttons'),wrap=document.getElementById('screens');
+Object.entries(S).forEach(([k,[label,fn]],i)=>{
+  btnWrap.insertAdjacentHTML('beforeend',`<li><button type="button" data-s="${k}" aria-pressed="${i===0}">${label}</button></li>`);
+  wrap.insertAdjacentHTML('beforeend',`<div class="screen" id="${k}"${i===0?'':' hidden'}>${fn()}</div>`);
+});
+function show(k){
+  document.querySelectorAll('[data-s]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===k));
+  document.querySelectorAll('.screen').forEach(s=>s.hidden=s.id!==k);
+  scrollTo(0,0);
+}
+btnWrap.addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(b)show(b.dataset.s)});
+if(location.hash&&S[location.hash.slice(1)])show(location.hash.slice(1));
+document.querySelectorAll('input[name=board-theme]').forEach(r=>r.addEventListener('change',()=>document.body.dataset.theme=r.value));
+document.addEventListener('click',e=>{
+  const t=e.target.closest('.toggle');if(t){const on=t.getAttribute('aria-checked')!=='true';t.setAttribute('aria-checked',on);t.querySelector('.st').textContent=on?'On':'Off';}
+  const c=e.target.closest('button.creator');if(c){const on=c.getAttribute('aria-pressed')!=='true';c.setAttribute('aria-pressed',on);c.querySelector('.st').textContent=on?'✓ Watching':'+ Add';}
+  const s=e.target.closest('[data-scroll]');if(s){const r=document.getElementById(s.dataset.scroll);r.scrollBy({left:s.dataset.dir*r.clientWidth*.8,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+});
+</script>
+</body>
+</html>
