@@ -394,23 +394,22 @@ export const progress = sqliteTable(
 	(t) => [primaryKey({ columns: [t.userId, t.videoId] })]
 );
 
-export type UserSettings = {
-	theme?: 'system' | 'dark' | 'light' | 'contrast';
-	textSize?: 'default' | 'large' | 'larger';
-	motion?: 'system' | 'reduce';
-	underlineLinks?: boolean;
-	autoplay?: 'off' | 'countdown' | 'wait';
-	captionsByDefault?: boolean;
-	spoilerDefault?: boolean;
-	shortcuts?: boolean;
-	locale?: string;
+/**
+ * The viewing prefs of an account (see `src/lib/prefs/schema.ts`), without the creator lists:
+ * those live in `user_creators` and `user_series_creators`. `creatorsMode` and `customSeries`
+ * say which lists are set (an empty list has no rows).
+ */
+export type AccountPrefs = {
+	prefs: Record<string, unknown>;
+	creatorsMode: 'all' | 'list';
+	customSeries: number[];
 };
 
 export const userSettings = sqliteTable('user_settings', {
 	userId: integer('user_id')
 		.primaryKey()
 		.references(() => users.id, { onDelete: 'cascade' }),
-	settings: text('settings', { mode: 'json' }).$type<UserSettings>().notNull(),
+	settings: text('settings', { mode: 'json' }).$type<AccountPrefs>().notNull(),
 	updatedAt: integer('updated_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`)
