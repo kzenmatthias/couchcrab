@@ -129,6 +129,7 @@ export function clearDatabase(db: DB) {
 			t.auditLog,
 			t.suggestions,
 			t.claims,
+			t.claimChecks,
 			t.sessions,
 			t.users,
 			t.pageTranslations,
@@ -478,6 +479,11 @@ export function seed(db: DB): SeedSummary {
 				status: 'verified',
 				createdAt: claimedAt
 			})
+			.run();
+
+		/* A viewer who signs in with Discord (fictional id), for development and the e2e tests. */
+		tx.insert(t.users)
+			.values({ discordId: '100000000000000001', name: 'Demo Viewer', createdAt: claimedAt })
 			.run();
 
 		/* Uploads no rule could place */

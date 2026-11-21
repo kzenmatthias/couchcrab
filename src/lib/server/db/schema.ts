@@ -277,6 +277,26 @@ export const sessions = sqliteTable(
 	(t) => [index('sessions_user_idx').on(t.userId)]
 );
 
+/** A YouTube channel the signed-in Google account owns, kept for the claim step. */
+export type OwnedChannel = { id: string; title: string };
+
+/**
+ * The channels a Google account owns, saved for at most 15 minutes after Google sign-in so the
+ * claim step survives the redirect. Bound to one session: signing out deletes it. Only channel
+ * ids and titles are kept, never the Google token.
+ */
+export const claimChecks = sqliteTable('claim_checks', {
+	sessionId: text('session_id')
+		.primaryKey()
+		.references(() => sessions.id, { onDelete: 'cascade' }),
+	userId: integer('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	channels: text('channels', { mode: 'json' }).$type<OwnedChannel[]>().notNull(),
+	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+	createdAt: createdAt()
+});
+
 export const suggestions = sqliteTable(
 	'suggestions',
 	{
