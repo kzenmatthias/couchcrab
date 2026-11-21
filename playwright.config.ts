@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4173;
+// E2E_PORT lets two checkouts run their e2e suites at the same time.
+const PORT = Number(process.env.E2E_PORT ?? 4173);
 const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
@@ -24,6 +25,8 @@ export default defineConfig({
 		reuseExistingServer: false,
 		env: {
 			DATABASE_URL: './data/e2e.db',
+			// Build with the "Simulate end of video" button on the demo player (see YouTubePlayer).
+			VITE_TEST_HOOKS: '1',
 			PORT: String(PORT),
 			ORIGIN: BASE_URL
 		}
