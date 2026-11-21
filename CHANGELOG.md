@@ -53,6 +53,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Videos of a channel the creator unlinked, or of a creator who opted out, can't be suggested on and stay out of the review queue and the Unsorted queue. The sync of an unlinked channel stays off until an admin restores it.
 - A creator unlinking or linking a channel, and an admin restoring one, can be reverted from the history by an admin.
 - Search (`/search`) from the header: series, creators (also by channel name) and episodes in three sections with a count each, ignoring upper case and accents. Each section shows the first results with a "Show all" link. Episode titles in spoiler-free series are not searched or shown. Works without JavaScript.
+- Watch together (`/together`): the livestream VODs of one stream play side by side on one clock, lined up by when each stream started. Shared play, pause and seek, one POV with sound, a shift in seconds per POV, a link to the current moment, and links from sessions and from the watch page of a stream. The sync now stores the actual start of every livestream VOD.
 - Community page (`/community`, in the header): how Couchcrab is maintained and how to help (suggest an edit, creator requests, code and translations, the Code of Conduct), managed by admins as a site page in `/manage/site`, with links to My suggestions and the review queue and the recent public changes across all series (no viewer names, spoiler-free titles hidden).
 
 ### Changed
