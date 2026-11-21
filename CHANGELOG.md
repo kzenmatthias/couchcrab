@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-21
+
+First version: feature complete, running locally with demo data, not online yet.
+
 ### Added
 
 - Project documentation: README, product spec, architecture, accessibility rules, contributing guide.
@@ -72,3 +76,6 @@ All notable changes to this project are documented here. The format follows [Kee
 - The current link in the header, the creator dashboard, settings, series tabs and the management navigation is marked (`aria-current` and its style) in the server render too, so also before JavaScript loads or without it.
 - Creator pages show the real title of watched episodes in spoiler-free series, like the episode cards.
 - The first-visit notice and the footer disclaimer come from the site texts managed in the app, with English and then the built-in text as fallback.
+
+[Unreleased]: https://github.com/kzenmatthias/couchcrab/compare/v0.1.0...develop
+[0.1.0]: https://github.com/kzenmatthias/couchcrab/releases/tag/v0.1.0
