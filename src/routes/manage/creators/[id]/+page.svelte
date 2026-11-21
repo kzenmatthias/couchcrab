@@ -74,6 +74,11 @@
 	{/if}
 	<a href={resolve('/(site)/creators/[slug]', { slug: c.slug })}>{m.manage_view_on_site()}</a>
 </p>
+{#if data.lastCreatorEdit}
+	<p class="creator-edit">
+		{m.manage_creator_self_edited({ date: formatDate(data.lastCreatorEdit, locale) })}
+	</p>
+{/if}
 
 <Flash message={flash} />
 

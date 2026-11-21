@@ -6,7 +6,8 @@ export const load: LayoutServerLoad = ({ locals }) => ({
 		? {
 				name: locals.user.name,
 				avatarUrl: locals.user.avatarUrl,
-				creatorId: locals.user.creatorId
+				creatorId: locals.user.creatorId,
+				role: locals.user.role
 			}
 		: null
 });

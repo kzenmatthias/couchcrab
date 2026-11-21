@@ -695,5 +695,110 @@
 	"manage_error_group_mismatch": "Deze sessie of week hoort bij een andere serie.",
 	"manage_error_claim_other_creator": "Deze gebruiker claimde al een andere maker; voeg het kanaal aan die maker toe.",
 	"manage_error_not_pending": "Deze claim werd al bekeken.",
-	"footer_privacy": "Privacy"
+	"footer_privacy": "Privacy",
+	"account_manage": "Beheer",
+	"creator_nav_label": "Makersdashboard",
+	"creator_nav_profile": "Profiel",
+	"creator_nav_channels": "Kanalen",
+	"creator_nav_videos": "Mijn video's",
+	"creator_forbidden_title": "Alleen voor makers die hun profiel claimden",
+	"creator_forbidden_body": "Het makersdashboard is voor YouTube-makers op Couchcrab. Meld je aan met het Google-account dat je YouTube-kanaal bezit: Couchcrab kijkt welke kanalen van jou zijn en koppelt je makersprofiel. Kanalen die nog niet op Couchcrab staan, gaan naar een controle.",
+	"creator_forbidden_link": "Naar aanmelden om je profiel te claimen",
+	"creator_dashboard_title": "Makersdashboard",
+	"creator_dashboard_lead": "Dit is je eigen makersprofiel. Wijzigingen staan meteen op Couchcrab en worden bewaard in de geschiedenis.",
+	"creator_view_public": "Bekijk je openbare pagina",
+	"creator_profile_heading": "Profiel",
+	"creator_field_color": "Profielkleur",
+	"creator_color_hint": "Elke kleur houdt je initialen leesbaar op de avatar.",
+	"creator_color_current": "Huidige kleur",
+	"creator_color_teal": "Groenblauw",
+	"creator_color_green": "Groen",
+	"creator_color_sky": "Hemelsblauw",
+	"creator_color_violet": "Violet",
+	"creator_color_pink": "Roze",
+	"creator_color_coral": "Koraal",
+	"creator_color_red": "Rood",
+	"creator_color_gold": "Goud",
+	"creator_color_plum": "Pruim",
+	"creator_color_forest": "Bosgroen",
+	"creator_color_navy": "Marineblauw",
+	"creator_color_slate": "Leisteen",
+	"creator_field_links": "Links",
+	"creator_hint_links": "Optioneel. Eén link per regel (https://…), hoogstens 5. Ze staan op je makerspagina.",
+	"creator_save_profile": "Profiel bewaren",
+	"creator_profile_saved": "Je profiel is bewaard.",
+	"creator_your_videos": "Je video's",
+	"creator_unsorted_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} upload staat nog in geen enkele serie.",
+				"countPlural=*": "{count} uploads staan nog in geen enkele serie."
+			}
+		}
+	],
+	"creator_place_videos": "Mijn video's plaatsen",
+	"creator_opt_out_title": "Mijn video's verbergen op Couchcrab",
+	"creator_opt_out_body": "Je profiel en al je video's verdwijnen van de site, ook uit de zoekresultaten. De synchronisatie leest je kanalen niet meer. Je kunt dit altijd ongedaan maken.",
+	"creator_opt_out_button": "Mijn video's verbergen…",
+	"creator_opt_out_confirm_title": "Je profiel en al je video's verbergen?",
+	"creator_opt_out_confirm_body": "Niemand ziet je profiel of je video's nog op Couchcrab, tot je ze hier weer toont. Kijkers houden hun eigen kijkgeschiedenis.",
+	"creator_opt_out_confirm": "Ja, verberg mijn video's",
+	"creator_opted_out_done": "Je profiel en video's zijn verborgen op Couchcrab.",
+	"creator_hidden_title": "Je video's zijn verborgen",
+	"creator_hidden_body": "Je profiel en video's staan nergens op Couchcrab en de synchronisatie slaat je kanalen over.",
+	"creator_opt_in_button": "Mijn video's weer tonen",
+	"creator_opted_in_done": "Je profiel en video's staan weer op Couchcrab.",
+	"creator_channels_title": "Kanalen",
+	"creator_channels_lead": "De YouTube-kanalen op je profiel. Een geverifieerd kanaal is er een waarvan je met Google-aanmelding bewees dat het van jou is.",
+	"creator_channel_main": "Hoofdkanaal",
+	"creator_channel_secondary": "Tweede kanaal",
+	"creator_channel_synced": "gesynchroniseerd {date}",
+	"creator_channel_not_synced": "nog niet gesynchroniseerd",
+	"creator_channel_videos": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} video",
+				"countPlural=*": "{count} video's"
+			}
+		}
+	],
+	"creator_channel_requested": "Nog niet op Couchcrab: wacht op controle",
+	"creator_status_verified": "Geverifieerd",
+	"creator_status_needs_review": "Wacht op controle",
+	"creator_unlink_button": "Ontkoppelen",
+	"creator_unlink_confirm_title": "{title} ontkoppelen?",
+	"creator_unlink_confirm_body": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Het kanaal en zijn {count} video verdwijnen van Couchcrab en de synchronisatie leest het niet meer. Je kunt het later opnieuw toevoegen.",
+				"countPlural=*": "Het kanaal en zijn {count} video's verdwijnen van Couchcrab en de synchronisatie leest het niet meer. Je kunt het later opnieuw toevoegen."
+			}
+		}
+	],
+	"creator_unlink_confirm": "Ja, ontkoppelen",
+	"creator_channel_unlinked": "Het kanaal is ontkoppeld.",
+	"creator_add_channel_title": "Nog een kanaal toevoegen",
+	"creator_add_channel_body": "Meld je opnieuw aan met Google, met het account dat het andere kanaal bezit. Couchcrab kijkt welke kanalen van dat account zijn; een kanaal dat nog niet op Couchcrab staat, wordt een aanvraag die het team nakijkt.",
+	"creator_add_channel_button": "Kanaal toevoegen met Google",
+	"creator_videos_title": "Mijn video's",
+	"creator_videos_lead": "Je uploads die nog in geen serie staan, komen eerst. Plaats ze in een serie waaraan je meedoet (of de Extra's ervan), of negeer ze. Wijzigingen zijn meteen zichtbaar en worden bewaard in de geschiedenis.",
+	"creator_filter_heading": "Filteren",
+	"creator_filter_status": "Status",
+	"creator_filter_all": "Alle",
+	"creator_filter_apply": "Filteren",
+	"creator_filter_clear": "Filters wissen",
+	"creator_status_placed": "In een serie",
+	"creator_placed_in": "In {series}",
+	"creator_field_group": "Sessie of week",
+	"creator_no_series": "Je doet nog aan geen enkele serie mee, dus je kunt je video's nergens plaatsen. Vraag het team om je aan een serie toe te voegen.",
+	"creator_no_videos": "Er staan nog geen video's van jou op Couchcrab.",
+	"creator_no_videos_filtered": "Geen video's voor deze filters.",
+	"creator_links_heading": "Links",
+	"manage_creator_self_edited": "De maker paste het eigen profiel het laatst aan op {date}."
 }

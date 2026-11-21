@@ -327,6 +327,7 @@ export function getCreatorBySlug(slug: string) {
 			color: creator.color,
 			avatarUrl: creator.avatarUrl,
 			bio: creator.bio,
+			links: creator.links,
 			claimedAt: creator.claimedAt
 		},
 		channels: channelRows,

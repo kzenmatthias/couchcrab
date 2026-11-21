@@ -9,7 +9,12 @@
 
 	type Props = {
 		/** Null when signed out: the same disclosure, as "Menu" with a Sign in link. */
-		user: { name: string; avatarUrl: string | null; creatorId: number | null } | null;
+		user: {
+			name: string;
+			avatarUrl: string | null;
+			creatorId: number | null;
+			role?: 'viewer' | 'editor' | 'admin';
+		} | null;
 		theme: Theme;
 	};
 
@@ -116,9 +121,10 @@
 			<li><a href={resolve('/(site)/settings/creators')}>{m.account_who_i_watch()}</a></li>
 			<li><a href={resolve('/(site)/settings/display')}>{m.account_display()}</a></li>
 			{#if user && user.creatorId !== null}
-				<!-- The creator dashboard is built separately; switch to resolve() once it exists. -->
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-				<li><a href="/creator">{m.account_creator_dashboard()}</a></li>
+				<li><a href={resolve('/(site)/creator')}>{m.account_creator_dashboard()}</a></li>
+			{/if}
+			{#if user && (user.role === 'editor' || user.role === 'admin')}
+				<li><a href={resolve('/manage')}>{m.account_manage()}</a></li>
 			{/if}
 		</ul>
 

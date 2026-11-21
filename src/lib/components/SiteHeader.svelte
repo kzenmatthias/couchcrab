@@ -7,7 +7,12 @@
 	import LogoMark from './LogoMark.svelte';
 
 	type Props = {
-		user: { name: string; avatarUrl: string | null; creatorId: number | null } | null;
+		user: {
+			name: string;
+			avatarUrl: string | null;
+			creatorId: number | null;
+			role?: 'viewer' | 'editor' | 'admin';
+		} | null;
 		theme: Theme;
 	};
 

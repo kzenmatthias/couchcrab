@@ -17,6 +17,17 @@
 	const locale = $derived(getLocale());
 	const viewing = getViewing();
 
+	/** A creator's link, shown as its host and path (without `https://www.`). */
+	const linkLabel = (url: string) => {
+		try {
+			const u = new URL(url);
+			const path = u.pathname === '/' ? '' : u.pathname.replace(/\/$/, '');
+			return u.hostname.replace(/^www\./, '') + path;
+		} catch {
+			return url;
+		}
+	};
+
 	/*
 	 * Spoiler-free series: the server leaves the title out; once an episode is watched its real
 	 * title is fetched and shown, like on the episode cards.
@@ -49,6 +60,20 @@
 							<a href={youtubeChannelUrl(ch.youtubeChannelId)} rel="external noopener">
 								{m.creator_channel_link({ title: ch.title })}
 								<span class="sr-only">{m.opens_youtube()}</span>
+								<span aria-hidden="true">↗</span>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+			{#if c.links.length}
+				<h2 class="sr-only">{m.creator_links_heading()}</h2>
+				<ul class="links">
+					{#each c.links as link (link)}
+						<li>
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- an external link -->
+							<a href={link} rel="external noopener nofollow ugc">
+								{linkLabel(link)}
 								<span aria-hidden="true">↗</span>
 							</a>
 						</li>

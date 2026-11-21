@@ -695,5 +695,110 @@
 	"manage_error_group_mismatch": "This session or week belongs to another series.",
 	"manage_error_claim_other_creator": "This user already claimed another creator; add the channel to that creator.",
 	"manage_error_not_pending": "This claim was already reviewed.",
-	"footer_privacy": "Privacy"
+	"footer_privacy": "Privacy",
+	"account_manage": "Manage",
+	"creator_nav_label": "Creator dashboard",
+	"creator_nav_profile": "Profile",
+	"creator_nav_channels": "Channels",
+	"creator_nav_videos": "My videos",
+	"creator_forbidden_title": "Only for creators who claimed their profile",
+	"creator_forbidden_body": "The creator dashboard is for YouTube creators on Couchcrab. Sign in with the Google account that owns your YouTube channel: Couchcrab checks which channels you own and links your creator profile. Channels that are not on Couchcrab yet go to review.",
+	"creator_forbidden_link": "Go to sign in and claim your profile",
+	"creator_dashboard_title": "Creator dashboard",
+	"creator_dashboard_lead": "This is your own creator profile. Changes are shown on Couchcrab right away and kept in the history.",
+	"creator_view_public": "View your public page",
+	"creator_profile_heading": "Profile",
+	"creator_field_color": "Profile colour",
+	"creator_color_hint": "Every colour keeps your initials readable on the avatar.",
+	"creator_color_current": "Current colour",
+	"creator_color_teal": "Teal",
+	"creator_color_green": "Green",
+	"creator_color_sky": "Sky",
+	"creator_color_violet": "Violet",
+	"creator_color_pink": "Pink",
+	"creator_color_coral": "Coral",
+	"creator_color_red": "Red",
+	"creator_color_gold": "Gold",
+	"creator_color_plum": "Plum",
+	"creator_color_forest": "Forest",
+	"creator_color_navy": "Navy",
+	"creator_color_slate": "Slate",
+	"creator_field_links": "Links",
+	"creator_hint_links": "Optional. One link per line (https://…), at most 5. Shown on your creator page.",
+	"creator_save_profile": "Save profile",
+	"creator_profile_saved": "Your profile was saved.",
+	"creator_your_videos": "Your videos",
+	"creator_unsorted_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} upload isn't in a series yet.",
+				"countPlural=*": "{count} uploads aren't in a series yet."
+			}
+		}
+	],
+	"creator_place_videos": "Place my videos",
+	"creator_opt_out_title": "Hide my videos from Couchcrab",
+	"creator_opt_out_body": "Your profile and every video of yours disappear from the site, also from search. The sync stops reading your channels. You can undo this at any time.",
+	"creator_opt_out_button": "Hide my videos…",
+	"creator_opt_out_confirm_title": "Hide your profile and all your videos?",
+	"creator_opt_out_confirm_body": "Nobody sees your profile or your videos on Couchcrab anymore until you show them again here. Viewers keep their own watch history.",
+	"creator_opt_out_confirm": "Yes, hide my videos",
+	"creator_opted_out_done": "Your profile and videos are hidden from Couchcrab.",
+	"creator_hidden_title": "Your videos are hidden",
+	"creator_hidden_body": "Your profile and videos are not shown anywhere on Couchcrab, and the sync skips your channels.",
+	"creator_opt_in_button": "Show my videos again",
+	"creator_opted_in_done": "Your profile and videos are back on Couchcrab.",
+	"creator_channels_title": "Channels",
+	"creator_channels_lead": "The YouTube channels on your profile. A verified channel is one you proved you own with Google sign-in.",
+	"creator_channel_main": "Main channel",
+	"creator_channel_secondary": "Second channel",
+	"creator_channel_synced": "synced {date}",
+	"creator_channel_not_synced": "not synced yet",
+	"creator_channel_videos": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} video",
+				"countPlural=*": "{count} videos"
+			}
+		}
+	],
+	"creator_channel_requested": "Not on Couchcrab yet: waiting for review",
+	"creator_status_verified": "Verified",
+	"creator_status_needs_review": "Needs review",
+	"creator_unlink_button": "Unlink",
+	"creator_unlink_confirm_title": "Unlink {title}?",
+	"creator_unlink_confirm_body": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "The channel and its {count} video leave Couchcrab and the sync stops reading it. You can add it again later.",
+				"countPlural=*": "The channel and its {count} videos leave Couchcrab and the sync stops reading it. You can add it again later."
+			}
+		}
+	],
+	"creator_unlink_confirm": "Yes, unlink",
+	"creator_channel_unlinked": "The channel was unlinked.",
+	"creator_add_channel_title": "Add another channel",
+	"creator_add_channel_body": "Sign in with Google again, with the account that owns the other channel. Couchcrab checks which channels it owns; a channel that is not on Couchcrab yet becomes a request that the team reviews.",
+	"creator_add_channel_button": "Add a channel with Google",
+	"creator_videos_title": "My videos",
+	"creator_videos_lead": "Your uploads that aren't in a series yet come first. Place them in a series you take part in (or its Extras), or ignore them. Changes show up right away and are kept in the history.",
+	"creator_filter_heading": "Filter",
+	"creator_filter_status": "Status",
+	"creator_filter_all": "All",
+	"creator_filter_apply": "Filter",
+	"creator_filter_clear": "Clear filters",
+	"creator_status_placed": "In a series",
+	"creator_placed_in": "In {series}",
+	"creator_field_group": "Session or week",
+	"creator_no_series": "You don't take part in a series yet, so there is nothing to place your videos in. Ask the team to add you to a series.",
+	"creator_no_videos": "No videos of yours are on Couchcrab yet.",
+	"creator_no_videos_filtered": "No videos match these filters.",
+	"creator_links_heading": "Links",
+	"manage_creator_self_edited": "The creator last edited their own profile on {date}."
 }
