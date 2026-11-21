@@ -65,5 +65,6 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- The current link in the header, the creator dashboard, settings, series tabs and the management navigation is marked (`aria-current` and its style) in the server render too, so also before JavaScript loads or without it.
 - Creator pages show the real title of watched episodes in spoiler-free series, like the episode cards.
 - The first-visit notice and the footer disclaimer come from the site texts managed in the app, with English and then the built-in text as fallback.

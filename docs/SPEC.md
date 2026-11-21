@@ -28,7 +28,7 @@ Nothing about creators or series is hard-coded. Everything below is managed in t
 | Series | title, slug, kind (season, live series, event, other), description, dates, status, grouping (week, session, none), poster, participating creators, optional parent (for Extras) |
 | Group | a session or a manual week inside a series |
 | Title rule | pattern that places uploads of a channel into a series (main or Extras), with priority |
-| Page | About, disclaimer, accessibility statement, privacy, creator requests intro |
+| Page | About, disclaimer, accessibility statement, privacy, community, creator requests intro |
 
 There are no fixed creator groups (no "Hermits" vs "Friends"). A creator is simply listed; series show who takes part.
 
@@ -38,6 +38,7 @@ There are no fixed creator groups (no "Hermits" vs "Friends"). A creator is simp
 - **Series page:** header with poster art, POV bar (who you watch here, global or custom), sub-pages: mixed timeline, by creator, Extras, about and history.
 - **Mixed timeline:** episodes of the chosen POVs sorted by upload date and grouped per week. Live series are grouped per session (groups made by the community). Uploads that no rule could place go to "Unsorted".
 - **Creator page:** all series of a creator, links to their channels, latest uploads.
+- **Search:** series, creators (by name or channel) and episodes, ignoring case and accents, in three sections with counts and "Show all". Hidden titles of spoiler-free series are neither searched nor shown.
 - **Player:** YouTube IFrame player, queue of the current week or session, autoplay countdown (setting), mark as watched, show real title (spoiler mode), watch on YouTube, suggest an edit.
 
 ## Who I watch
@@ -90,6 +91,7 @@ Per series (and a default for new series). Unwatched episodes show a neutral car
 - Trust: approved suggestions minus rejected ones. From a threshold (configurable, default 10) the user list tells admins "Suggest promoting to editor". Promotion stays manual.
 - Creator requests: a separate public form (linked in the footer) for a correction or the removal of a creator's videos, with or without an account (then with a contact email that only reviewers see). Always at the top of the review queue. Reviewers act on them by hand (for example the opt-out).
 - History: every change (by a person, a rule, the sync or a verified creator) goes into an audit log. Editors and admins see it; editors can revert changes to content, admins also users and roles. A revert asks for confirmation, writes the earlier state back through the management tool and is itself a new history entry. It is refused when the thing changed again since, or no longer exists. Data that comes from YouTube is not reverted; the sync keeps it up to date. Reverting a creator unlinking or linking a channel is for admins.
+- A public Community page explains how Couchcrab is maintained and how to help (text managed by admins as a site page), links to My suggestions and the review queue, and lists recent changes across all series with the same privacy rules as below.
 - Every series has a public "About and history" page with its recent history. It names reviewers and verified creators, never the viewers who suggested something.
 
 ## Accessibility

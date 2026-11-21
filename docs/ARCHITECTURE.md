@@ -22,6 +22,8 @@ src/
     poster-art.ts    generated poster art
     i18n.ts          translation fallback and Intl helpers
     timeline.ts      timeline order, ISO week and session grouping (pure, unit tested)
+    search.ts        search normalisation and matching (pure, unit tested)
+    nav.ts           which navigation link is the current page (also for SSR's relative hrefs)
     viewing.ts       who-I-watch, spoiler and captions filters, next episode (pure, unit tested)
     video.ts         episode card type, YouTube id/URL and duration helpers
     youtube-iframe.ts  loads the YouTube IFrame Player API in the browser
@@ -31,7 +33,7 @@ src/
   routes/
     (site)/          home, series/[slug] (timeline, by-creator, extras, about and history),
                      creators/[slug], watch/[videoId], settings/{creators,display}, [page] (site pages),
-                     suggest, creator-requests, me/suggestions
+                     suggest, creator-requests, me/suggestions, search, community
     manage/          management tool (editor/admin)
     auth/            Discord and Google login and callbacks, POST signout
     (site)/signin, (site)/claim  sign-in page and creator claim step
@@ -210,7 +212,7 @@ The theme and the language stay in their cookies and are not part of the account
 | `series.ts` | Series with participants, descriptions per locale (English required), poster settings; "Create Extras series" (one child per series, same kind, participants and poster, slug `<slug>-extras`); sessions and manual weeks (unique number per kind, end after start) | editor |
 | `rules.ts` | Title rules per series. Regexes are checked with the engine's own guard (`compileRulePattern`). `testRule` runs one unsaved rule over the 200 latest uploads of the participating channels and writes nothing. `applyRulesToUnsorted` runs `placeVideo` over every unsorted, non-Short video with the same rule context as the sync (`loadRuleContext`); a dry run only reports, a real run writes `placed_by = rule` and an audit entry with actor `rule`, the rule id and the person who started it. | editor |
 | `videos.ts` | The Unsorted queue (and the ignored list; videos of channels a creator unlinked stay out of both and out of the dashboard count): place in a series or Extras and a group of that series (`placed_by = user`), ignore, or send back to Unsorted | editor |
-| `site.ts` | Site pages (`about`, `disclaimer`, `accessibility`, `privacy`) per locale with a sanitised preview (`renderMarkdown`, the same as the public page), and the site texts | admin |
+| `site.ts` | Site pages (`about`, `disclaimer`, `accessibility`, `privacy`, and `community`, the text at the top of `/community`) per locale with a sanitised preview (`renderMarkdown`, the same as the public page), and the site texts | admin |
 | `users.ts` | Users with their sign-in providers and claimed creator; role changes. The last admin cannot be demoted, also not by themselves. | admin |
 | `claims.ts` | `pending_review` claims. Approve: add the channel (verified for the claiming user) to an existing creator or a new one, let the user claim that creator if they have none, mark the claim verified and the creator request approved. Reject: mark both rejected. | admin |
 | `sync.ts` | "Sync now" and dry run: `runSync` with a client for `YOUTUBE_API_KEY`; without a key the page explains and the buttons are disabled | admin |
@@ -266,6 +268,11 @@ The captions flag comes from YouTube: the sync refreshes it, so a corrected badg
 - `revertBlock` refuses with a reason: `already_reverted`, `not_revertible` (an entity or field a revert cannot write, or a deletion), `from_youtube` (titles and new uploads from the sync), `admin_only` (editors revert content only: videos, series, groups, creators, channels, rules; admins also user roles and a channel's link state), `missing` (the entity is gone) or `conflict` (a field the entry changed has another value now).
 - `revertEntry` writes the `before` values over the current state through the service layer (a creation is undone by deleting through the service layer: groups, rules, channels, creators). The new entries get `revert_of`, the reverted entry gets `reverted_by`. A revert can itself be reverted. Channel entries use the full channel snapshot (`channelSnapshot`, including `unlinked_at`): reverting a creator's unlink restores the channel (`restoreChannel`), reverting a relink or an admin's restore unlinks it again with the original time and person (`unlinkChannel`, admin only), then kind, title and sync are written with `updateChannel`.
 - `publicSeriesHistory` shows the series, its Extras, its groups and rules and placements of videos that are public now. Only editors, admins and verified creators are named; changes from a suggestion say "suggested by the community". In a spoiler-free series video titles are left out.
+- `publicRecentHistory` is the same across all series, for "Recent changes" on `/community` (newest 20, each with a link to its series' About page). It takes the viewer's spoiler-free check per series (from the viewing cookie): an episode that is or was in a spoiler-free series (or its Extras) has no title.
+
+### Community page
+
+`/community` (`src/routes/(site)/community/`) shows the managed site page `community` (title and Markdown per locale, sanitised with `renderMarkdown`, edited by admins on `/manage/site`; the seed fills English and Dutch), then "Your part" (a Sign in link, or My suggestions, plus the review queue for editors and admins) and the recent changes. Without a `community` page row the title falls back to a message string.
 
 ## Translations
 
@@ -280,6 +287,7 @@ The captions flag comes from YouTube: the sync refreshes it, so a corrected badg
 
 - Only `placed` videos that are not Shorts are shown publicly; Unsorted and ignored videos stay in the management tool. Creators with `opted_out`, and all their videos, never appear; nor do channels with `unlinked_at` and their videos. `src/lib/server/catalog.ts` applies these rules in every query.
 - Mixed timeline: upload order (`published_at`, then id). Grouping `week` uses ISO 8601 weeks in UTC, so it does not depend on the server time zone or the visitor's locale; week 1 is the week the series started. Grouping `session` uses the session groups; videos without a session come last. Dates are shown in UTC through `Intl`.
+- Search (`/search?q=`, `searchCatalog` in `catalog.ts`, matching in `src/lib/search.ts`): the query (at most 100 characters) is normalised (Unicode NFKD without combining marks, lower case, punctuation as spaces) and split into words; every word must appear in one of the fields. Series match on their title (main series only), creators on their name or the title of a linked channel, episodes on their title, creator name, channel title and series title. The public rules above apply. Episodes of a series that is spoiler-free for the viewer (from the viewing cookie; an Extras video follows its parent) are matched without their title and returned with `title: ''` and `titleHidden`, so the card shows "Episode N" and the title is in neither the HTML nor the page data. Who-I-watch and the captions filter do not narrow search results. Each section shows the first 6 series, 8 creators or 12 episodes (`SEARCH_LIMITS`); `more=<section>` (repeatable) shows up to 100. Ranking: whole-query prefix, then word start, then alphabetical (series, creators); episodes whose title matched first, then newest. Matching runs in JavaScript over the public rows, which is fine for the size of the catalog; a full-text index can replace it later. The header field submits a plain GET form, so search works without JavaScript; on `/search` it keeps the query. The result count is in a `role="status"` paragraph and the `<title>` has the query.
 - The watch page uses the YouTube IFrame Player API with the `youtube-nocookie.com` host. Demo data uses fake ids (`demo` + 7 characters); for those the cards show generated art instead of a YouTube thumbnail and the player shows a placeholder.
 
 ## Front-end

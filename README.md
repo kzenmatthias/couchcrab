@@ -30,7 +30,8 @@ Multiplayer Minecraft series like a Hermitcraft season or a Life series are told
 - **Continue watching.** Progress is saved, the next episode on your timeline plays when you're ready.
 - **Spoiler-free mode.** Per series: titles and thumbnails of unwatched episodes stay hidden.
 - **Extras.** Livestream VODs live in a side series next to the main one.
-- **Community-maintained.** Creators, channels, series, sessions and the rules that sort uploads are all managed in the app. Anyone can suggest an edit, editors review them, everything has a history and can be reverted. Creators can file a request that always goes to the top of the queue.
+- **Community-maintained.** Creators, channels, series, sessions and the rules that sort uploads are all managed in the app. Anyone can suggest an edit, editors review them, everything has a history and can be reverted. Creators can file a request that always goes to the top of the queue. The Community page explains how to help and lists the recent changes.
+- **Search.** Find series, creators and episodes from the header, without spoiling titles you chose to hide.
 - **Works without an account.** Preferences and progress live in your browser. Sign in with Discord to sync them and to suggest edits.
 
 ## Accessibility
