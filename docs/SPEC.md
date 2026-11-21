@@ -81,10 +81,16 @@ Per series (and a default for new series). Unwatched episodes show a neutral car
 
 - Sign-in: Discord only.
 - Roles: viewer, editor, admin. At launch only the owner is admin and approves suggestions.
-- Suggestions: anyone signed in can suggest an edit on a video, series, group, creator or rule. Editors and admins approve or reject.
-- Trust: approved suggestions raise a user's trust; above a threshold (configurable) an admin can promote them to editor.
-- Creator requests: a separate form, always at the top of the review queue.
-- History: every change (by a person, a rule or the sync) goes into an audit log and can be reverted.
+- Suggestions: anyone signed in can suggest an edit from a video (the watch page), a series or a creator page. Editors and admins approve or reject. Nothing changes until a reviewer approves.
+  - For a video: wrong or no series (and session or week), wrong session or week, it's a livestream VOD (moves to the Extras series), captions badge is wrong, not part of any series (ignore), other.
+  - For a series or a creator: a detail is wrong (series: title, kind, status, dates, English description; creator: name, bio), a creator is missing from a series, an idea for a title rule, other.
+  - "Other", and a missing creator who is not on Couchcrab yet, are done by hand: approving marks them as done.
+  - A user can send at most 30 suggestions a day; a note has at most 1000 characters.
+- Review queue: creator requests first, then the oldest suggestion first. Each item shows who sent it and their trust, the item, and a Before/After written out in words. Approve applies the change through the management tool (validated, logged in the history with the reviewer as the person and a link to the suggestion). Reject has an optional reason, "Ask a question" sends a message; the sender sees both on "My suggestions".
+- Trust: approved suggestions minus rejected ones. From a threshold (configurable, default 10) the user list tells admins "Suggest promoting to editor". Promotion stays manual.
+- Creator requests: a separate public form (linked in the footer) for a correction or the removal of a creator's videos, with or without an account (then with a contact email that only reviewers see). Always at the top of the review queue. Reviewers act on them by hand (for example the opt-out).
+- History: every change (by a person, a rule, the sync or a verified creator) goes into an audit log. Editors and admins see it; editors can revert changes to content, admins also users and roles. A revert asks for confirmation, writes the earlier state back through the management tool and is itself a new history entry. It is refused when the thing changed again since, or no longer exists. Data that comes from YouTube is not reverted; the sync keeps it up to date.
+- Every series has a public "About and history" page with its recent history. It names reviewers and verified creators, never the viewers who suggested something.
 
 ## Accessibility
 

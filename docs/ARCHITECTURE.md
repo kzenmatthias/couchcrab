@@ -13,6 +13,7 @@ src/
       auth/          Discord and Google OAuth, sessions, roles, creator claims
       youtube/       API client, sync, rule engine
       manage/        the management service layer (validation, role checks, history)
+      community/     suggestions, creator requests, review queue, trust, history and revert
       audit.ts       write and revert history entries
       me.ts          the signed-in viewer's prefs and progress in the database
     components/      shared UI (cards, rails, timeline, player, POV bar, switches, dialogs)
@@ -25,10 +26,12 @@ src/
     video.ts         episode card type, YouTube id/URL and duration helpers
     youtube-iframe.ts  loads the YouTube IFrame Player API in the browser
     labels.ts        translated labels for database enums
+    community/       the Before/After change shape and its labels, shared by server and pages
     paraglide/       generated, do not edit
   routes/
-    (site)/          home, series/[slug] (timeline, by-creator, extras, about), creators/[slug],
-                     watch/[videoId], settings/{creators,display}, [page] (site pages)
+    (site)/          home, series/[slug] (timeline, by-creator, extras, about and history),
+                     creators/[slug], watch/[videoId], settings/{creators,display}, [page] (site pages),
+                     suggest, creator-requests, me/suggestions
     manage/          management tool (editor/admin)
     auth/            Discord and Google login and callbacks, POST signout
     (site)/signin, (site)/claim  sign-in page and creator claim step
@@ -61,12 +64,12 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 | `title_rules` | id, series_id, channel_id (nullable = all channels of the series), pattern, match (`contains`, `regex`), target (`main`, `extras`), priority, enabled |
 | `site_texts` | key (`notice`, `footer_disclaimer`), locale, value, updated_at. Short site texts managed in the app. |
 | `pages` / `page_translations` | `pages`: id, slug. `page_translations`: page_id, locale, title, body (Markdown), updated_at |
-| `users` | id, discord_id (nullable), google_sub (nullable), name, avatar_url, role (`viewer`, `editor`, `admin`), trust, creator_id (the creator profile this user claimed). At least one of discord_id and google_sub is set. |
+| `users` | id, discord_id (nullable), google_sub (nullable), name, avatar_url, role (`viewer`, `editor`, `admin`), trust (approved minus rejected suggestions), creator_id (the creator profile this user claimed). At least one of discord_id and google_sub is set. |
 | `claims` | id, user_id, creator_id (null when the channel is not on Couchcrab yet), youtube_channel_id, status (`verified`, `pending_review`, `rejected`), created_at, reviewed_by, reviewed_at |
 | `sessions` | id (SHA-256 hash of the session token), user_id, expires_at |
 | `claim_checks` | session_id, user_id, channels (JSON: owned channel ids and titles), expires_at (15 minutes). The owned channels between Google sign-in and the claim step. |
-| `suggestions` | id, user_id, target_type, target_id, kind (`create`, `update`, `delete`), payload (JSON), note, is_creator_request, status (`open`, `approved`, `rejected`, `withdrawn`), reviewed_by, reviewed_at |
-| `audit_log` | id, actor (`user`, `creator`, `rule`, `sync`), actor_user_id (set when actor is `user` or `creator`, and for `rule` entries of a rule run someone started in the management tool), entity, entity_id, before, after (JSON), created_at, reverted_by |
+| `suggestions` | id, user_id (null for a creator request sent without an account), target_type (`video`, `series`, `creator`, `channel` for claim requests, `other`), target_id, kind (`create`, `update`, `delete`), payload (JSON, see "Community"), note, is_creator_request, contact_email (creator requests without an account), status (`open`, `question`, `approved`, `rejected`, `withdrawn`), review_message (the reason or question the sender sees), reviewed_by, reviewed_at, created_at |
+| `audit_log` | id, actor (`user`, `creator`, `rule`, `sync`), actor_user_id (set when actor is `user` or `creator`, and for `rule` entries of a rule run someone started in the management tool), entity, entity_id, before, after (JSON), created_at, reverted_by (on a reverted entry: the first entry of the revert), revert_of (on the entries a revert wrote: the reverted entry), suggestion_id (on the entries an approved suggestion wrote) |
 | `user_creators` | user_id, creator_id (global who-I-watch) |
 | `user_series_creators` | user_id, series_id, creator_id (custom list per series) |
 | `progress` | user_id, video_id, seconds, watched_at, updated_at |
@@ -202,7 +205,7 @@ The theme and the language stay in their cookies and are not part of the account
 
 | Module | Does | Role |
 | --- | --- | --- |
-| `dashboard.ts` | Counts (unsorted videos, pending claims, creators, series) and the last sync per channel | editor |
+| `dashboard.ts` | Counts (unsorted videos, pending claims, creators, series) and the last sync per channel; the dashboard also shows open suggestions and creator requests (`community/review.ts`) | editor |
 | `creators.ts` | Creators: list, create, edit, delete (only without videos); channels: parse and resolve `UC…` ids, `@handles` and channel URLs (`channels.list` with `id` or `forHandle` when `YOUTUBE_API_KEY` is set, otherwise a raw id only), add, edit, delete (only without videos). A claimed creator's colour, avatar and bio are the creator's: editors keep them, admins can change them. `opted_out` is admin only. | editor |
 | `series.ts` | Series with participants, descriptions per locale (English required), poster settings; "Create Extras series" (one child per series, same kind, participants and poster, slug `<slug>-extras`); sessions and manual weeks (unique number per kind, end after start) | editor |
 | `rules.ts` | Title rules per series. Regexes are checked with the engine's own guard (`compileRulePattern`). `testRule` runs one unsaved rule over the 200 latest uploads of the participating channels and writes nothing. `applyRulesToUnsorted` runs `placeVideo` over every unsorted, non-Short video with the same rule context as the sync (`loadRuleContext`); a dry run only reports, a real run writes `placed_by = rule` and an audit entry with actor `rule`, the rule id and the person who started it. | editor |
@@ -228,6 +231,41 @@ The first-visit notice and the footer disclaimer are rows in `site_texts`. The r
 ### First admin
 
 `ADMIN_DISCORD_IDS` makes Discord accounts admin on every sign-in. `npm run make-admin -- <user id>` promotes any existing user. The demo seed has a fictional "Demo Editor" and "Demo Admin" for the e2e tests.
+
+## Community
+
+Code in `src/lib/server/community/`; the pages are `(site)/suggest`, `(site)/creator-requests`, `(site)/me/suggestions`, `(site)/series/[slug]/about` (public history), `manage/review` and `manage/history`.
+
+| Module | Does |
+| --- | --- |
+| `targets.ts` | What a suggestion can point at, with the choices its form offers. Only public things: placed videos that are not Shorts, creators who did not opt out. |
+| `suggestions.ts` | Payload types and validation per kind (`parseSuggestion`), `createSuggestion` (rate limit `DAILY_LIMIT` = 30 per user per 24 hours, note at most 1000 characters), `createCreatorRequest` (without an account: a contact email, at most 3 per email and 50 in total per 24 hours), "My suggestions" and withdraw. |
+| `review.ts` | The review queue, `describeSuggestion` (Before/After against the current state), approve, reject, ask a question, the trust formula and promotion candidates. |
+| `history.ts` | The history list with filters, `revertBlock` and `revertEntry`, and the public history of a series. |
+| `entities.ts` | Per content entity: its current state in the same shape as the audit snapshots, which keys a revert can write, and how to write a state back through the service layer. |
+| `changes.ts` | Turns two snapshots into field changes with names instead of ids (`src/lib/community/change.ts` is the shape, `labels.ts` translates it). |
+| `tx.ts` | `runTagged`: runs service-layer writes in one transaction and returns the audit entries they wrote, so they can be tagged. |
+
+### Payloads
+
+A suggestion stores what it wants in `payload.type`: `video_series` (`seriesId`, `groupId`), `video_group` (`seriesId`, `groupId`), `video_live_vod` (`seriesId` of the Extras series), `video_captions` (`hasCreatorCaptions`), `video_ignore`, `series_field` and `creator_field` (`field`, `value`), `participant` (`seriesId`, `creatorId`, or `name` for someone not on Couchcrab yet), `rule` (`seriesId`, `pattern`, `match`, `target`, `channelId`), `other`, and `creator_request` (`request`: `correction` or `removal`, `creatorId`, `name`, `channel`). Creator requests from the claim step (Google sign-in) have no `type`; they are handled on the Claims page.
+
+### Approving
+
+`approveSuggestion` re-reads the suggestion (it must be `open` or `question`) and, in one transaction, calls the same service functions as the management pages (`placeVideoByHand`, `setVideoStatus`, `setVideoCaptions`, `updateSeries`, `updateCreator`, `createRule`) with the reviewer as actor. The audit entries those write get `suggestion_id`; the suggestion becomes `approved` and the sender's `users.trust` is recomputed. A change that no longer validates (a claimed creator's bio, a slug taken since) or a target that is gone is refused and nothing is written. Kinds without an automatic change (`other`, a creator not on Couchcrab, creator requests) only change the status.
+
+The captions flag comes from YouTube: the sync refreshes it, so a corrected badge can be set back by a later sync.
+
+### Trust
+
+`users.trust` = approved − rejected suggestions (open and withdrawn ones do not count), updated on every review. `/manage/users` (admin) shows the counts and marks viewers with a trust of at least `PROMOTE_TRUST_THRESHOLD` (default 10) with "Suggest promoting to editor". Promotion stays a manual role change.
+
+### History and revert
+
+- `/manage/history` lists `audit_log` newest first, 50 per page, filtered by entity, actor type and date (UTC). Actor types: `person` (a user), `creator` (a viewer who claimed a creator profile), `rule`, `sync`. Each entry has a summary, the Before/After and, when allowed, a Revert link that opens a confirmation panel.
+- `revertBlock` refuses with a reason: `already_reverted`, `not_revertible` (an entity or field a revert cannot write, or a deletion), `from_youtube` (titles and new uploads from the sync), `admin_only` (editors revert content only: videos, series, groups, creators, channels, rules; admins also user roles), `missing` (the entity is gone) or `conflict` (a field the entry changed has another value now).
+- `revertEntry` writes the `before` values over the current state through the service layer (a creation is undone by deleting through the service layer: groups, rules, channels, creators). The new entries get `revert_of`, the reverted entry gets `reverted_by`. A revert can itself be reverted.
+- `publicSeriesHistory` shows the series, its Extras, its groups and rules and placements of videos that are public now. Only editors, admins and verified creators are named; changes from a suggestion say "suggested by the community". In a spoiler-free series video titles are left out.
 
 ## Translations
 

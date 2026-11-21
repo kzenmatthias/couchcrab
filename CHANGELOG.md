@@ -42,6 +42,13 @@ All notable changes to this project are documented here. The format follows [Kee
 - Creator pages show the links a creator added.
 - The account menu links to the management tool for editors and admins.
 - In the management tool, a creator's page says when the creator last edited their own profile, shows channels the creator unlinked and lets admins link them again.
+- Suggest an edit: signed in, anyone can suggest a fix from a video, series or creator page (wrong series or session, a livestream VOD for Extras, a wrong CC badge, not part of any series, a detail of a series or creator, a missing creator, an idea for a title rule, or something else). A real form that works without JavaScript, at most 30 suggestions a day.
+- Creator requests (linked in the footer): creators ask for a correction or for removal of their videos, with or without an account. They are always on top of the review queue.
+- Review queue (`/manage/review`) for editors and admins: who sent it and their trust, a written-out Before and After, Approve (applies the change through the management tool and logs it), Reject with a reason, Ask a question.
+- My suggestions (`/me/suggestions`): the status of everything you suggested and what reviewers said; open suggestions can be withdrawn.
+- Trust: approved minus rejected suggestions. Admins see who passed `PROMOTE_TRUST_THRESHOLD` (default 10) as "Suggest promoting to editor" on the user list.
+- History (`/manage/history`): every change by a person, a title rule, the sync or a verified creator, filterable, with Before and After. Changes can be reverted after a confirmation step, unless they changed again since.
+- "About and history" on series pages shows the recent public history of the series, without the names of viewers.
 
 ### Changed
 
