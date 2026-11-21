@@ -29,6 +29,7 @@
 			<PosterArt
 				palette={poster?.type === 'art' ? poster.palette : undefined}
 				seed={poster?.type === 'art' ? poster.seed : seed}
+				motif={poster?.type === 'art' ? poster.motif : null}
 				width={160}
 				height={90}
 				{tint}

@@ -7,6 +7,7 @@
 		width?: number;
 		height?: number;
 		tint?: string | null;
+		motif?: string | null;
 		class?: string;
 	};
 
@@ -16,11 +17,14 @@
 		width = 100,
 		height = 150,
 		tint = null,
+		motif = null,
 		class: className = ''
 	}: Props = $props();
 
 	const uid = $props.id();
-	const markup = $derived(posterArt({ palette, seed, width, height, tint, id: `art-${uid}` }));
+	const markup = $derived(
+		posterArt({ palette, seed, width, height, tint, motif, id: `art-${uid}` })
+	);
 </script>
 
 <!-- Decorative: the art carries no information and never contains text. -->

@@ -205,6 +205,23 @@ export function createYouTubeClient(options: YouTubeClientOptions) {
 	}
 
 	/**
+	 * Finds a channel by id or by handle (`@name`) for the management tool. Returns its id and
+	 * title, or `null` when YouTube has no such channel.
+	 */
+	async function findChannel(
+		query: { id: string } | { handle: string }
+	): Promise<{ youtubeChannelId: string; title: string } | null> {
+		const data = await get<ApiList<ApiChannel>>('channels', {
+			part: 'snippet',
+			...('id' in query ? { id: query.id } : { forHandle: query.handle }),
+			maxResults: '1'
+		});
+		const channel = data.items?.[0];
+		if (!channel) return null;
+		return { youtubeChannelId: channel.id, title: channel.snippet?.title ?? '' };
+	}
+
+	/**
 	 * Pages through an uploads playlist, newest first, until an item is older than
 	 * `publishedAfter`, `max` items are collected, or the playlist ends.
 	 */
@@ -253,5 +270,5 @@ export function createYouTubeClient(options: YouTubeClientOptions) {
 		return out;
 	}
 
-	return { getChannel, listUploads, getVideos };
+	return { getChannel, findChannel, listUploads, getVideos };
 }

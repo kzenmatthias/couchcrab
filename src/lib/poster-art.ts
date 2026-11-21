@@ -5,7 +5,20 @@
  * The art never contains text; titles are real text placed on top of it.
  */
 
-export type Motif = 'tree' | 'heart' | 'hearts2' | 'hearts3' | 'crown' | 'hourglass' | 'card';
+export const MOTIFS = [
+	'tree',
+	'heart',
+	'hearts2',
+	'hearts3',
+	'crown',
+	'hourglass',
+	'card'
+] as const;
+export type Motif = (typeof MOTIFS)[number];
+
+export function isMotif(name: unknown): name is Motif {
+	return typeof name === 'string' && (MOTIFS as readonly string[]).includes(name);
+}
 
 export type Palette = {
 	sky: [string, string];
@@ -160,6 +173,8 @@ export type ArtOptions = {
 	height?: number;
 	/** Optional colour for the sun or moon, e.g. a creator colour. Must be a hex colour. */
 	tint?: string | null;
+	/** Overrides the palette's own motif. Unknown names are ignored. */
+	motif?: string | null;
 	/** Prefix for the gradient id, unique per page. */
 	id: string;
 };
@@ -174,7 +189,9 @@ export function posterArt(options: ArtOptions): string {
 	const { seed = 1, width: w = 100, height: h = 150, id } = options;
 	const key: PaletteName =
 		options.palette && isPaletteName(options.palette) ? options.palette : DEFAULT_PALETTE;
-	const p: Palette = PALETTES[key];
+	const p: Palette = isMotif(options.motif)
+		? { ...PALETTES[key], motif: options.motif }
+		: PALETTES[key];
 	const tint = options.tint && HEX.test(options.tint) ? options.tint : null;
 	const gid = `${id.replace(/[^\w-]/g, '')}-sky`;
 	const r = random(seed * 7 + key.length);

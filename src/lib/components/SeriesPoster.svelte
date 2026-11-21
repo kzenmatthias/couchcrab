@@ -44,7 +44,7 @@
 		{#if poster?.type === 'image'}
 			<img class="image" src={poster.url} alt="" />
 		{:else}
-			<PosterArt palette={poster?.palette} seed={poster?.seed ?? 1} />
+			<PosterArt palette={poster?.palette} seed={poster?.seed ?? 1} motif={poster?.motif} />
 		{/if}
 	</span>
 	<span class="tag">{kindLabel[kind]()}</span>

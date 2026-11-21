@@ -391,13 +391,13 @@ function insertVideo(
 	});
 }
 
-interface RuleContext {
+export interface RuleContext {
 	rules: CandidateRule[];
 	series: Map<number, RuleSeries>;
 }
 
 /** Enabled rules of the series this creator takes part in, plus what the engine needs to know about those series. */
-function loadRuleContext(tx: Executor, creatorId: number): RuleContext {
+export function loadRuleContext(tx: Executor, creatorId: number): RuleContext {
 	const seriesIds = tx
 		.select({ id: t.seriesCreators.seriesId })
 		.from(t.seriesCreators)
@@ -412,8 +412,13 @@ function loadRuleContext(tx: Executor, creatorId: number): RuleContext {
 		.where(and(inArray(t.titleRules.seriesId, seriesIds), eq(t.titleRules.enabled, true)))
 		.all();
 	const ruleSeriesIds = [...new Set(rules.map((r) => r.seriesId))];
-	if (ruleSeriesIds.length === 0) return { rules, series: new Map() };
+	return { rules, series: loadRuleSeries(tx, ruleSeriesIds) };
+}
 
+/** What the rule engine needs to know about these series and their Extras children. */
+export function loadRuleSeries(tx: Executor, ruleSeriesIds: number[]): Map<number, RuleSeries> {
+	const series = new Map<number, RuleSeries>();
+	if (ruleSeriesIds.length === 0) return series;
 	const children = tx
 		.select({ id: t.series.id, parentId: t.series.parentId })
 		.from(t.series)
@@ -428,7 +433,6 @@ function loadRuleContext(tx: Executor, creatorId: number): RuleContext {
 		.all();
 	const groups = tx.select().from(t.groups).where(inArray(t.groups.seriesId, allIds)).all();
 
-	const series = new Map<number, RuleSeries>();
 	for (const row of rows) {
 		series.set(row.id, {
 			id: row.id,
@@ -439,7 +443,7 @@ function loadRuleContext(tx: Executor, creatorId: number): RuleContext {
 				.map((g) => ({ id: g.id, startsAt: g.startsAt, endsAt: g.endsAt }))
 		});
 	}
-	return { rules, series };
+	return series;
 }
 
 /**
