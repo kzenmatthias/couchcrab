@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
 	import { NOTICE_STORAGE_KEY } from '#lib/prefs/notice.js';
+
+	// Managed in the app (site texts); the message string is the fallback, so it is never empty.
+	const text = $derived(
+		(page.data as { siteTexts?: { notice: string | null } }).siteTexts?.notice || m.notice_text()
+	);
 
 	function dismiss() {
 		try {
@@ -17,7 +23,7 @@
 
 <aside class="notice" aria-label={m.notice_label()}>
 	<p>
-		{m.notice_text()}
+		{text}
 		<a href={resolve('/(site)/[page]', { page: 'about' })}>{m.notice_about_link()}</a>
 	</p>
 	<button type="button" class="dismiss" aria-label={m.notice_dismiss()} onclick={dismiss}>

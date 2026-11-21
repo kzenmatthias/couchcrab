@@ -11,10 +11,15 @@
 	};
 	const redirectTo = $derived(page.url.pathname + page.url.search);
 	const prefs = resolve('/prefs');
+	// Managed in the app (site texts); the message string is the fallback, so it is never empty.
+	const disclaimer = $derived(
+		(page.data as { siteTexts?: { footer_disclaimer: string | null } }).siteTexts
+			?.footer_disclaimer || m.footer_disclaimer()
+	);
 </script>
 
 <footer class="footer">
-	<p><b>{m.footer_unofficial()}</b> {m.footer_disclaimer()}</p>
+	<p><b>{m.footer_unofficial()}</b> {disclaimer}</p>
 
 	<nav aria-label={m.footer_links_label()}>
 		<ul>
@@ -26,6 +31,9 @@
 				<a href={resolve('/(site)/[page]', { page: 'accessibility' })}>
 					{m.footer_accessibility()}
 				</a>
+			</li>
+			<li>
+				<a href={resolve('/(site)/[page]', { page: 'privacy' })}>{m.footer_privacy()}</a>
 			</li>
 		</ul>
 	</nav>
