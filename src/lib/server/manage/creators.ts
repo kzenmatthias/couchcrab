@@ -1,5 +1,5 @@
 /** Creators and their channels in the management tool. */
-import { and, asc, count, eq, like, ne, or } from 'drizzle-orm';
+import { and, asc, count, desc, eq, like, ne, or } from 'drizzle-orm';
 import type { DB } from '../db/client.js';
 import * as t from '../db/schema.js';
 import type { YouTubeClient } from '../youtube/client.js';
@@ -29,14 +29,16 @@ export const BIO_MAX = 500;
 type CreatorRow = typeof t.creators.$inferSelect;
 
 /** What `audit_log` keeps of a creator. */
-const snapshot = (c: CreatorRow) => ({
+export const creatorSnapshot = (c: CreatorRow) => ({
 	slug: c.slug,
 	name: c.name,
 	color: c.color,
 	avatarUrl: c.avatarUrl,
 	bio: c.bio,
+	links: c.links,
 	optedOut: c.optedOut
 });
+const snapshot = creatorSnapshot;
 
 export function listCreators(db: DB, actor: Actor, search = '') {
 	assertRole(actor, 'editor');
@@ -83,7 +85,31 @@ export function getCreator(db: DB, actor: Actor, creatorId: number) {
 			.from(t.users)
 			.where(eq(t.users.creatorId, creatorId))
 			.get() ?? null;
-	return { creator, channels, claimedBy, videos: countVideos(db, creatorId) };
+	return {
+		creator,
+		channels,
+		claimedBy,
+		videos: countVideos(db, creatorId),
+		lastCreatorEdit: lastCreatorEdit(db, creatorId)
+	};
+}
+
+/** When the claimed creator last changed their own profile on the creator dashboard, or null. */
+export function lastCreatorEdit(db: DB, creatorId: number): Date | null {
+	return (
+		db
+			.select({ at: t.auditLog.createdAt })
+			.from(t.auditLog)
+			.where(
+				and(
+					eq(t.auditLog.entity, 'creator'),
+					eq(t.auditLog.entityId, creatorId),
+					eq(t.auditLog.actor, 'creator')
+				)
+			)
+			.orderBy(desc(t.auditLog.id))
+			.get()?.at ?? null
+	);
 }
 
 function countVideos(db: DB | Parameters<Parameters<DB['transaction']>[0]>[0], creatorId: number) {

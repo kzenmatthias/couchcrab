@@ -104,7 +104,8 @@ export function classifyOwnedChannels(
 
 	const result: ClassifiedChannel[] = owned.map((c) => {
 		const row = byChannel.get(c.id);
-		if (!row || row.optedOut) {
+		// An opted-out creator stays private, except to the user who claimed it.
+		if (!row || (row.optedOut && user.creatorId !== row.creatorId)) {
 			return { youtubeChannelId: c.id, title: c.title, status: 'needs_review', creator: null };
 		}
 		const creator = { id: row.creatorId, name: row.name, slug: row.slug, color: row.color };

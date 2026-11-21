@@ -1,5 +1,6 @@
 /** The Unsorted queue: place a video by hand, ignore it, or send it back to Unsorted. */
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
+import type { Executor } from '../audit.js';
 import type { DB } from '../db/client.js';
 import * as t from '../db/schema.js';
 import {
@@ -54,23 +55,24 @@ export function groupChoices(db: DB) {
 }
 
 type VideoRow = typeof t.videos.$inferSelect;
-const placementOf = (v: VideoRow) => ({
+export const placementOf = (v: VideoRow) => ({
 	seriesId: v.seriesId,
 	groupId: v.groupId,
 	status: v.status,
 	placedBy: v.placedBy
 });
 
-function loadVideo(db: DB, videoId: number): VideoRow {
+export function loadVideo(db: DB, videoId: number): VideoRow {
 	const video = db.select().from(t.videos).where(eq(t.videos.id, videoId)).get();
 	if (!video) throw new NotFoundError();
 	return video;
 }
 
-/** Places a video in a series (main or Extras) and optionally a group. Sets `placed_by = user`. */
-export function placeVideoByHand(db: DB, actor: Actor, videoId: number, input: Input): VideoRow {
-	assertRole(actor, 'editor');
-	const before = loadVideo(db, videoId);
+/**
+ * Reads and checks a placement form: `series_id` (required, must exist) and an optional
+ * `group_id` of that series. Throws a `ValidationError`.
+ */
+export function parsePlacement(db: DB, input: Input): { seriesId: number; groupId: number | null } {
 	const c = new Checker();
 	const seriesId = id(text(input, 'series_id'));
 	if (!text(input, 'series_id')) c.fail('series_id', 'required');
@@ -94,16 +96,69 @@ export function placeVideoByHand(db: DB, actor: Actor, videoId: number, input: I
 		else if (seriesId !== null && group.seriesId !== seriesId) c.fail('group_id', 'group_mismatch');
 	}
 	c.done();
+	return { seriesId: seriesId!, groupId };
+}
+
+/** The audit writer of the person changing a placement (an editor, or a claimed creator). */
+export type PlacementAudit = (
+	tx: Executor,
+	videoId: number,
+	before: Record<string, unknown>,
+	after: Record<string, unknown>
+) => void;
+
+const editorAudit =
+	(actor: Actor): PlacementAudit =>
+	(tx, videoId, before, after) =>
+		auditUser(tx, actor, 'video', videoId, before, after);
+
+/** Writes a checked placement (`placed_by = user`) and its audit entry in one transaction. */
+export function writePlacement(
+	db: DB,
+	before: VideoRow,
+	placement: { seriesId: number; groupId: number | null },
+	audit: PlacementAudit
+): VideoRow {
 	return db.transaction((tx) => {
 		const row = tx
 			.update(t.videos)
-			.set({ seriesId, groupId, status: 'placed', placedBy: 'user' })
-			.where(eq(t.videos.id, videoId))
+			.set({ ...placement, status: 'placed', placedBy: 'user' })
+			.where(eq(t.videos.id, before.id))
 			.returning()
 			.get();
-		auditUser(tx, actor, 'video', videoId, placementOf(before), placementOf(row));
+		audit(tx, before.id, placementOf(before), placementOf(row));
 		return row;
 	});
+}
+
+/** Writes `ignored` (or back to Unsorted, which clears the placement) and its audit entry. */
+export function writeVideoStatus(
+	db: DB,
+	before: VideoRow,
+	status: 'ignored' | 'unsorted',
+	audit: PlacementAudit
+): VideoRow {
+	return db.transaction((tx) => {
+		const row = tx
+			.update(t.videos)
+			.set(
+				status === 'unsorted'
+					? { status, seriesId: null, groupId: null, placedBy: null }
+					: { status, placedBy: 'user' }
+			)
+			.where(eq(t.videos.id, before.id))
+			.returning()
+			.get();
+		audit(tx, before.id, placementOf(before), placementOf(row));
+		return row;
+	});
+}
+
+/** Places a video in a series (main or Extras) and optionally a group. Sets `placed_by = user`. */
+export function placeVideoByHand(db: DB, actor: Actor, videoId: number, input: Input): VideoRow {
+	assertRole(actor, 'editor');
+	const before = loadVideo(db, videoId);
+	return writePlacement(db, before, parsePlacement(db, input), editorAudit(actor));
 }
 
 /** Ignores a video (`status = ignored`) or puts an ignored one back in Unsorted. */
@@ -114,19 +169,5 @@ export function setVideoStatus(
 	status: 'ignored' | 'unsorted'
 ): VideoRow {
 	assertRole(actor, 'editor');
-	const before = loadVideo(db, videoId);
-	return db.transaction((tx) => {
-		const row = tx
-			.update(t.videos)
-			.set(
-				status === 'unsorted'
-					? { status, seriesId: null, groupId: null, placedBy: null }
-					: { status, placedBy: 'user' }
-			)
-			.where(and(eq(t.videos.id, videoId)))
-			.returning()
-			.get();
-		auditUser(tx, actor, 'video', videoId, placementOf(before), placementOf(row));
-		return row;
-	});
+	return writeVideoStatus(db, loadVideo(db, videoId), status, editorAudit(actor));
 }
