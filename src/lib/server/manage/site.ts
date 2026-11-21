@@ -15,8 +15,17 @@ import {
 } from './core.js';
 import { BASE_LOCALE } from './series.js';
 
-/** The pages an admin manages here. Their slugs are the public URLs (`/about`, ...). */
-export const MANAGED_PAGES = ['about', 'disclaimer', 'accessibility', 'privacy'] as const;
+/**
+ * The pages an admin manages here. Their slugs are the public URLs (`/about`, ...); `community`
+ * is the text above the dynamic parts of `/community`.
+ */
+export const MANAGED_PAGES = [
+	'about',
+	'disclaimer',
+	'accessibility',
+	'privacy',
+	'community'
+] as const;
 export type ManagedPage = (typeof MANAGED_PAGES)[number];
 
 export const SITE_TEXT_KEYS = ['notice', 'footer_disclaimer'] as const;

@@ -1088,5 +1088,14 @@
 	"search_show_all_episodes": "Toon alle {count} afleveringen",
 	"search_show_fewer": "Toon minder",
 	"search_capped": "Je ziet de eerste {count}. Voeg een woord toe om gerichter te zoeken.",
-	"search_via_channel": "Kanaal: {channel}"
+	"search_via_channel": "Kanaal: {channel}",
+	"community_page_fallback_title": "Community",
+	"community_page_you_heading": "Jouw bijdrage",
+	"community_page_my_lead": "Bekijk wat je voorstelde en wat de reviewers antwoordden.",
+	"community_page_review_lead": "Voorstellen en verzoeken van makers die op een reviewer wachten.",
+	"community_page_signin": "Meld je aan om een wijziging voor te stellen",
+	"community_page_signin_lead": "Iedereen met een account kan een wijziging voorstellen. Er verandert niets tot een reviewer ze goedkeurt.",
+	"community_recent_heading": "Recente wijzigingen",
+	"community_recent_lead": "Wijzigingen aan series, sessies, titelregels en afleveringen op heel Couchcrab. Wie een wijziging voorstelde, blijft anoniem.",
+	"manage_page_community": "Community"
 }

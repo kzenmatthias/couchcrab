@@ -3,7 +3,7 @@
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { formatDate } from '#lib/i18n.js';
 	import { kindLabel, statusLabel } from '#lib/labels.js';
-	import { actorTypeLabel, entityLabel, valText } from '#lib/community/labels.js';
+	import { publicHistorySummary } from '#lib/community/labels.js';
 	import ChangeList from '#lib/components/community/ChangeList.svelte';
 	import type { PageProps } from './$types';
 
@@ -11,21 +11,7 @@
 	const s = $derived(data.series);
 	const locale = getLocale();
 	const date = (d: Date) => formatDate(d, locale, { dateStyle: 'long', timeZone: 'UTC' });
-	type Item = (typeof data.history)[number];
-	const actorText = (h: Item) =>
-		h.actorType === 'rule' || h.actorType === 'sync'
-			? actorTypeLabel(h.actorType)
-			: (h.actorName ?? m.community_actor_someone());
-	const summary = (h: Item) => {
-		const name = h.label ? valText(h.label.name, locale) : m.community_public_episode();
-		const what = m.community_hist_what({ entity: entityLabel(h.entity), name });
-		const args = { actor: actorText(h), what };
-		return h.kind === 'create'
-			? m.community_hist_create(args)
-			: h.kind === 'delete'
-				? m.community_hist_delete(args)
-				: m.community_hist_update(args);
-	};
+	const summary = (h: (typeof data.history)[number]) => publicHistorySummary(h, locale);
 </script>
 
 <svelte:head>

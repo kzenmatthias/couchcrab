@@ -748,5 +748,54 @@ Video's spelen af in de YouTube-speler (\`youtube-nocookie.com\`). Voor de spele
 *Deze pagina is demo-inhoud.*`
 			}
 		}
+	},
+	{
+		slug: 'community',
+		translations: {
+			en: {
+				title: 'Community',
+				body: `Couchcrab is kept up to date by its community: fans who sort uploads into the right series, add sessions and fix details. Editors review every suggestion before anything changes.
+
+## Suggest an edit
+
+Sign in with Discord, then choose **Suggest an edit** on the watch page of a video, on a series or on a creator page. Pick what is wrong and add a short note when it helps. You can follow your suggestions and the answers of the reviewers on *My suggestions*.
+
+## For creators
+
+Are you a creator and want something corrected or your videos removed? Send a [creator request](/creator-requests). You can also claim your profile by signing in with Google.
+
+## Contribute code or translations
+
+Couchcrab is open source (AGPL-3.0). The code, the issues and the translations are on [GitHub](https://github.com/kzenmatthias/couchcrab). The [contributing guide](https://github.com/kzenmatthias/couchcrab/blob/main/CONTRIBUTING.md) explains how to get started.
+
+## Code of Conduct
+
+Everyone who takes part follows the [Code of Conduct](https://github.com/kzenmatthias/couchcrab/blob/main/CODE_OF_CONDUCT.md). Be kind, assume good intent and keep spoilers out of your notes.
+
+*This page is demo content. Edit it in the app.*`
+			},
+			nl: {
+				title: 'Community',
+				body: `Couchcrab wordt bijgehouden door de community: fans die uploads in de juiste serie zetten, sessies toevoegen en details verbeteren. Editors bekijken elk voorstel voor er iets verandert.
+
+## Een wijziging voorstellen
+
+Meld je aan met Discord en kies **Stel een wijziging voor** op de kijkpagina van een video, bij een serie of op de pagina van een maker. Kies wat er niet klopt en voeg een korte notitie toe als dat helpt. Op *Mijn voorstellen* volg je je voorstellen en de antwoorden van de reviewers.
+
+## Voor makers
+
+Ben je een maker en wil je iets laten verbeteren of je video's laten verwijderen? Stuur een [verzoek als maker](/creator-requests). Je kunt je profiel ook claimen door je aan te melden met Google.
+
+## Code of vertalingen bijdragen
+
+Couchcrab is open source (AGPL-3.0). De code, de issues en de vertalingen staan op [GitHub](https://github.com/kzenmatthias/couchcrab). In de [gids voor bijdragers](https://github.com/kzenmatthias/couchcrab/blob/main/CONTRIBUTING.md) lees je hoe je begint.
+
+## Gedragscode
+
+Iedereen die meedoet, volgt de [gedragscode](https://github.com/kzenmatthias/couchcrab/blob/main/CODE_OF_CONDUCT.md). Wees vriendelijk, ga uit van goede bedoelingen en hou spoilers uit je notities.
+
+*Deze pagina is demo-inhoud. Pas ze aan in de app.*`
+			}
+		}
 	}
 ];

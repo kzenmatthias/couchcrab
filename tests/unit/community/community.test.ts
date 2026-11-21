@@ -4,10 +4,11 @@ import type { DB } from '#lib/server/db/client.js';
 import * as t from '#lib/server/db/schema.js';
 import { ForbiddenError, ValidationError } from '#lib/server/manage/core.js';
 import { createGroup } from '#lib/server/manage/series.js';
-import { placeVideoByHand } from '#lib/server/manage/videos.js';
+import { placeVideoByHand, setVideoStatus } from '#lib/server/manage/videos.js';
 import { setUserRole } from '#lib/server/manage/users.js';
 import {
 	listHistory,
+	publicRecentHistory,
 	publicSeriesHistory,
 	revertBlock,
 	revertEntry
@@ -598,5 +599,37 @@ describe('history lists', () => {
 		expect(items[0]).toMatchObject({ entity: 'video', actorName: 'Demo Editor', suggested: true });
 		expect(JSON.stringify(items)).not.toContain('Demo Viewer');
 		expect(publicSeriesHistory(env.db, s.id, { spoilerFree: true })[0].label).toBeNull();
+	});
+
+	it('shows recent public changes across all series, with spoiler-free titles left out', () => {
+		const { video, groups, series } = sessionVideo(env.db);
+		const id = createSuggestion(env.db, env.viewer.id, 'video', video.youtubeVideoId, {
+			type: 'video_group',
+			new_group_id: groups[1].id
+		});
+		approveSuggestion(env.db, env.editor, id, LOCALES);
+		const [first] = publicRecentHistory(env.db);
+		expect(first).toMatchObject({
+			entity: 'video',
+			actorName: 'Demo Editor',
+			suggested: true,
+			series: { slug: 'ember-hearts' }
+		});
+		expect(first.label?.name).toEqual({ text: video.title });
+		expect(JSON.stringify(publicRecentHistory(env.db))).not.toContain('Demo Viewer');
+
+		// Spoiler-free for this series only: no title, and no title change either.
+		const hidden = publicRecentHistory(env.db, { isSpoilerFree: (s) => s === series.id })[0];
+		expect(hidden.label).toBeNull();
+		expect(JSON.stringify(hidden)).not.toContain(video.title);
+		expect(publicRecentHistory(env.db, { isSpoilerFree: () => false })[0].label).not.toBeNull();
+
+		// A video that is not public any more drops out.
+		setVideoStatus(env.db, env.editor, video.id, 'ignored');
+		expect(
+			publicRecentHistory(env.db).some(
+				(h) => h.entity === 'video' && JSON.stringify(h.label).includes(video.title)
+			)
+		).toBe(false);
 	});
 });

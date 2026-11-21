@@ -15,7 +15,8 @@
 		about: m.manage_page_about,
 		disclaimer: m.manage_page_disclaimer,
 		accessibility: m.manage_page_accessibility,
-		privacy: m.manage_page_privacy
+		privacy: m.manage_page_privacy,
+		community: m.manage_page_community
 	};
 	const name = $derived(pageTitle[p.slug]?.() ?? p.slug);
 	const value = (field: 'title' | 'body', l: string) => {

@@ -289,31 +289,15 @@ export interface PublicHistoryItem {
 	isRevert: boolean;
 }
 
-/**
- * Recent public history of a series and its Extras: the series itself, its sessions and weeks,
- * its title rules and placements of videos that are public now. Viewers' names are never shown.
- * With `spoilerFree`, video titles are left out.
- */
-export function publicSeriesHistory(
-	db: DB,
-	seriesId: number,
-	{ spoilerFree = false, limit = PUBLIC_HISTORY_LIMIT } = {}
-): PublicHistoryItem[] {
-	const ids = [
-		seriesId,
-		...db
-			.select({ id: t.series.id })
-			.from(t.series)
-			.where(eq(t.series.parentId, seriesId))
-			.all()
-			.map((s) => s.id)
-	];
-	const list = sql.join(
-		ids.map((n) => sql`${n}`),
-		sql`, `
-	);
-	const inSeries = sql`(json_extract(${t.auditLog.before}, '$.seriesId') IN (${list}) OR json_extract(${t.auditLog.after}, '$.seriesId') IN (${list}))`;
-	const rows = db
+type PublicRow = {
+	e: typeof t.auditLog.$inferSelect;
+	name: string | null;
+	role: string | null;
+	creatorId: number | null;
+};
+
+function publicRows(db: DB, where: ReturnType<typeof and>, limit: number): PublicRow[] {
+	return db
 		.select({
 			e: t.auditLog,
 			name: actorUser.name,
@@ -322,17 +306,29 @@ export function publicSeriesHistory(
 		})
 		.from(t.auditLog)
 		.leftJoin(actorUser, eq(actorUser.id, t.auditLog.actorUserId))
-		.where(
-			or(
-				and(eq(t.auditLog.entity, 'series'), inArray(t.auditLog.entityId, ids)),
-				and(inArray(t.auditLog.entity, ['group', 'rule', 'video']), inSeries)
-			)
-		)
+		.where(where)
 		.orderBy(desc(t.auditLog.id))
-		.limit(limit * 3)
+		.limit(limit)
 		.all();
+}
 
-	// Videos must be public right now: placed, not a Short, of a creator who did not opt out.
+/** The series ids an entry is about: the series itself, or the series in its before and after. */
+function seriesIdsOf(e: PublicRow['e']): number[] {
+	if (e.entity === 'series') return [e.entityId];
+	return [e.before?.seriesId, e.after?.seriesId].filter((v): v is number => typeof v === 'number');
+}
+
+/**
+ * Turns history rows into public items: videos must be public right now (placed, not a Short,
+ * of a creator who did not opt out, on a channel that is still linked), only editors, admins
+ * and verified creators are named, and `hideTitle` leaves out the title of an episode.
+ */
+function toPublicItems(
+	db: DB,
+	rows: PublicRow[],
+	limit: number,
+	hideTitle: (e: PublicRow['e']) => boolean
+): { item: PublicHistoryItem; seriesIds: number[] }[] {
 	const videoIds = [
 		...new Set(rows.filter((r) => r.e.entity === 'video').map((r) => r.e.entityId))
 	];
@@ -357,30 +353,128 @@ export function publicSeriesHistory(
 			: []
 	);
 	const r = new Resolver(db);
-	const out: PublicHistoryItem[] = [];
+	const out: { item: PublicHistoryItem; seriesIds: number[] }[] = [];
 	for (const { e, name, role, creatorId } of rows) {
 		if (out.length >= limit) break;
 		if (e.entity === 'video' && !visible.has(e.entityId)) continue;
 		const actorType = actorTypeOf(e.actor, role, creatorId);
 		const named =
 			actorType === 'creator' || (e.actor === 'user' && (role === 'editor' || role === 'admin'));
-		out.push({
+		const hidden = e.entity === 'video' && hideTitle(e);
+		const item: PublicHistoryItem = {
 			id: e.id,
 			actorType,
 			actorName: named ? name : null,
 			suggested: e.suggestionId !== null,
 			entity: e.entity,
 			createdAt: e.createdAt,
-			label:
-				e.entity === 'video' && spoilerFree
-					? null
-					: entityLabel(r, db, e.entity, e.entityId, e.after ?? e.before),
+			label: hidden ? null : entityLabel(r, db, e.entity, e.entityId, e.after ?? e.before),
 			changes: describeChanges(r, e.entity, e.before, e.after).filter(
-				(ch) => !(spoilerFree && e.entity === 'video' && ch.field === 'title')
+				(ch) => !(hidden && ch.field === 'title')
 			),
 			kind: e.before === null ? 'create' : e.after === null ? 'delete' : 'update',
 			isRevert: e.revertOf !== null
-		});
+		};
+		out.push({ item, seriesIds: seriesIdsOf(e) });
 	}
 	return out;
+}
+
+const seriesIdList = (ids: number[]) =>
+	sql.join(
+		ids.map((n) => sql`${n}`),
+		sql`, `
+	);
+
+/**
+ * Recent public history of a series and its Extras: the series itself, its sessions and weeks,
+ * its title rules and placements of videos that are public now. Viewers' names are never shown.
+ * With `spoilerFree`, video titles are left out.
+ */
+export function publicSeriesHistory(
+	db: DB,
+	seriesId: number,
+	{ spoilerFree = false, limit = PUBLIC_HISTORY_LIMIT } = {}
+): PublicHistoryItem[] {
+	const ids = [
+		seriesId,
+		...db
+			.select({ id: t.series.id })
+			.from(t.series)
+			.where(eq(t.series.parentId, seriesId))
+			.all()
+			.map((s) => s.id)
+	];
+	const list = seriesIdList(ids);
+	const inSeries = sql`(json_extract(${t.auditLog.before}, '$.seriesId') IN (${list}) OR json_extract(${t.auditLog.after}, '$.seriesId') IN (${list}))`;
+	const rows = publicRows(
+		db,
+		or(
+			and(eq(t.auditLog.entity, 'series'), inArray(t.auditLog.entityId, ids)),
+			and(inArray(t.auditLog.entity, ['group', 'rule', 'video']), inSeries)
+		),
+		limit * 3
+	);
+	return toPublicItems(db, rows, limit, () => spoilerFree).map(({ item }) => item);
+}
+
+export const PUBLIC_RECENT_LIMIT = 20;
+
+export interface PublicRecentItem extends PublicHistoryItem {
+	/** The series the change belongs to (the newest one for a video that moved), if it still exists. */
+	series: { slug: string; title: string } | null;
+}
+
+/**
+ * Recent public history across all series, for the community page: the same entities and
+ * privacy rules as `publicSeriesHistory`. `isSpoilerFree(povSeriesId)` tells which series hide
+ * episode titles for this viewer; an episode that is or was in such a series has no title.
+ */
+export function publicRecentHistory(
+	db: DB,
+	{
+		isSpoilerFree = () => false,
+		limit = PUBLIC_RECENT_LIMIT
+	}: { isSpoilerFree?: (povSeriesId: number) => boolean; limit?: number } = {}
+): PublicRecentItem[] {
+	const rows = publicRows(
+		db,
+		or(
+			eq(t.auditLog.entity, 'series'),
+			and(
+				inArray(t.auditLog.entity, ['group', 'rule', 'video']),
+				or(
+					sql`json_extract(${t.auditLog.before}, '$.seriesId') IS NOT NULL`,
+					sql`json_extract(${t.auditLog.after}, '$.seriesId') IS NOT NULL`
+				)
+			)
+		),
+		limit * 3
+	);
+	const allSeries = new Map(
+		db
+			.select({
+				id: t.series.id,
+				slug: t.series.slug,
+				title: t.series.title,
+				parentId: t.series.parentId
+			})
+			.from(t.series)
+			.all()
+			.map((s) => [s.id, s])
+	);
+	const povOf = (id: number) => allSeries.get(id)?.parentId ?? id;
+	const currentSeries = (videoId: number) =>
+		db.select({ s: t.videos.seriesId }).from(t.videos).where(eq(t.videos.id, videoId)).get()?.s;
+	const items = toPublicItems(db, rows, limit, (e) => {
+		const ids = [...seriesIdsOf(e), currentSeries(e.entityId)].filter(
+			(v): v is number => typeof v === 'number'
+		);
+		// Without a known series the title stays hidden, to be safe.
+		return ids.length === 0 || ids.some((id) => isSpoilerFree(povOf(id)));
+	});
+	return items.map(({ item, seriesIds }) => {
+		const s = allSeries.get(seriesIds.at(-1) ?? -1);
+		return { ...item, series: s ? { slug: s.slug, title: s.title } : null };
+	});
 }

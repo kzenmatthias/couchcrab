@@ -1088,5 +1088,14 @@
 	"search_show_all_episodes": "Show all {count} episodes",
 	"search_show_fewer": "Show fewer",
 	"search_capped": "Showing the first {count}. Add a word to narrow the search.",
-	"search_via_channel": "Channel: {channel}"
+	"search_via_channel": "Channel: {channel}",
+	"community_page_fallback_title": "Community",
+	"community_page_you_heading": "Your part",
+	"community_page_my_lead": "See what you suggested and what the reviewers answered.",
+	"community_page_review_lead": "Suggestions and creator requests that wait for a reviewer.",
+	"community_page_signin": "Sign in to suggest an edit",
+	"community_page_signin_lead": "Anyone with an account can suggest an edit. Nothing changes until a reviewer approves it.",
+	"community_recent_heading": "Recent changes",
+	"community_recent_lead": "Changes to series, sessions, title rules and episodes across Couchcrab. People who suggested a change stay anonymous.",
+	"manage_page_community": "Community"
 }

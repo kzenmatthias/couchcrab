@@ -201,3 +201,31 @@ export function blockLabel(block: RevertBlock): string {
 			return m.community_error_not_revertible();
 	}
 }
+
+/** What a public history item needs for its one-line summary. */
+export type PublicSummaryItem = {
+	actorType: ActorType;
+	actorName: string | null;
+	entity: string;
+	kind: 'create' | 'update' | 'delete';
+	label: { name: Val } | null;
+};
+
+/**
+ * "Demo Editor changed series “…”" for the public history. Unnamed people are "Someone"; an
+ * episode without a label (spoiler-free) is "an episode".
+ */
+export function publicHistorySummary(h: PublicSummaryItem, locale: string): string {
+	const actor =
+		h.actorType === 'rule' || h.actorType === 'sync'
+			? actorTypeLabel(h.actorType)
+			: (h.actorName ?? m.community_actor_someone());
+	const name = h.label ? valText(h.label.name, locale) : m.community_public_episode();
+	const what = m.community_hist_what({ entity: entityLabel(h.entity), name });
+	const args = { actor, what };
+	return h.kind === 'create'
+		? m.community_hist_create(args)
+		: h.kind === 'delete'
+			? m.community_hist_delete(args)
+			: m.community_hist_update(args);
+}
