@@ -5,9 +5,12 @@
  * - only placed videos (Unsorted and ignored videos are never shown publicly), no Shorts;
  * - creators who opted out, and all their videos, never appear;
  * - channels a creator unlinked, and their videos, never appear.
+ *
+ * `searchCatalog` follows the same rules, and leaves hidden (spoiler-free) titles out.
  */
 import { and, desc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
 import { pickTranslation } from '#lib/i18n.js';
+import { matchesTerms, matchRank, normalizeSearch, searchTerms } from '#lib/search.js';
 import type { VideoCard } from '#lib/video.js';
 import { db, schema } from './db/index.js';
 
@@ -336,4 +339,163 @@ export function getCreatorBySlug(slug: string) {
 		series: creatorSeries,
 		uploads
 	};
+}
+
+/* ---------- search ---------- */
+
+export const SEARCH_SECTIONS = ['series', 'creators', 'episodes'] as const;
+export type SearchSection = (typeof SEARCH_SECTIONS)[number];
+
+/** Results per section on the first page, and with "Show all". */
+export const SEARCH_LIMITS: Record<SearchSection, number> = {
+	series: 6,
+	creators: 8,
+	episodes: 12
+};
+export const SEARCH_EXPANDED_MAX = 100;
+
+export type CreatorHit = {
+	slug: string;
+	name: string;
+	color: string;
+	avatarUrl: string | null;
+	claimedAt: Date | null;
+	/** The channel that matched, when the creator's name itself did not. */
+	viaChannel: string | null;
+};
+
+export type SearchResult<T> = { items: T[]; total: number; expanded: boolean };
+
+export type SearchResults = {
+	series: SearchResult<SeriesSummary>;
+	creators: SearchResult<CreatorHit>;
+	episodes: SearchResult<VideoCard>;
+	total: number;
+};
+
+function take<T>(all: T[], section: SearchSection, expand: readonly SearchSection[]) {
+	const expanded = expand.includes(section);
+	const limit = expanded ? SEARCH_EXPANDED_MAX : SEARCH_LIMITS[section];
+	return { items: all.slice(0, limit), total: all.length, expanded };
+}
+
+/**
+ * Searches series titles, creator names and channel titles, and episode titles, with the
+ * public rules of this file. `isSpoilerFree(povSeriesId)` tells which series hide episode
+ * titles for this viewer: those titles are never matched and come back empty with
+ * `titleHidden`, so an episode there is only found by its creator, channel or series.
+ * Sections in `expand` return up to `SEARCH_EXPANDED_MAX` items.
+ */
+export function searchCatalog(
+	query: string,
+	{
+		isSpoilerFree = () => false,
+		expand = []
+	}: { isSpoilerFree?: (povSeriesId: number) => boolean; expand?: readonly SearchSection[] } = {}
+): SearchResults | null {
+	const terms = searchTerms(query);
+	if (terms.length === 0) return null;
+
+	const seriesHits = listSeries()
+		.map((s) => ({ s, title: normalizeSearch(s.title) }))
+		.filter((x) => matchesTerms(terms, [x.title]))
+		.sort(
+			(a, b) =>
+				matchRank(terms, a.title) - matchRank(terms, b.title) || a.s.title.localeCompare(b.s.title)
+		)
+		.map((x) => x.s);
+
+	const channelRows = db
+		.select({ creatorId: channels.creatorId, title: channels.title })
+		.from(channels)
+		.where(isNull(channels.unlinkedAt))
+		.all();
+	const creatorHits = listCreators()
+		.map((c) => {
+			const name = normalizeSearch(c.name);
+			const own = channelRows.filter((ch) => ch.creatorId === c.id);
+			const byName = matchesTerms(terms, [name]);
+			const channel = byName
+				? null
+				: own.find((ch) => matchesTerms(terms, [name, normalizeSearch(ch.title)]));
+			return { c, name, byName, channel };
+		})
+		.filter((x) => x.byName || x.channel)
+		.sort(
+			(a, b) =>
+				Number(b.byName) - Number(a.byName) ||
+				matchRank(terms, a.name) - matchRank(terms, b.name) ||
+				a.c.name.localeCompare(b.c.name)
+		)
+		.map(({ c, channel }): CreatorHit => ({
+			slug: c.slug,
+			name: c.name,
+			color: c.color,
+			avatarUrl: c.avatarUrl,
+			claimedAt: c.claimedAt,
+			viaChannel: channel?.title ?? null
+		}));
+
+	const episodeRows = db
+		.select({
+			id: videos.id,
+			title: videos.title,
+			publishedAt: videos.publishedAt,
+			seriesId: videos.seriesId,
+			parentId: series.parentId,
+			seriesTitle: series.title,
+			creatorName: creators.name,
+			channelTitle: channels.title
+		})
+		.from(videos)
+		.innerJoin(channels, eq(channels.id, videos.channelId))
+		.innerJoin(creators, eq(creators.id, channels.creatorId))
+		.innerJoin(series, eq(series.id, videos.seriesId))
+		.where(visibleVideo)
+		.all();
+	const hidden = new Map<number, boolean>();
+	const isHidden = (povId: number) => {
+		if (!hidden.has(povId)) hidden.set(povId, isSpoilerFree(povId));
+		return hidden.get(povId)!;
+	};
+	const episodeHits = episodeRows
+		.map((v) => {
+			const titleHidden = isHidden(v.parentId ?? v.seriesId!);
+			const title = titleHidden ? '' : normalizeSearch(v.title);
+			const others = [v.creatorName, v.channelTitle, v.seriesTitle].map(normalizeSearch);
+			return {
+				v,
+				titleHidden,
+				matched: matchesTerms(terms, [title, ...others]),
+				byTitle: title !== '' && matchesTerms(terms, [title])
+			};
+		})
+		.filter((x) => x.matched)
+		.sort(
+			(a, b) =>
+				Number(b.byTitle) - Number(a.byTitle) ||
+				b.v.publishedAt.getTime() - a.v.publishedAt.getTime() ||
+				b.v.id - a.v.id
+		);
+	const episodes = take(episodeHits, 'episodes', expand);
+	const ids = episodes.items.map((x) => x.v.id);
+	const cards = new Map(
+		(ids.length ? videoQuery().where(inArray(videos.id, ids)).all() : []).map((r) => [
+			r.id,
+			toCard(r)
+		])
+	);
+	const episodeCards = episodes.items.map(({ v, titleHidden }): VideoCard => {
+		const card = cards.get(v.id)!;
+		return titleHidden ? { ...card, title: '', titleHidden: true } : card;
+	});
+
+	const result: SearchResults = {
+		series: take(seriesHits, 'series', expand),
+		creators: take(creatorHits, 'creators', expand),
+		episodes: { ...episodes, items: episodeCards },
+		total: 0
+	};
+	result.total = result.series.total + result.creators.total + result.episodes.total;
+	return result;
 }

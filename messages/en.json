@@ -1055,5 +1055,38 @@
 	"community_promote_explain": "Viewers with a trust of {threshold} or more are marked “Suggest promoting to editor”. Trust is approved minus rejected suggestions. Promotion stays manual.",
 	"community_footer_requests": "Creator requests",
 	"manage_error_channel_unlinked": "The creator unlinked this channel. An admin can restore it, which turns the sync on again.",
-	"manage_channel_sync_unlinked_hint": "Unlinked by the creator: the sync stays off until an admin restores the channel."
+	"manage_channel_sync_unlinked_hint": "Unlinked by the creator: the sync stays off until an admin restores the channel.",
+	"search_title": "Search",
+	"search_doc_title": "Search: {query}",
+	"search_heading_results": "Results for “{query}”",
+	"search_summary": [
+		{
+			"declarations": ["input total", "local totalPlural = total: plural", "input query"],
+			"selectors": ["totalPlural"],
+			"match": {
+				"totalPlural=one": "1 result for “{query}”",
+				"totalPlural=*": "{total} results for “{query}”"
+			}
+		}
+	],
+	"search_empty_lead": "Type a series title, a creator's name or an episode title in the search field at the top of the page. Upper case and accents don't matter.",
+	"search_none": "Nothing found for “{query}”.",
+	"search_tips_heading": "Try this",
+	"search_tip_spelling": "Check the spelling, or use fewer or shorter words.",
+	"search_tip_spoiler": "In spoiler-free series, episode titles are not searched. Search for the series or the creator instead.",
+	"search_tip_browse_series": "Browse all series",
+	"search_tip_browse_creators": "Browse all creators",
+	"search_section_series": "Series",
+	"search_section_creators": "Creators",
+	"search_section_episodes": "Episodes",
+	"search_section_heading": "{section} ({count})",
+	"search_none_series": "No series match.",
+	"search_none_creators": "No creators match.",
+	"search_none_episodes": "No episodes match.",
+	"search_show_all_series": "Show all {count} series",
+	"search_show_all_creators": "Show all {count} creators",
+	"search_show_all_episodes": "Show all {count} episodes",
+	"search_show_fewer": "Show fewer",
+	"search_capped": "Showing the first {count}. Add a word to narrow the search.",
+	"search_via_channel": "Channel: {channel}"
 }

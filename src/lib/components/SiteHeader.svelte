@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { navCurrent } from '#lib/nav.js';
+	import { hrefPath, navCurrent } from '#lib/nav.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { Theme } from '#lib/prefs/theme.js';
 	import AccountMenu from './AccountMenu.svelte';
@@ -24,11 +24,18 @@
 		{ href: resolve('/(site)/series'), label: m.nav_series() },
 		{ href: resolve('/(site)/creators'), label: m.nav_creators() },
 		{ href: resolve('/(site)/[page]', { page: 'who-i-watch' }), label: m.nav_who_i_watch() },
-		{ href: resolve('/(site)/[page]', { page: 'community' }), label: m.nav_community() }
+		{ href: resolve('/(site)/community'), label: m.nav_community() }
 	]);
 
 	/** `page` on the page itself, `true` inside its section (e.g. a series under Series). */
 	const current = (href: string) => navCurrent(href, page.url);
+
+	/** On the search page the field keeps the query, so it can be refined. */
+	const query = $derived(
+		hrefPath(resolve('/(site)/search'), page.url) === page.url.pathname
+			? (page.url.searchParams.get('q') ?? '')
+			: ''
+	);
 </script>
 
 <header class="top">
@@ -52,14 +59,15 @@
 
 	<span class="sp"></span>
 
-	<form
-		class="search"
-		role="search"
-		method="get"
-		action={resolve('/(site)/[page]', { page: 'search' })}
-	>
+	<form class="search" role="search" method="get" action={resolve('/(site)/search')}>
 		<label class="sr-only" for="site-search">{m.search_label()}</label>
-		<input id="site-search" name="q" type="search" placeholder={m.search_placeholder()} />
+		<input
+			id="site-search"
+			name="q"
+			type="search"
+			placeholder={m.search_placeholder()}
+			value={query}
+		/>
 	</form>
 
 	<!-- The theme lives only here, for everyone: signed out the menu has a Sign in link. -->

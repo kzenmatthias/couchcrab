@@ -1055,5 +1055,38 @@
 	"community_promote_explain": "Kijkers met een vertrouwen van {threshold} of meer krijgen “Voorstel: promoveren tot editor”. Vertrouwen is goedgekeurde min afgewezen voorstellen. Promoveren blijft met de hand.",
 	"community_footer_requests": "Verzoeken van makers",
 	"manage_error_channel_unlinked": "De maker ontkoppelde dit kanaal. Een admin kan het herstellen, dan gaat de synchronisatie weer aan.",
-	"manage_channel_sync_unlinked_hint": "Ontkoppeld door de maker: de synchronisatie blijft uit tot een admin het kanaal herstelt."
+	"manage_channel_sync_unlinked_hint": "Ontkoppeld door de maker: de synchronisatie blijft uit tot een admin het kanaal herstelt.",
+	"search_title": "Zoeken",
+	"search_doc_title": "Zoeken: {query}",
+	"search_heading_results": "Resultaten voor “{query}”",
+	"search_summary": [
+		{
+			"declarations": ["input total", "local totalPlural = total: plural", "input query"],
+			"selectors": ["totalPlural"],
+			"match": {
+				"totalPlural=one": "1 resultaat voor “{query}”",
+				"totalPlural=*": "{total} resultaten voor “{query}”"
+			}
+		}
+	],
+	"search_empty_lead": "Typ een serietitel, de naam van een maker of een afleveringstitel in het zoekveld bovenaan de pagina. Hoofdletters en accenten maken niet uit.",
+	"search_none": "Niets gevonden voor “{query}”.",
+	"search_tips_heading": "Probeer dit",
+	"search_tip_spelling": "Kijk de spelling na, of gebruik minder of kortere woorden.",
+	"search_tip_spoiler": "In spoilervrije series zoeken we niet in afleveringstitels. Zoek dan op de serie of de maker.",
+	"search_tip_browse_series": "Bekijk alle series",
+	"search_tip_browse_creators": "Bekijk alle makers",
+	"search_section_series": "Series",
+	"search_section_creators": "Makers",
+	"search_section_episodes": "Afleveringen",
+	"search_section_heading": "{section} ({count})",
+	"search_none_series": "Geen series gevonden.",
+	"search_none_creators": "Geen makers gevonden.",
+	"search_none_episodes": "Geen afleveringen gevonden.",
+	"search_show_all_series": "Toon alle {count} series",
+	"search_show_all_creators": "Toon alle {count} makers",
+	"search_show_all_episodes": "Toon alle {count} afleveringen",
+	"search_show_fewer": "Toon minder",
+	"search_capped": "Je ziet de eerste {count}. Voeg een woord toe om gerichter te zoeken.",
+	"search_via_channel": "Kanaal: {channel}"
 }

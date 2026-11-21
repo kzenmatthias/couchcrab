@@ -52,6 +52,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - The account menu links to My suggestions.
 - Videos of a channel the creator unlinked, or of a creator who opted out, can't be suggested on and stay out of the review queue and the Unsorted queue. The sync of an unlinked channel stays off until an admin restores it.
 - A creator unlinking or linking a channel, and an admin restoring one, can be reverted from the history by an admin.
+- Search (`/search`) from the header: series, creators (also by channel name) and episodes in three sections with a count each, ignoring upper case and accents. Each section shows the first results with a "Show all" link. Episode titles in spoiler-free series are not searched or shown. Works without JavaScript.
 
 ### Changed
 
