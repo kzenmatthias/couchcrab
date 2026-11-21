@@ -139,6 +139,8 @@ function actorTypeOf(
 ): ActorType {
 	if (actor === 'rule') return 'rule';
 	if (actor === 'sync') return 'sync';
+	// The creator dashboard writes its own actor value; older entries are users with a profile.
+	if ((actor as string) === 'creator') return 'creator';
 	return creatorId !== null && role === 'viewer' ? 'creator' : 'person';
 }
 
@@ -173,10 +175,13 @@ export function listHistory(db: DB, actor: Actor, filter: HistoryFilter = {}) {
 			break;
 		case 'creator':
 			conditions.push(
-				and(
-					eq(t.auditLog.actor, 'user'),
-					isNotNull(actorUser.creatorId),
-					eq(actorUser.role, 'viewer')
+				or(
+					sql`${t.auditLog.actor} = 'creator'`,
+					and(
+						eq(t.auditLog.actor, 'user'),
+						isNotNull(actorUser.creatorId),
+						eq(actorUser.role, 'viewer')
+					)
 				)
 			);
 			break;
@@ -350,7 +355,7 @@ export function publicSeriesHistory(
 		if (e.entity === 'video' && !visible.has(e.entityId)) continue;
 		const actorType = actorTypeOf(e.actor, role, creatorId);
 		const named =
-			e.actor === 'user' && (role === 'editor' || role === 'admin' || actorType === 'creator');
+			actorType === 'creator' || (e.actor === 'user' && (role === 'editor' || role === 'admin'));
 		out.push({
 			id: e.id,
 			actorType,
