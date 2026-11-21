@@ -11,14 +11,16 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-blue"></a>
-  <img alt="Status: early development" src="https://img.shields.io/badge/status-early%20development-orange">
+  <img alt="Status: feature complete, not live yet" src="https://img.shields.io/badge/status-feature%20complete%2C%20not%20live%20yet-yellow">
   <a href="CONTRIBUTING.md"><img alt="Contributions welcome" src="https://img.shields.io/badge/contributions-welcome-brightgreen"></a>
 </p>
 
 > [!IMPORTANT]
 > **Couchcrab is an unofficial fan project.** It is not affiliated with, endorsed by or connected to Hermitcraft, its members, any creator listed on the site, Mojang or Microsoft. Every video plays from YouTube on the creator's own channel, so views, ads and revenue stay with the creator. Couchcrab never downloads, re-hosts or monetises videos.
 
-![Couchcrab home screen with a large hero, continue-watching row and a row of series posters](docs/design/screens/01-home-dark.png)
+![Couchcrab home page in the dark theme: a featured series with pixel-art poster, a row of new uploads and a row of series posters](docs/screenshots/01-home.png)
+
+<sub>Screenshots show the built-in demo data: every creator and series in them is fictional.</sub>
 
 ## What is Couchcrab?
 
@@ -52,7 +54,22 @@ Couchcrab is built to be translated. Every interface string lives in a message f
 
 ## Status
 
-Couchcrab is in **early development**. The designs are done (see [docs/design](docs/design)), the code is being built now. Follow the [issues](https://github.com/kzenmatthias/couchcrab/issues) to see what's next.
+The first version is **feature complete** and runs locally with demo data, but it is **not online yet**. Next steps: production hosting, the Google OAuth verification that creator claims need, and seeding the real series (by the community, in the app).
+
+## Screenshots
+
+| | |
+| --- | --- |
+| ![Series page with a session-grouped mixed timeline and viewing options](docs/screenshots/02-series-timeline.png) | ![Watch page with the player and the rest of the session as a queue](docs/screenshots/03-watch.png) |
+| Series page with the mixed timeline | Watch page with the session queue |
+| ![Who I watch: one creator list with toggle buttons](docs/screenshots/05-who-i-watch.png) | ![Display and accessibility settings](docs/screenshots/06-display-settings.png) |
+| Who I watch | Display and accessibility settings |
+| ![Management dashboard for editors and admins](docs/screenshots/08-manage.png) | ![Review queue with a creator request on top](docs/screenshots/09-review-queue.png) |
+| Management tool | Review queue |
+| ![Creator dashboard of a verified creator](docs/screenshots/12-creator-dashboard.png) | ![Home page in the light theme](docs/screenshots/13-home-light.png) |
+| Creator dashboard | Light theme |
+
+More in [docs/screenshots](docs/screenshots).
 
 ## Tech stack
 
