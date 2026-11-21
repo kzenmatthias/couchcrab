@@ -49,6 +49,9 @@ All notable changes to this project are documented here. The format follows [Kee
 - Trust: approved minus rejected suggestions. Admins see who passed `PROMOTE_TRUST_THRESHOLD` (default 10) as "Suggest promoting to editor" on the user list.
 - History (`/manage/history`): every change by a person, a title rule, the sync or a verified creator, filterable, with Before and After. Changes can be reverted after a confirmation step, unless they changed again since.
 - "About and history" on series pages shows the recent public history of the series, without the names of viewers.
+- The account menu links to My suggestions.
+- Videos of a channel the creator unlinked, or of a creator who opted out, can't be suggested on and stay out of the review queue and the Unsorted queue. The sync of an unlinked channel stays off until an admin restores it.
+- A creator unlinking or linking a channel, and an admin restoring one, can be reverted from the history by an admin.
 
 ### Changed
 
