@@ -35,7 +35,8 @@ const snapshot = (r: RuleDraft) => ({
 	match: r.match,
 	target: r.target,
 	priority: r.priority,
-	enabled: r.enabled
+	enabled: r.enabled,
+	withinSeriesDates: r.withinSeriesDates
 });
 
 /** Rules of a series, highest priority first (the order the engine tries them). */
@@ -106,7 +107,11 @@ export function parseRule(
 	}
 	const priority = integerField(c, input, 'priority', { min: -1000, max: 1000, fallback: 0 });
 	const enabled = flag(input, 'enabled');
-	return { c, draft: { seriesId, channelId, pattern, match, target, priority, enabled } };
+	const withinSeriesDates = flag(input, 'within_series_dates');
+	return {
+		c,
+		draft: { seriesId, channelId, pattern, match, target, priority, enabled, withinSeriesDates }
+	};
 }
 
 function assertSeries(db: DB, seriesId: number) {

@@ -41,7 +41,16 @@ export const REVERTIBLE_KEYS: Record<string, readonly string[]> = {
 	],
 	creator: ['slug', 'name', 'color', 'avatarUrl', 'bio', 'optedOut'],
 	group: ['seriesId', 'kind', 'number', 'title', 'startsAt', 'endsAt'],
-	rule: ['seriesId', 'channelId', 'pattern', 'match', 'target', 'priority', 'enabled'],
+	rule: [
+		'seriesId',
+		'channelId',
+		'pattern',
+		'match',
+		'target',
+		'priority',
+		'enabled',
+		'withinSeriesDates'
+	],
 	channel: [
 		'creatorId',
 		'youtubeChannelId',
@@ -141,7 +150,8 @@ export function currentSnapshot(db: DB, entity: string, entityId: number): Snaps
 						match: r.match,
 						target: r.target,
 						priority: r.priority,
-						enabled: r.enabled
+						enabled: r.enabled,
+						withinSeriesDates: r.withinSeriesDates
 					}
 				: null;
 		}
@@ -286,7 +296,8 @@ export function applySnapshot(
 				target: str(state.target),
 				channel_id: str(state.channelId),
 				priority: str(state.priority),
-				enabled: on(state.enabled)
+				enabled: on(state.enabled),
+				within_series_dates: on(state.withinSeriesDates)
 			});
 			return;
 		case 'channel':

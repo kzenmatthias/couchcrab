@@ -1,0 +1,1 @@
+ALTER TABLE `title_rules` ADD `within_series_dates` integer DEFAULT false NOT NULL;

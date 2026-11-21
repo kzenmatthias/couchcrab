@@ -22,7 +22,8 @@
 			channel_id: r.channelId === null ? '' : String(r.channelId),
 			target: r.target,
 			priority: String(r.priority),
-			enabled: r.enabled
+			enabled: r.enabled,
+			within_series_dates: r.withinSeriesDates
 		}
 	);
 	const groupNames = $derived(Object.fromEntries(data.groups.map((g) => [g.id, groupName(g)])));
@@ -54,6 +55,7 @@
 		errors={form?.errors}
 		channels={data.channels}
 		hasExtras={Boolean(data.detail.extras)}
+		hasStartDate={Boolean(data.detail.series.startedAt)}
 		submitLabel={m.manage_save()}
 	/>
 {/key}

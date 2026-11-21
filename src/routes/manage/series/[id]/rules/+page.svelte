@@ -36,6 +36,7 @@
 					<th scope="col">{m.manage_col_match()}</th>
 					<th scope="col">{m.manage_col_channel()}</th>
 					<th scope="col">{m.manage_col_target()}</th>
+					<th scope="col">{m.manage_col_dates()}</th>
 					<th scope="col">{m.manage_col_state()}</th>
 				</tr>
 			</thead>
@@ -58,6 +59,13 @@
 							{r.channelId ? (channelName[r.channelId] ?? r.channelId) : m.manage_all_channels()}
 						</td>
 						<td>{r.target === 'extras' ? m.manage_target_extras() : m.manage_target_main()}</td>
+						<td>
+							{!r.withinSeriesDates
+								? m.manage_rule_dates_any()
+								: s.startedAt
+									? m.manage_rule_dates_series()
+									: m.manage_rule_dates_no_start()}
+						</td>
 						<td>{r.enabled ? m.manage_rule_enabled() : m.manage_rule_disabled()}</td>
 					</tr>
 				{/each}
@@ -72,6 +80,7 @@
 	errors={form?.errors}
 	channels={data.channels}
 	hasExtras={Boolean(data.detail.extras)}
+	hasStartDate={Boolean(data.detail.series.startedAt)}
 	submitLabel={m.manage_rule_create()}
 />
 {#if form?.test}

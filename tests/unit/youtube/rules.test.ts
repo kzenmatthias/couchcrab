@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	type CandidateRule,
 	compileRulePattern,
+	inSeriesWindow,
 	MAX_PATTERN_LENGTH,
 	placeVideo,
 	type RuleSeries
@@ -133,5 +134,60 @@ describe('placeVideo', () => {
 			seriesId: OTHER,
 			target: 'main'
 		});
+	});
+});
+
+describe('rules within the series dates', () => {
+	const DATED = 20;
+	const DATED_EXTRAS = 21;
+	const dated = (startedAt: Date | null, endedAt: Date | null) =>
+		new Map<number, RuleSeries>([
+			[
+				DATED,
+				{ id: DATED, grouping: 'none', extrasId: DATED_EXTRAS, groups: [], startedAt, endedAt }
+			],
+			[DATED_EXTRAS, { id: DATED_EXTRAS, grouping: 'none', extrasId: null, groups: [] }]
+		]);
+	const start = new Date('2026-03-10T00:00:00Z');
+	const end = new Date('2026-06-01T00:00:00Z');
+	const at = (iso: string) => video('hermitcraft', { publishedAt: new Date(iso) });
+	const bound = rule({ seriesId: DATED, pattern: 'hermitcraft', withinSeriesDates: true });
+
+	it('matches from 2 days before the start up to 7 days after the end, edges included', () => {
+		const s = dated(start, end);
+		expect(placeVideo(at('2026-03-08T00:00:00Z'), [bound], s)?.seriesId).toBe(DATED);
+		expect(placeVideo(at('2026-03-07T23:59:59Z'), [bound], s)).toBeNull();
+		expect(placeVideo(at('2026-06-08T00:00:00Z'), [bound], s)?.seriesId).toBe(DATED);
+		expect(placeVideo(at('2026-06-08T00:00:01Z'), [bound], s)).toBeNull();
+	});
+
+	it('is open-ended while the series has no end date', () => {
+		expect(placeVideo(at('2030-01-01T00:00:00Z'), [bound], dated(start, null))?.seriesId).toBe(
+			DATED
+		);
+	});
+
+	it('never matches when the series has no start date', () => {
+		expect(placeVideo(at('2026-04-01T00:00:00Z'), [bound], dated(null, end))).toBeNull();
+		expect(inSeriesWindow(undefined, start)).toBe(false);
+	});
+
+	it('uses the rule series dates also when the video goes to Extras', () => {
+		const extras = rule({ ...bound, id: 99, target: 'extras' });
+		expect(placeVideo(at('2026-04-01T00:00:00Z'), [extras], dated(start, end))?.seriesId).toBe(
+			DATED_EXTRAS
+		);
+		expect(placeVideo(at('2027-04-01T00:00:00Z'), [extras], dated(start, end))).toBeNull();
+	});
+
+	it('lets the next rule try when the date window rules a rule out', () => {
+		const fallback = rule({ seriesId: OTHER, pattern: 'hermitcraft', priority: -1 });
+		const s = new Map([...dated(start, end), ...series]);
+		expect(placeVideo(at('2025-01-01T00:00:00Z'), [bound, fallback], s)?.seriesId).toBe(OTHER);
+	});
+
+	it('ignores the dates for a rule without the option', () => {
+		const free = rule({ seriesId: DATED, pattern: 'hermitcraft' });
+		expect(placeVideo(at('2020-01-01T00:00:00Z'), [free], dated(null, null))?.seriesId).toBe(DATED);
 	});
 });

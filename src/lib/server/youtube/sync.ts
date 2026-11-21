@@ -428,7 +428,12 @@ export function loadRuleSeries(tx: Executor, ruleSeriesIds: number[]): Map<numbe
 		.all();
 	const allIds = [...ruleSeriesIds, ...children.map((c) => c.id)];
 	const rows = tx
-		.select({ id: t.series.id, grouping: t.series.grouping })
+		.select({
+			id: t.series.id,
+			grouping: t.series.grouping,
+			startedAt: t.series.startedAt,
+			endedAt: t.series.endedAt
+		})
 		.from(t.series)
 		.where(inArray(t.series.id, allIds))
 		.all();
@@ -438,6 +443,8 @@ export function loadRuleSeries(tx: Executor, ruleSeriesIds: number[]): Map<numbe
 		series.set(row.id, {
 			id: row.id,
 			grouping: row.grouping,
+			startedAt: row.startedAt,
+			endedAt: row.endedAt,
 			extrasId: children.find((c) => c.parentId === row.id)?.id ?? null,
 			groups: groups
 				.filter((g) => g.seriesId === row.id)

@@ -13,13 +13,19 @@
 		errors: Errors;
 		channels: Channel[];
 		hasExtras: boolean;
+		/** False when the series has no start date: a date-bound rule then matches nothing. */
+		hasStartDate: boolean;
 		submitLabel: string;
 	};
 
-	let { values, errors, channels, hasExtras, submitLabel }: Props = $props();
+	let { values, errors, channels, hasExtras, hasStartDate, submitLabel }: Props = $props();
 	const str = (v: Values[string]) => (v == null ? '' : String(v));
 	const enabled = $derived(
 		values.enabled === undefined || values.enabled === true || values.enabled === '1'
+	);
+
+	const withinSeriesDates = $derived(
+		values.within_series_dates === true || values.within_series_dates === '1'
 	);
 
 	const labels = $derived({
@@ -28,7 +34,8 @@
 		channel_id: m.manage_field_rule_channel(),
 		target: m.manage_field_target(),
 		priority: m.manage_field_priority(),
-		enabled: m.manage_field_enabled()
+		enabled: m.manage_field_enabled(),
+		within_series_dates: m.manage_field_within_series_dates()
 	});
 </script>
 
@@ -111,6 +118,25 @@
 			<input {...a} type="number" min="-1000" max="1000" value={str(values.priority) || '0'} />
 		{/snippet}
 	</Field>
+	<div class="check">
+		<input
+			id="f-within_series_dates"
+			type="checkbox"
+			name="within_series_dates"
+			value="1"
+			checked={withinSeriesDates}
+			aria-describedby={hasStartDate
+				? 'f-within_series_dates-hint'
+				: 'f-within_series_dates-hint f-within_series_dates-warn'}
+		/>
+		<label for="f-within_series_dates">{labels.within_series_dates}</label>
+	</div>
+	<p class="hint" id="f-within_series_dates-hint">{m.manage_hint_within_series_dates()}</p>
+	{#if !hasStartDate}
+		<p class="hint" id="f-within_series_dates-warn">
+			{m.manage_warn_within_series_dates_no_start()}
+		</p>
+	{/if}
 	<div class="check">
 		<input id="f-enabled" type="checkbox" name="enabled" value="1" checked={enabled} />
 		<label for="f-enabled">{labels.enabled}</label>
