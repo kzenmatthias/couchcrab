@@ -200,6 +200,8 @@ export function seed(db: DB): SeedSummary {
 			episode?: number | null;
 			captions?: boolean;
 			liveVod?: boolean;
+			/** Actual livestream start (live VODs only). */
+			liveStartedAt?: Date;
 		}) => {
 			videoN += 1;
 			videoCount += 1;
@@ -212,6 +214,7 @@ export function seed(db: DB): SeedSummary {
 					durationS: v.durationS,
 					hasCreatorCaptions: v.captions ?? false,
 					isLiveVod: v.liveVod ?? false,
+					liveStartedAt: v.liveStartedAt ?? null,
 					seriesId: v.seriesId,
 					groupId: v.groupId ?? null,
 					episodeNumber: v.episode ?? null,
@@ -447,6 +450,59 @@ export function seed(db: DB): SeedSummary {
 				captions: i === 1
 			});
 		});
+
+		/*
+		 * 5. Extras for the event: every player streamed both days. The streams started a few
+		 * minutes apart, so Watch together can line the POVs up by their actual start.
+		 */
+		const eventMembers = ['marrowfen', 'nimbleknot', 'ferrocrest', 'cobalt-wren'] as const;
+		const eventStreams = addSeries(
+			{
+				slug: 'skyforge-games-2026-streams',
+				title: 'Skyforge Games 2026 Streams',
+				kind: 'other',
+				status: 'ended',
+				grouping: 'session',
+				parentId: event,
+				startedAt: new Date(eventStart),
+				endedAt: at(eventStart, 2),
+				poster: { type: 'art', palette: 'night', seed: 10 }
+			},
+			eventMembers,
+			{
+				en: 'The full livestreams of every player, day by day.',
+				nl: 'De volledige livestreams van elke speler, dag per dag.'
+			}
+		);
+		for (let d = 1; d <= 2; d++) {
+			const dayStart = at(eventStart, d - 1);
+			const group = tx
+				.insert(t.groups)
+				.values({
+					seriesId: eventStreams,
+					kind: 'session',
+					number: d,
+					title: `Day ${d}`,
+					startsAt: dayStart,
+					endsAt: at(eventStart, d - 1, 4)
+				})
+				.returning({ id: t.groups.id })
+				.get();
+			eventMembers.forEach((slug, i) => {
+				// Streams start up to six minutes apart and run for about three hours.
+				const startedAt = new Date(dayStart.getTime() + ((i * 97 + d * 31) % 360) * 1000);
+				addVideo({
+					channel: mainChannel.get(slug)!,
+					title: `Skyforge Games day ${d} LIVE`,
+					publishedAt: startedAt,
+					durationS: 3 * 3600 + ((i * 7 + d * 3) % 9) * 300,
+					seriesId: eventStreams,
+					groupId: group.id,
+					liveVod: true,
+					liveStartedAt: startedAt
+				});
+			});
+		}
 
 		/*
 		 * One creator has claimed their profile, so the UI can show the "Verified creator" state.

@@ -161,6 +161,11 @@ export const videos = sqliteTable(
 		/** Captions made by the creator, not only YouTube's automatic ones. */
 		hasCreatorCaptions: bool('has_creator_captions').notNull().default(false),
 		isLiveVod: bool('is_live_vod').notNull().default(false),
+		/**
+		 * When the livestream actually started (YouTube `actualStartTime`), for live VODs only.
+		 * Lines up several POVs of the same stream on one clock (Watch together).
+		 */
+		liveStartedAt: integer('live_started_at', { mode: 'timestamp' }),
 		isShort: bool('is_short').notNull().default(false),
 		seriesId: integer('series_id').references(() => series.id, { onDelete: 'set null' }),
 		groupId: integer('group_id').references(() => groups.id, { onDelete: 'set null' }),

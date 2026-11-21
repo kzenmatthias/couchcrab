@@ -257,6 +257,7 @@ function apiFields(video: ClassifiedVideo, now: Date) {
 		durationS: video.durationS,
 		hasCreatorCaptions: video.hasCreatorCaptions,
 		isLiveVod: video.isLiveVod,
+		liveStartedAt: video.liveStartedAt,
 		isShort: video.isShort,
 		fetchedAt: now
 	};
@@ -504,6 +505,7 @@ export async function refreshStale(
 					durationS: 0,
 					hasCreatorCaptions: false,
 					isLiveVod: false,
+					liveStartedAt: null,
 					isShort: false,
 					status: 'ignored',
 					fetchedAt: now

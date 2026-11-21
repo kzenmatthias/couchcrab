@@ -18,6 +18,8 @@ export interface ClassifiedVideo {
 	durationS: number;
 	hasCreatorCaptions: boolean;
 	isLiveVod: boolean;
+	/** Actual start of the livestream, for live VODs only. */
+	liveStartedAt: Date | null;
 	isShort: boolean;
 	/** `upcoming` (scheduled stream or premiere) and `live` (streaming now) are not synced yet. */
 	liveState: 'none' | 'upcoming' | 'live';
@@ -42,8 +44,14 @@ export function classifyVideo(video: ApiVideo): ClassifiedVideo {
 		durationS,
 		hasCreatorCaptions: video.contentDetails?.caption === 'true',
 		isLiveVod,
+		liveStartedAt: isLiveVod && live?.actualStartTime ? validDate(live.actualStartTime) : null,
 		// A zero duration means "unknown" (live, processing), not "short". Live VODs are never Shorts.
 		isShort: !isLiveVod && durationS > 0 && durationS <= SHORT_MAX_SECONDS,
 		liveState
 	};
+}
+
+function validDate(value: string): Date | null {
+	const date = new Date(value);
+	return Number.isNaN(date.getTime()) ? null : date;
 }

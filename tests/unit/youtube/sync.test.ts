@@ -248,7 +248,11 @@ describe('runSync: later syncs', () => {
 		const summary = await sync(new Date('2026-10-28T08:00:00Z'), { channel: PEBBLE });
 		expect(summary.channels[0]).toMatchObject({ new: 2, placed: 2, skipped: 0 });
 		expect(video('fxPeb000011')).toMatchObject({ seriesId: ids.s1, groupId: ids.week2 });
-		expect(video('fxPeb000006')).toMatchObject({ seriesId: ids.s1Extras, isLiveVod: true });
+		expect(video('fxPeb000006')).toMatchObject({
+			seriesId: ids.s1Extras,
+			isLiveVod: true,
+			liveStartedAt: new Date('2026-10-24T19:00:00Z')
+		});
 		// Cursor was 8 October minus the safety margin: older uploads are not requested again.
 		const requested = yt.requestedVideoIds();
 		expect(requested).toContain('fxPeb000007');

@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { MIRROR_COOKIE, parseMirror } from '#lib/prefs/mirror.js';
-import { getVideo, seriesSessions, seriesVideos } from '#lib/server/catalog.js';
+import { getVideo, livePartners, seriesSessions, seriesVideos } from '#lib/server/catalog.js';
+import { TOGETHER_MAX } from '#lib/together.js';
 import { groupBySession, groupByWeek, isoWeekKey, sortTimeline } from '#lib/timeline.js';
 import { isShown, isSpoilerFree, nextEpisode, redactForViewer } from '#lib/viewing.js';
 import type { PageServerLoad } from './$types';
@@ -31,6 +32,16 @@ export const load: PageServerLoad = ({ params, cookies }) => {
 	const current = groups.find((items) => items.some((v) => v.id === video.id)) ?? [video];
 	const queue = current.filter((v) => v.id === video.id || isShown(mirror, v));
 	const next = nextEpisode(groups, video.id, (v) => isShown(mirror, v));
+	// Other POVs of the same livestream, the creators I watch first.
+	const partners = livePartners(video);
+	const together = [
+		video,
+		...partners.filter((v) => isShown(mirror, v)),
+		...partners.filter((v) => !isShown(mirror, v))
+	]
+		.slice(0, TOGETHER_MAX)
+		.map((v) => v.youtubeVideoId);
+
 	const [redactedVideo, ...redactedQueue] = redactForViewer([video, ...queue], mirror);
 
 	return {
@@ -39,6 +50,7 @@ export const load: PageServerLoad = ({ params, cookies }) => {
 		group,
 		week,
 		queue: redactedQueue,
+		together: together.length > 1 ? together : [],
 		next: next ? redactForViewer([next], mirror)[0] : null,
 		spoilerFree: isSpoilerFree(mirror, video.povSeriesId)
 	};

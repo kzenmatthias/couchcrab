@@ -12,6 +12,7 @@
 	import { requestAutoplay, takeAutoplay } from '#lib/prefs/autoplay.js';
 	import { CONTINUE_MIN_SECONDS } from '#lib/prefs/progress.js';
 	import { getViewing } from '#lib/prefs/store.svelte.js';
+	import { togetherQuery } from '#lib/together.js';
 	import { clockDuration, spokenDuration, youtubeWatchUrl, type VideoCard } from '#lib/video.js';
 	import type { PageData } from './$types';
 
@@ -236,6 +237,15 @@
 					href={resolve('/(site)/watch/[videoId]', { videoId: next.youtubeVideoId })}
 				>
 					{m.watch_next_link({ next: nextLabel })}
+				</a>
+			{/if}
+			{#if data.together.length > 1}
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() plus a query -->
+				<a
+					class="btn ghost"
+					href="{resolve('/(site)/together')}?{togetherQuery({ ids: data.together })}"
+				>
+					{m.together_with_others({ count: data.together.length - 1 })}
 				</a>
 			{/if}
 			<a class="btn ghost" href={youtubeWatchUrl(v.youtubeVideoId)} rel="external noopener">

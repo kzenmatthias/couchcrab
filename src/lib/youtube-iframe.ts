@@ -9,10 +9,15 @@ export type YTPlayer = {
 	getCurrentTime(): number;
 	getDuration(): number;
 	getPlayerState(): number;
+	playVideo(): void;
+	pauseVideo(): void;
+	seekTo(seconds: number, allowSeekAhead: boolean): void;
+	mute(): void;
+	unMute(): void;
 };
 
 /** `YT.PlayerState` values used here. */
-export const PLAYER_STATE = { ENDED: 0, PLAYING: 1, PAUSED: 2 } as const;
+export const PLAYER_STATE = { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3 } as const;
 
 type YTNamespace = {
 	Player: new (

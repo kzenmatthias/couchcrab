@@ -1,0 +1,1 @@
+ALTER TABLE `videos` ADD `live_started_at` integer;

@@ -23,6 +23,8 @@ export type VideoCard = {
 	publishedAt: Date;
 	durationS: number;
 	hasCreatorCaptions: boolean;
+	/** Actual livestream start, for live VODs whose start is known (Watch together). */
+	liveStartedAt: Date | null;
 	episodeNumber: number | null;
 	groupId: number | null;
 	seriesId: number;

@@ -61,7 +61,13 @@ describe('classifyVideo', () => {
 				}
 			})
 		);
-		expect(vod).toMatchObject({ isLiveVod: true, isShort: false, liveState: 'none' });
+		expect(vod).toMatchObject({
+			isLiveVod: true,
+			isShort: false,
+			liveState: 'none',
+			liveStartedAt: new Date('2026-10-01T19:00:00Z')
+		});
+		expect(classifyVideo(video()).liveStartedAt).toBeNull();
 	});
 
 	it('detects Shorts by duration, up to and including the threshold', () => {

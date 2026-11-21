@@ -5,6 +5,8 @@
 	import { groupBySession, groupByWeek, sortTimeline, type SessionInfo } from '#lib/timeline.js';
 	import type { VideoCard } from '#lib/video.js';
 	import { getViewing } from '#lib/prefs/store.svelte.js';
+	import { resolve } from '$app/paths';
+	import { togetherIds, togetherQuery } from '#lib/together.js';
 	import EpisodeCard from './EpisodeCard.svelte';
 
 	type Props = {
@@ -65,6 +67,21 @@
 			<span>{section.title}</span>
 			{#if section.note}<span class="note">{section.note}</span>{/if}
 		</h2>
+		{#if grouping === 'session'}
+			{@const together = togetherIds(section.items)}
+			{#if together.length > 1}
+				<p class="together">
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() plus a query -->
+					<a
+						class="btn ghost"
+						href="{resolve('/(site)/together')}?{togetherQuery({ ids: together })}"
+					>
+						<span aria-hidden="true">▦</span>
+						{m.together_link_session({ session: section.title, count: together.length })}
+					</a>
+				</p>
+			{/if}
+		{/if}
 		<ul class={listClass}>
 			{#each section.items as video (video.id)}
 				<li><EpisodeCard {video} /></li>
@@ -97,6 +114,9 @@
 		font-size: 1.5rem;
 		text-transform: none;
 		letter-spacing: -0.01em;
+	}
+	.together {
+		margin: -8px 0 20px;
 	}
 	.note {
 		font-size: 0.875rem;

@@ -8,7 +8,7 @@
  *
  * `searchCatalog` follows the same rules, and leaves hidden (spoiler-free) titles out.
  */
-import { and, desc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, isNull, max, sql } from 'drizzle-orm';
 import { pickTranslation } from '#lib/i18n.js';
 import { matchesTerms, matchRank, normalizeSearch, searchTerms } from '#lib/search.js';
 import type { VideoCard } from '#lib/video.js';
@@ -32,6 +32,7 @@ function videoQuery() {
 			publishedAt: videos.publishedAt,
 			durationS: videos.durationS,
 			hasCreatorCaptions: videos.hasCreatorCaptions,
+			liveStartedAt: videos.liveStartedAt,
 			episodeNumber: videos.episodeNumber,
 			groupId: videos.groupId,
 			seriesId: videos.seriesId,
@@ -61,6 +62,7 @@ function toCard(r: VideoRow): VideoCard {
 		publishedAt: r.publishedAt,
 		durationS: r.durationS,
 		hasCreatorCaptions: r.hasCreatorCaptions,
+		liveStartedAt: r.liveStartedAt,
 		episodeNumber: r.episodeNumber,
 		groupId: r.groupId,
 		seriesId: r.seriesId!,
@@ -274,6 +276,34 @@ export function getVideo(youtubeVideoId: string) {
 		},
 		group
 	};
+}
+
+/* ---------- watch together ---------- */
+
+/**
+ * Other public live VODs of the same series whose livestream overlapped this one in time: the
+ * other POVs of the same stream. Empty when the video is not a live VOD with a known start.
+ */
+export function livePartners(video: VideoCard): VideoCard[] {
+	if (!video.liveStartedAt) return [];
+	const start = video.liveStartedAt.getTime();
+	const end = start + Math.max(video.durationS, 1) * 1000;
+	return videoQuery()
+		.where(
+			and(
+				visibleVideo,
+				eq(videos.seriesId, video.seriesId),
+				isNotNull(videos.liveStartedAt),
+				sql`${videos.id} <> ${video.id}`
+			)
+		)
+		.orderBy(videos.liveStartedAt, videos.id)
+		.all()
+		.map(toCard)
+		.filter((v) => {
+			const s = v.liveStartedAt!.getTime();
+			return s < end && s + Math.max(v.durationS, 1) * 1000 > start;
+		});
 }
 
 /* ---------- creators ---------- */
