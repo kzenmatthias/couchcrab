@@ -1,11 +1,18 @@
 /**
- * The public catalog queries hide a creator who opted out, and all their videos, everywhere.
+ * The public catalog queries hide a creator who opted out, and all their videos, everywhere, and
+ * the videos of a channel the creator unlinked.
  * The app database is replaced by a seeded in-memory one.
  */
 import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as t from '#lib/server/db/schema.js';
-import { setOwnOptOut } from '#lib/server/manage/creator-self.js';
+import {
+	listOwnChannels,
+	placeOwnVideo,
+	relinkOwnChannel,
+	setOwnOptOut,
+	unlinkOwnChannel
+} from '#lib/server/manage/creator-self.js';
 
 vi.mock('#lib/server/db/index.js', async () => {
 	const { seeded } = await import('./manage/fixtures.js');
@@ -56,5 +63,38 @@ describe('opting out hides a creator from the catalog', () => {
 		setOwnOptOut(db, actor(), false);
 		expect(catalog.getCreatorBySlug('tidecaller-juno')).not.toBeNull();
 		expect(catalog.seriesVideos(season().id).filter(isJuno)).toHaveLength(junoVideos.length);
+	});
+});
+
+describe('unlinking a channel hides its videos from the catalog', () => {
+	it('hides the channel and its videos, and linking again brings them back', () => {
+		const second = listOwnChannels(db, actor()).find((c) => c.kind === 'secondary')!;
+		const video = db
+			.select()
+			.from(t.videos)
+			.where(eq(t.videos.title, 'Late night building chat'))
+			.get()!;
+		placeOwnVideo(db, actor(), video.id, { series_id: String(season().id) });
+		const shown = () => catalog.seriesVideos(season().id).some((v) => v.id === video.id);
+		const channelShown = () =>
+			catalog
+				.getCreatorBySlug('tidecaller-juno')!
+				.channels.some((c) => c.youtubeChannelId === second.youtubeChannelId);
+		expect(shown()).toBe(true);
+		expect(channelShown()).toBe(true);
+
+		unlinkOwnChannel(db, actor(), second.id);
+		expect(shown()).toBe(false);
+		expect(channelShown()).toBe(false);
+		expect(catalog.latestVideos(400).some((v) => v.id === video.id)).toBe(false);
+		expect(catalog.videosByYoutubeIds([video.youtubeVideoId])).toEqual([]);
+		expect(catalog.getVideo(video.youtubeVideoId)).toBeNull();
+		// The rest of the creator stays public.
+		expect(catalog.getCreatorBySlug('tidecaller-juno')).not.toBeNull();
+		expect(catalog.seriesVideos(season().id).some(isJuno)).toBe(true);
+
+		relinkOwnChannel(db, actor(), second.id);
+		expect(shown()).toBe(true);
+		expect(channelShown()).toBe(true);
 	});
 });

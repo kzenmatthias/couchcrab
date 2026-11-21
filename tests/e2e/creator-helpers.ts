@@ -52,10 +52,41 @@ export function createClaimedCreator(seriesSlug: string) {
 				 series_id, status, placed_by, fetched_at)
 				 VALUES (?, ?, ?, ?, 1500, ?, 'placed', 'rule', ?)`
 			).run(youtubeId, channel.id, videoTitle, now - 600, series.id, now);
+			// A second channel with one placed upload, for unlinking.
+			const secondChannelTitle = `${name} Plays`;
+			const second = db
+				.prepare(
+					`INSERT INTO channels (creator_id, youtube_channel_id, title, kind)
+					 VALUES (?, ?, ?, 'secondary') RETURNING id`
+				)
+				.get(creator.id, `UC${randomBytes(11).toString('hex')}`, secondChannelTitle) as {
+				id: number;
+			};
+			const secondVideoTitle = `Second channel upload ${tag}`;
+			db.prepare(
+				`INSERT INTO videos (youtube_video_id, channel_id, title, published_at, duration_s,
+				 series_id, status, placed_by, fetched_at)
+				 VALUES (?, ?, ?, ?, 1500, ?, 'placed', 'rule', ?)`
+			).run(
+				`e2e${randomBytes(4).toString('hex')}`,
+				second.id,
+				secondVideoTitle,
+				now - 900,
+				series.id,
+				now
+			);
 			const user = db
 				.prepare('INSERT INTO users (google_sub, name, creator_id) VALUES (?, ?, ?) RETURNING id')
 				.get(`e2e-${tag}`, name, creator.id) as { id: number };
-			return { userId: user.id, slug, name, videoTitle, youtubeId };
+			return {
+				userId: user.id,
+				slug,
+				name,
+				videoTitle,
+				youtubeId,
+				secondChannelTitle,
+				secondVideoTitle
+			};
 		})()
 	);
 }
@@ -96,5 +127,18 @@ export function lastAuditActor(entity: string, entityId: number) {
 					)
 					.get(entity, entityId) as { actor: string } | undefined
 			)?.actor
+	);
+}
+
+export function channelState(title: string) {
+	return withDb(
+		(db) =>
+			db
+				.prepare(
+					`SELECT unlinked_at AS unlinkedAt, sync_enabled AS syncEnabled,
+					 (SELECT count(*) FROM videos v WHERE v.channel_id = ch.id) AS videos
+					 FROM channels ch WHERE title = ?`
+				)
+				.get(title) as { unlinkedAt: number | null; syncEnabled: number; videos: number }
 	);
 }

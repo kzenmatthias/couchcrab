@@ -776,13 +776,13 @@
 			"declarations": ["input count", "local countPlural = count: plural"],
 			"selectors": ["countPlural"],
 			"match": {
-				"countPlural=one": "The channel and its {count} video leave Couchcrab and the sync stops reading it. You can add it again later.",
-				"countPlural=*": "The channel and its {count} videos leave Couchcrab and the sync stops reading it. You can add it again later."
+				"countPlural=one": "The channel and its {count} video are hidden from Couchcrab and the sync stops reading it. Nothing is deleted: you can link it again here at any time.",
+				"countPlural=*": "The channel and its {count} videos are hidden from Couchcrab and the sync stops reading it. Nothing is deleted: you can link it again here at any time."
 			}
 		}
 	],
 	"creator_unlink_confirm": "Yes, unlink",
-	"creator_channel_unlinked": "The channel was unlinked.",
+	"creator_channel_unlinked": "The channel was unlinked. Its videos are hidden from Couchcrab.",
 	"creator_add_channel_title": "Add another channel",
 	"creator_add_channel_body": "Sign in with Google again, with the account that owns the other channel. Couchcrab checks which channels it owns; a channel that is not on Couchcrab yet becomes a request that the team reviews.",
 	"creator_add_channel_button": "Add a channel with Google",
@@ -800,5 +800,11 @@
 	"creator_no_videos": "No videos of yours are on Couchcrab yet.",
 	"creator_no_videos_filtered": "No videos match these filters.",
 	"creator_links_heading": "Links",
-	"manage_creator_self_edited": "The creator last edited their own profile on {date}."
+	"manage_creator_self_edited": "The creator last edited their own profile on {date}.",
+	"creator_status_unlinked": "Unlinked",
+	"creator_relink_button": "Link again",
+	"creator_channel_relinked": "The channel is linked again. Its videos are back on Couchcrab.",
+	"manage_channel_unlinked": "Unlinked by the creator on {date}. Its videos are hidden from the site and the sync is off.",
+	"manage_restore_channel": "Link to the creator again",
+	"manage_channel_restored": "The channel is linked again."
 }

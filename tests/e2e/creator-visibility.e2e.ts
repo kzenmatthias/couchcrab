@@ -6,7 +6,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page, test } from '@playwright/test';
 import { signIn, userIdByName } from './auth-helpers.js';
-import { createClaimedCreator } from './creator-helpers.js';
+import { channelState, createClaimedCreator } from './creator-helpers.js';
 import { idOf } from './manage-helpers.js';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'];
@@ -71,4 +71,77 @@ test('the admin sees when the creator edited their own profile', async ({
 	await signIn(context, baseURL!, userIdByName('Demo Admin'));
 	await page.goto(`/manage/creators/${idOf('creators', creator.slug)}`);
 	await expect(page.getByText(/The creator last edited their own profile on/)).toBeVisible();
+});
+
+test('unlinking a channel hides its videos without deleting them, and linking again brings them back', async ({
+	page,
+	context,
+	baseURL
+}) => {
+	const creator = createClaimedCreator('lanternfall-season-3');
+	await signIn(context, baseURL!, creator.userId);
+	await page.goto('/series/lanternfall-season-3');
+	await expect(page.getByText(creator.secondVideoTitle).first()).toBeVisible();
+
+	await page.goto('/creator/channels');
+	await page
+		.getByRole('button', { name: new RegExp(`^Unlink.*${creator.secondChannelTitle}`) })
+		.click();
+	const panel = page.getByRole('region', { name: `Unlink ${creator.secondChannelTitle}?` });
+	await expect(panel).toBeFocused();
+	await expect(panel).toContainText('Nothing is deleted');
+	await panel.getByRole('button', { name: 'Yes, unlink' }).click();
+	await expect(page.getByRole('status')).toContainText('The channel was unlinked.');
+	expect(channelState(creator.secondChannelTitle)).toMatchObject({ syncEnabled: 0, videos: 1 });
+	expect(channelState(creator.secondChannelTitle).unlinkedAt).not.toBeNull();
+
+	await page.goto('/series/lanternfall-season-3');
+	await expect(page.getByText(creator.secondVideoTitle)).toHaveCount(0);
+	// The main channel's upload and the profile stay.
+	await expect(page.getByText(creator.videoTitle).first()).toBeVisible();
+	await page.goto('/');
+	await expect(page.getByText(creator.secondVideoTitle)).toHaveCount(0);
+	await page.goto(`/creators/${creator.slug}`);
+	await expect(page.getByRole('heading', { level: 1, name: creator.name })).toBeVisible();
+	await expect(page.getByText(creator.secondVideoTitle)).toHaveCount(0);
+	await page.goto('/creator/videos');
+	await expect(page.getByRole('article', { name: creator.secondVideoTitle })).toHaveCount(0);
+
+	await page.goto('/creator/channels');
+	await page
+		.getByRole('button', { name: new RegExp(`^Link again.*${creator.secondChannelTitle}`) })
+		.click();
+	await expect(page.getByRole('status')).toContainText('linked again');
+	expect(channelState(creator.secondChannelTitle)).toMatchObject({
+		unlinkedAt: null,
+		syncEnabled: 1
+	});
+	await page.goto('/series/lanternfall-season-3');
+	await expect(page.getByText(creator.secondVideoTitle).first()).toBeVisible();
+});
+
+test('an admin sees an unlinked channel and links it to the creator again', async ({
+	page,
+	context,
+	baseURL
+}) => {
+	const creator = createClaimedCreator('lanternfall-season-3');
+	await signIn(context, baseURL!, creator.userId);
+	await page.goto('/creator/channels');
+	await page
+		.getByRole('button', { name: new RegExp(`^Unlink.*${creator.secondChannelTitle}`) })
+		.click();
+	await page.getByRole('button', { name: 'Yes, unlink' }).click();
+	await expect(page.getByRole('status')).toContainText('The channel was unlinked.');
+
+	await context.clearCookies();
+	await signIn(context, baseURL!, userIdByName('Demo Admin'));
+	await page.goto(`/manage/creators/${idOf('creators', creator.slug)}`);
+	await expect(page.getByText(/Unlinked by the creator on/)).toBeVisible();
+	await expectNoAxeViolations(page);
+	await page.getByRole('button', { name: 'Link to the creator again' }).click();
+	await expect(page.getByRole('status')).toContainText('The channel is linked again.');
+	expect(channelState(creator.secondChannelTitle).unlinkedAt).toBeNull();
+	await page.goto('/series/lanternfall-season-3');
+	await expect(page.getByText(creator.secondVideoTitle).first()).toBeVisible();
 });

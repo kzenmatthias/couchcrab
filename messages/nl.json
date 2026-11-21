@@ -776,13 +776,13 @@
 			"declarations": ["input count", "local countPlural = count: plural"],
 			"selectors": ["countPlural"],
 			"match": {
-				"countPlural=one": "Het kanaal en zijn {count} video verdwijnen van Couchcrab en de synchronisatie leest het niet meer. Je kunt het later opnieuw toevoegen.",
-				"countPlural=*": "Het kanaal en zijn {count} video's verdwijnen van Couchcrab en de synchronisatie leest het niet meer. Je kunt het later opnieuw toevoegen."
+				"countPlural=one": "Het kanaal en zijn {count} video worden verborgen op Couchcrab en de synchronisatie leest het niet meer. Er wordt niets gewist: je kunt het hier altijd opnieuw koppelen.",
+				"countPlural=*": "Het kanaal en zijn {count} video's worden verborgen op Couchcrab en de synchronisatie leest het niet meer. Er wordt niets gewist: je kunt het hier altijd opnieuw koppelen."
 			}
 		}
 	],
 	"creator_unlink_confirm": "Ja, ontkoppelen",
-	"creator_channel_unlinked": "Het kanaal is ontkoppeld.",
+	"creator_channel_unlinked": "Het kanaal is ontkoppeld. De video's zijn verborgen op Couchcrab.",
 	"creator_add_channel_title": "Nog een kanaal toevoegen",
 	"creator_add_channel_body": "Meld je opnieuw aan met Google, met het account dat het andere kanaal bezit. Couchcrab kijkt welke kanalen van dat account zijn; een kanaal dat nog niet op Couchcrab staat, wordt een aanvraag die het team nakijkt.",
 	"creator_add_channel_button": "Kanaal toevoegen met Google",
@@ -800,5 +800,11 @@
 	"creator_no_videos": "Er staan nog geen video's van jou op Couchcrab.",
 	"creator_no_videos_filtered": "Geen video's voor deze filters.",
 	"creator_links_heading": "Links",
-	"manage_creator_self_edited": "De maker paste het eigen profiel het laatst aan op {date}."
+	"manage_creator_self_edited": "De maker paste het eigen profiel het laatst aan op {date}.",
+	"creator_status_unlinked": "Ontkoppeld",
+	"creator_relink_button": "Opnieuw koppelen",
+	"creator_channel_relinked": "Het kanaal is weer gekoppeld. De video's staan weer op Couchcrab.",
+	"manage_channel_unlinked": "Ontkoppeld door de maker op {date}. De video's zijn verborgen op de site en de synchronisatie staat uit.",
+	"manage_restore_channel": "Opnieuw aan de maker koppelen",
+	"manage_channel_restored": "Het kanaal is weer gekoppeld."
 }

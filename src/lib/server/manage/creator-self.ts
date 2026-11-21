@@ -9,7 +9,7 @@
  * - only videos on that creator's channels;
  * - only series the creator takes part in (`series_creators`) and their Extras.
  */
-import { and, asc, count, desc, eq, inArray, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull, type SQL } from 'drizzle-orm';
 import { PROFILE_COLORS } from '#lib/creator-colors.js';
 import { type Executor, writeAudit } from '../audit.js';
 import type { DB } from '../db/client.js';
@@ -25,7 +25,7 @@ import {
 	text,
 	ValidationError
 } from './core.js';
-import { BIO_MAX, creatorSnapshot } from './creators.js';
+import { BIO_MAX, channelSnapshot, creatorSnapshot } from './creators.js';
 import {
 	loadVideo,
 	parsePlacement,
@@ -91,7 +91,13 @@ export function getOwnProfile(db: DB, actor: CreatorActor) {
 			.select({ n: count() })
 			.from(t.videos)
 			.innerJoin(t.channels, eq(t.channels.id, t.videos.channelId))
-			.where(and(eq(t.channels.creatorId, creator.id), eq(t.videos.status, 'unsorted')))
+			.where(
+				and(
+					eq(t.channels.creatorId, creator.id),
+					isNull(t.channels.unlinkedAt),
+					eq(t.videos.status, 'unsorted')
+				)
+			)
 			.get()?.n ?? 0;
 	return { creator, unsorted };
 }
@@ -195,40 +201,58 @@ export function listOwnChannels(db: DB, actor: CreatorActor) {
 		kind: r.kind,
 		lastSyncedAt: r.lastSyncedAt,
 		verified: r.verifiedAt !== null,
+		unlinkedAt: r.unlinkedAt,
 		videos: counts.get(r.id) ?? 0
 	}));
 }
 
+type ChannelRow = typeof t.channels.$inferSelect;
+
+/** Loads a channel of this creator (403 for another creator's channel). */
+function loadOwnChannel(db: DB | Executor, creatorId: number, channelId: number): ChannelRow {
+	const channel = db.select().from(t.channels).where(eq(t.channels.id, channelId)).get();
+	if (!channel) throw new NotFoundError();
+	if (channel.creatorId !== creatorId) throw new ForbiddenError();
+	return channel;
+}
+
 /**
- * Unlinks a secondary channel from the creator's own profile: the channel and its videos leave
- * Couchcrab and the sync stops reading it. The main channel cannot be unlinked.
+ * Unlinks a secondary channel from the creator's own profile. Nothing is deleted: the channel
+ * gets `unlinked_at`, the sync is turned off and its videos are hidden from every public page
+ * and from My videos. The creator can link it again (`relinkOwnChannel`), and an admin can
+ * restore it or revert the history entry. The main channel cannot be unlinked.
  */
-export function unlinkOwnChannel(db: DB, actor: CreatorActor, channelId: number): void {
+export function unlinkOwnChannel(db: DB, actor: CreatorActor, channelId: number): ChannelRow {
 	const creator = assertOwnCreator(db, actor);
-	db.transaction((tx) => {
-		const before = tx.select().from(t.channels).where(eq(t.channels.id, channelId)).get();
-		if (!before) throw new NotFoundError();
-		if (before.creatorId !== creator.id) throw new ForbiddenError();
+	return db.transaction((tx) => {
+		const before = loadOwnChannel(tx, creator.id, channelId);
 		if (before.kind !== 'secondary') throw new ValidationError({ channel: 'invalid_choice' });
-		const videos =
-			tx.select({ n: count() }).from(t.videos).where(eq(t.videos.channelId, channelId)).get()?.n ??
-			0;
-		tx.delete(t.channels).where(eq(t.channels.id, channelId)).run();
-		auditCreator(
-			tx,
-			actor,
-			'channel',
-			channelId,
-			{
-				creatorId: before.creatorId,
-				youtubeChannelId: before.youtubeChannelId,
-				title: before.title,
-				kind: before.kind,
-				syncEnabled: before.syncEnabled,
-				videos
-			},
-			null
-		);
+		if (before.unlinkedAt) return before;
+		const row = tx
+			.update(t.channels)
+			.set({ unlinkedAt: new Date(), unlinkedByUserId: actor.id, syncEnabled: false })
+			.where(eq(t.channels.id, channelId))
+			.returning()
+			.get();
+		auditCreator(tx, actor, 'channel', channelId, channelSnapshot(before), channelSnapshot(row));
+		return row;
+	});
+}
+
+/** Links an unlinked channel back: its videos show again and the sync is on again. */
+export function relinkOwnChannel(db: DB, actor: CreatorActor, channelId: number): ChannelRow {
+	const creator = assertOwnCreator(db, actor);
+	return db.transaction((tx) => {
+		const before = loadOwnChannel(tx, creator.id, channelId);
+		if (!before.unlinkedAt) return before;
+		const row = tx
+			.update(t.channels)
+			.set({ unlinkedAt: null, unlinkedByUserId: null, syncEnabled: true })
+			.where(eq(t.channels.id, channelId))
+			.returning()
+			.get();
+		auditCreator(tx, actor, 'channel', channelId, channelSnapshot(before), channelSnapshot(row));
+		return row;
 	});
 }
 
@@ -293,7 +317,8 @@ export interface OwnVideoFilter {
 /** The creator's own videos: unsorted first, then placed, then ignored; newest first in each. */
 export function listOwnVideos(db: DB, actor: CreatorActor, filter: OwnVideoFilter = {}) {
 	const creator = assertOwnCreator(db, actor);
-	const where: SQL[] = [eq(t.channels.creatorId, creator.id)];
+	// Videos of an unlinked channel are hidden until the channel is linked again.
+	const where: SQL[] = [eq(t.channels.creatorId, creator.id), isNull(t.channels.unlinkedAt)];
 	if (filter.status) where.push(eq(t.videos.status, filter.status));
 	if (filter.seriesId) where.push(eq(t.videos.seriesId, filter.seriesId));
 	const rows = db
@@ -327,11 +352,11 @@ export function listOwnVideos(db: DB, actor: CreatorActor, filter: OwnVideoFilte
 function loadOwnVideo(db: DB, creatorId: number, videoId: number) {
 	const video = loadVideo(db, videoId);
 	const channel = db
-		.select({ creatorId: t.channels.creatorId })
+		.select({ creatorId: t.channels.creatorId, unlinkedAt: t.channels.unlinkedAt })
 		.from(t.channels)
 		.where(eq(t.channels.id, video.channelId))
 		.get();
-	if (!channel || channel.creatorId !== creatorId) throw new ForbiddenError();
+	if (!channel || channel.creatorId !== creatorId || channel.unlinkedAt) throw new ForbiddenError();
 	return video;
 }
 

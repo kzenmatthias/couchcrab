@@ -63,6 +63,14 @@ export const channels = sqliteTable(
 		verifiedAt: integer('verified_at', { mode: 'timestamp' }),
 		verifiedByUserId: integer('verified_by_user_id').references((): AnySQLiteColumn => users.id, {
 			onDelete: 'set null'
+		}),
+		/**
+		 * Set when the claimed creator unlinked this channel from their profile. Its videos stay
+		 * in the database but are hidden from every public page; the sync is off. Reversible.
+		 */
+		unlinkedAt: integer('unlinked_at', { mode: 'timestamp' }),
+		unlinkedByUserId: integer('unlinked_by_user_id').references((): AnySQLiteColumn => users.id, {
+			onDelete: 'set null'
 		})
 	},
 	(t) => [index('channels_creator_idx').on(t.creatorId)]

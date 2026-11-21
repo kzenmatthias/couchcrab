@@ -27,7 +27,13 @@
 <h1>{m.creator_channels_title()}</h1>
 <p class="lead">{m.creator_channels_lead()}</p>
 
-<Flash message={form?.saved === 'unlinked' ? m.creator_channel_unlinked() : null} />
+<Flash
+	message={form?.saved === 'unlinked'
+		? m.creator_channel_unlinked()
+		: form?.saved === 'relinked'
+			? m.creator_channel_relinked()
+			: null}
+/>
 <ErrorSummary
 	{errors}
 	labels={{ channel: m.manage_field_channel() }}
@@ -65,7 +71,9 @@
 					· {m.creator_channel_videos({ count: ch.videos })}
 				</span>
 			</div>
-			{#if ch.verified}
+			{#if ch.unlinkedAt}
+				<span class="status review">{m.creator_status_unlinked()}</span>
+			{:else if ch.verified}
 				<span class="status ok">
 					<span aria-hidden="true">✓</span>
 					{m.creator_status_verified()}
@@ -73,7 +81,14 @@
 			{:else}
 				<span class="status review">{m.creator_status_needs_review()}</span>
 			{/if}
-			{#if ch.kind === 'secondary'}
+			{#if ch.unlinkedAt}
+				<form method="post" action="?/relink" use:enhance>
+					<input type="hidden" name="channel_id" value={ch.id} />
+					<button type="submit" class="btn ghost">
+						{m.creator_relink_button()}<span class="sr-only">: {ch.title}</span>
+					</button>
+				</form>
+			{:else if ch.kind === 'secondary'}
 				<form method="post" action="?/askUnlink" use:enhance>
 					<input type="hidden" name="channel_id" value={ch.id} />
 					<button type="submit" class="btn ghost">

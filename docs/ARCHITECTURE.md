@@ -52,7 +52,7 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 | Table | Purpose |
 | --- | --- |
 | `creators` | id, slug, name, color, avatar_url, bio, links (JSON array of URLs, set by the claimed creator), claimed_at (set once a user proved they own a channel), opted_out (hide all their videos) |
-| `channels` | id, creator_id, youtube_channel_id, title, kind (`main`, `secondary`), sync_enabled, last_synced_at, verified_at, verified_by_user_id (the creator who proved ownership) |
+| `channels` | id, creator_id, youtube_channel_id, title, kind (`main`, `secondary`), sync_enabled, last_synced_at, verified_at, verified_by_user_id (the creator who proved ownership), unlinked_at and unlinked_by_user_id (set while the creator has unlinked the channel; its videos are hidden) |
 | `series` | id, slug, title, kind (`season`, `live_series`, `event`, `other`), status (`upcoming`, `ongoing`, `ended`), grouping (`week`, `session`, `none`), started_at, ended_at, poster (JSON: generated art settings or image url), parent_id (set for an Extras series) |
 | `series_translations` | series_id, locale, description |
 | `series_creators` | series_id, creator_id |
@@ -186,7 +186,7 @@ The theme and the language stay in their cookies and are not part of the account
 - `assertOwnCreator` reads `users.creator_id` from the database again (not from the session) and throws `ForbiddenError` unless it is the creator being acted on.
 - Videos must be on one of that creator's channels, and a placement must target a series in `series_creators` for that creator or the Extras child of one. Anything else is a 403, also for a crafted form post. The placement checks and writes are the ones of `videos.ts` (`parsePlacement`, `writePlacement`, `writeVideoStatus`): `placed_by = user`.
 - Profile edits accept bio, avatar URL, links (at most five http(s) URLs) and a colour from `PROFILE_COLORS` (`src/lib/creator-colors.ts`, each keeps the black or white avatar initials at 4.5:1 or more) or the colour the profile already has.
-- Unlinking deletes a secondary channel and its videos (the main channel cannot be unlinked). Opting out sets `creators.opted_out`; `catalog.ts` and the sync already hide and skip opted-out creators. The claim step still shows an opted-out creator to the user who claimed it.
+- Unlinking a secondary channel deletes nothing: it sets `channels.unlinked_at` and `unlinked_by_user_id` and turns `sync_enabled` off. `catalog.ts` hides the channel and its videos like an opted-out creator (per channel), and My videos leaves them out. "Link again" (`relinkOwnChannel`) clears both and turns the sync back on; admins can do the same on `/manage/creators/[id]` (`restoreChannel` in `creators.ts`). Both directions write the full channel snapshot (`channelSnapshot`) as before and after, so reverting the history entry restores the channel. The main channel cannot be unlinked. Opting out sets `creators.opted_out`; `catalog.ts` and the sync already hide and skip opted-out creators. The claim step still shows an opted-out creator to the user who claimed it.
 - Every write has an `audit_log` entry with actor `creator` and `actor_user_id`, with the same `before`/`after` shapes as the management tool, so admins can review and revert it. `lastCreatorEdit` shows admins on `/manage/creators/[id]` when the creator last edited their own profile.
 - The forms reuse the management tool's `Field`, `ErrorSummary`, `ConfirmPanel` and `Flash` components (`src/routes/manage/ui/`).
 
@@ -240,7 +240,7 @@ The first-visit notice and the footer disclaimer are rows in `site_texts`. The r
 
 ## Public pages
 
-- Only `placed` videos that are not Shorts are shown publicly; Unsorted and ignored videos stay in the management tool. Creators with `opted_out`, and all their videos, never appear. `src/lib/server/catalog.ts` applies these rules in every query.
+- Only `placed` videos that are not Shorts are shown publicly; Unsorted and ignored videos stay in the management tool. Creators with `opted_out`, and all their videos, never appear; nor do channels with `unlinked_at` and their videos. `src/lib/server/catalog.ts` applies these rules in every query.
 - Mixed timeline: upload order (`published_at`, then id). Grouping `week` uses ISO 8601 weeks in UTC, so it does not depend on the server time zone or the visitor's locale; week 1 is the week the series started. Grouping `session` uses the session groups; videos without a session come last. Dates are shown in UTC through `Intl`.
 - The watch page uses the YouTube IFrame Player API with the `youtube-nocookie.com` host. Demo data uses fake ids (`demo` + 7 characters); for those the cards show generated art instead of a YouTube thumbnail and the player shows a placeholder.
 

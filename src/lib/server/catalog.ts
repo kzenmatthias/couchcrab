@@ -3,7 +3,8 @@
  *
  * Public rules, applied in every query here:
  * - only placed videos (Unsorted and ignored videos are never shown publicly), no Shorts;
- * - creators who opted out, and all their videos, never appear.
+ * - creators who opted out, and all their videos, never appear;
+ * - channels a creator unlinked, and their videos, never appear.
  */
 import { and, desc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
 import { pickTranslation } from '#lib/i18n.js';
@@ -15,7 +16,8 @@ const { creators, channels, series, seriesCreators, seriesTranslations, groups, 
 const visibleVideo = and(
 	eq(videos.status, 'placed'),
 	eq(videos.isShort, false),
-	eq(creators.optedOut, false)
+	eq(creators.optedOut, false),
+	isNull(channels.unlinkedAt)
 );
 
 function videoQuery() {
@@ -303,7 +305,7 @@ export function getCreatorBySlug(slug: string) {
 			kind: channels.kind
 		})
 		.from(channels)
-		.where(eq(channels.creatorId, creator.id))
+		.where(and(eq(channels.creatorId, creator.id), isNull(channels.unlinkedAt)))
 		.orderBy(channels.kind, channels.title)
 		.all();
 	const seriesIds = db

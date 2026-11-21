@@ -41,7 +41,9 @@
 					? m.manage_saved()
 					: form?.saved === 'channel_deleted'
 						? m.manage_channel_deleted()
-						: null
+						: form?.saved === 'channel_restored'
+							? m.manage_channel_restored()
+							: null
 	);
 
 	const channelLabels = $derived({ channel: m.manage_field_channel() });
@@ -133,6 +135,11 @@
 					<fieldset>
 						<legend>{ch.title} <code>{ch.youtubeChannelId}</code></legend>
 						{#if ch.verifiedAt}<p class="hint">{m.manage_channel_verified()}</p>{/if}
+						{#if ch.unlinkedAt}
+							<p class="hint">
+								{m.manage_channel_unlinked({ date: formatDate(ch.unlinkedAt, locale) })}
+							</p>
+						{/if}
 						<div class="field">
 							<label for="ch-{ch.id}-title">{m.manage_field_channel_title()}</label>
 							<input
@@ -166,6 +173,11 @@
 						</div>
 						<div class="actions">
 							<button type="submit" class="btn primary">{m.manage_save_channel()}</button>
+							{#if ch.unlinkedAt && isAdmin}
+								<button type="submit" class="btn ghost" formaction="?/restoreChannel">
+									{m.manage_restore_channel()}
+								</button>
+							{/if}
 							<button type="submit" class="btn ghost" formaction="?/askDeleteChannel">
 								{m.manage_delete_channel()}
 							</button>

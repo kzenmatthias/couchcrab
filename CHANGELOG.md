@@ -38,10 +38,10 @@ All notable changes to this project are documented here. The format follows [Kee
 - Every change in the management tool is checked on the server and written to the history with before and after.
 - `npm run make-admin -- <user id>` makes a user admin.
 - A Privacy page and a link to it in the footer.
-- Creator dashboard (`/creator`) for creators who claimed their profile: edit your bio, avatar, profile colour (choices that keep your initials readable, with a preview) and links; see your channels as verified or needing review, unlink a second channel or add another one through Google sign-in; place your own videos in the series you take part in (or their Extras, with a session or week) or ignore them, with your unsorted uploads first; and hide your profile and all your videos from Couchcrab, with a confirmation step and undo. Every change is checked on the server and kept in the history as made by the creator.
+- Creator dashboard (`/creator`) for creators who claimed their profile: edit your bio, avatar, profile colour (choices that keep your initials readable, with a preview) and links; see your channels as verified or needing review, unlink a second channel (its videos are hidden, nothing is deleted, and you can link it again) or add another one through Google sign-in; place your own videos in the series you take part in (or their Extras, with a session or week) or ignore them, with your unsorted uploads first; and hide your profile and all your videos from Couchcrab, with a confirmation step and undo. Every change is checked on the server and kept in the history as made by the creator.
 - Creator pages show the links a creator added.
 - The account menu links to the management tool for editors and admins.
-- In the management tool, a creator's page says when the creator last edited their own profile.
+- In the management tool, a creator's page says when the creator last edited their own profile, shows channels the creator unlinked and lets admins link them again.
 
 ### Changed
 

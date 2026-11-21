@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "6d51cfc4-9e4d-4e7c-9620-3c97c5e53e41",
+  "id": "8beae375-1e1a-4e75-b75e-e2789a59bd66",
   "prevId": "9c8eb647-2c0c-4dbb-b45a-198b1cf673c8",
   "tables": {
     "audit_log": {
@@ -181,6 +181,20 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "unlinked_at": {
+          "name": "unlinked_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "unlinked_by_user_id": {
+          "name": "unlinked_by_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -219,6 +233,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "verified_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "channels_unlinked_by_user_id_users_id_fk": {
+          "name": "channels_unlinked_by_user_id_users_id_fk",
+          "tableFrom": "channels",
+          "tableTo": "users",
+          "columnsFrom": [
+            "unlinked_by_user_id"
           ],
           "columnsTo": [
             "id"

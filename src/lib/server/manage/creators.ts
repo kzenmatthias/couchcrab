@@ -13,6 +13,7 @@ import {
 	ForbiddenError,
 	hasRole,
 	type Input,
+	iso,
 	NotFoundError,
 	oneOf,
 	optionalText,
@@ -287,12 +288,15 @@ export async function resolveChannel(
 }
 
 type ChannelRow = typeof t.channels.$inferSelect;
-const channelSnapshot = (c: ChannelRow) => ({
+/** What `audit_log` keeps of a channel (also used for unlinking by the creator). */
+export const channelSnapshot = (c: ChannelRow) => ({
 	creatorId: c.creatorId,
 	youtubeChannelId: c.youtubeChannelId,
 	title: c.title,
 	kind: c.kind,
-	syncEnabled: c.syncEnabled
+	syncEnabled: c.syncEnabled,
+	unlinkedAt: iso(c.unlinkedAt),
+	unlinkedByUserId: c.unlinkedByUserId
 });
 
 /** Adds a channel (after `resolveChannel`) to a creator. */
@@ -359,5 +363,26 @@ export function deleteChannel(db: DB, actor: Actor, channelId: number): void {
 		if (videos > 0) throw new ValidationError({ channel: 'has_videos' });
 		tx.delete(t.channels).where(eq(t.channels.id, channelId)).run();
 		auditUser(tx, actor, 'channel', channelId, channelSnapshot(before), null);
+	});
+}
+
+/**
+ * Links a channel the creator unlinked back to their profile (admins only): its videos show
+ * again and the sync is on again.
+ */
+export function restoreChannel(db: DB, actor: Actor, channelId: number): ChannelRow {
+	assertRole(actor, 'admin');
+	const before = db.select().from(t.channels).where(eq(t.channels.id, channelId)).get();
+	if (!before) throw new NotFoundError();
+	if (!before.unlinkedAt) return before;
+	return db.transaction((tx) => {
+		const row = tx
+			.update(t.channels)
+			.set({ unlinkedAt: null, unlinkedByUserId: null, syncEnabled: true })
+			.where(eq(t.channels.id, channelId))
+			.returning()
+			.get();
+		auditUser(tx, actor, 'channel', channelId, channelSnapshot(before), channelSnapshot(row));
+		return row;
 	});
 }

@@ -7,6 +7,7 @@ import {
 	deleteCreator,
 	getCreator,
 	resolveChannel,
+	restoreChannel,
 	updateChannel,
 	updateCreator
 } from '#lib/server/manage/creators.js';
@@ -114,5 +115,19 @@ export const actions: Actions = {
 			return handleServiceError(err, form, { action: 'deleteChannel' });
 		}
 		return { saved: 'channel_deleted' as const };
+	},
+
+	/** Admins link a channel the creator unlinked back to the profile. */
+	restoreChannel: async ({ locals, request }) => {
+		const actor = actorFor(locals, 'admin');
+		const form = await request.formData();
+		const channelId = parseId(text(form, 'channel_id'));
+		try {
+			if (channelId === null) throw new NotFoundError();
+			restoreChannel(db, actor, channelId);
+		} catch (err) {
+			return handleServiceError(err, form, { action: 'restoreChannel' });
+		}
+		return { saved: 'channel_restored' as const };
 	}
 };

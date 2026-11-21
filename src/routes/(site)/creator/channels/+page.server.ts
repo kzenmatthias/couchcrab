@@ -4,6 +4,7 @@ import { creatorActorFor } from '#lib/server/manage/creator-http.js';
 import {
 	listOwnChannels,
 	listOwnPendingClaims,
+	relinkOwnChannel,
 	unlinkOwnChannel
 } from '#lib/server/manage/creator-self.js';
 import { handleServiceError, load as guarded } from '#lib/server/manage/http.js';
@@ -36,5 +37,19 @@ export const actions: Actions = {
 			return handleServiceError(err, form);
 		}
 		return { saved: 'unlinked' as const };
+	},
+
+	/** Undo: link an unlinked channel again (no confirmation needed, nothing is lost). */
+	relink: async ({ locals, request }) => {
+		const actor = creatorActorFor(locals);
+		const form = await request.formData();
+		const channelId = parseId(text(form, 'channel_id'));
+		try {
+			if (channelId === null) throw new NotFoundError();
+			relinkOwnChannel(db, actor, channelId);
+		} catch (err) {
+			return handleServiceError(err, form);
+		}
+		return { saved: 'relinked' as const };
 	}
 };
