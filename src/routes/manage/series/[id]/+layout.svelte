@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { navCurrent } from '#lib/nav.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { LayoutProps } from './$types';
 
@@ -12,12 +13,7 @@
 		{ href: resolve('/manage/series/[id]/groups', { id }), label: m.manage_series_tab_groups() },
 		{ href: resolve('/manage/series/[id]/rules', { id }), label: m.manage_series_tab_rules() }
 	]);
-	const current = (href: string) =>
-		page.url.pathname === href
-			? 'page'
-			: href !== tabs[0].href && page.url.pathname.startsWith(`${href}/`)
-				? 'true'
-				: undefined;
+	const current = (href: string) => navCurrent(href, page.url, { exact: href === tabs[0].href });
 </script>
 
 <p><a href={resolve('/manage/series')}>{m.manage_back_series()}</a></p>

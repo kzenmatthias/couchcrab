@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { navCurrent } from '#lib/nav.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { Theme } from '#lib/prefs/theme.js';
 	import AccountMenu from './AccountMenu.svelte';
@@ -27,12 +28,7 @@
 	]);
 
 	/** `page` on the page itself, `true` inside its section (e.g. a series under Series). */
-	function current(href: string): 'page' | 'true' | undefined {
-		const path = page.url.pathname;
-		if (path === href) return 'page';
-		if (href !== resolve('/(site)') && path.startsWith(`${href}/`)) return 'true';
-		return undefined;
-	}
+	const current = (href: string) => navCurrent(href, page.url);
 </script>
 
 <header class="top">

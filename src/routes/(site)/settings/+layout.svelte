@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { navCurrent } from '#lib/nav.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { LayoutProps } from './$types';
 
@@ -11,11 +12,7 @@
 		{ href: resolve('/(site)/settings/display'), label: m.settings_nav_display() }
 	]);
 
-	function current(href: string): 'page' | 'true' | undefined {
-		const path = page.url.pathname;
-		if (path === href) return 'page';
-		return path.startsWith(`${href}/`) ? 'true' : undefined;
-	}
+	const current = (href: string) => navCurrent(href, page.url);
 </script>
 
 <div class="settings">

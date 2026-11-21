@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { navCurrent } from '#lib/nav.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { LayoutProps } from './$types';
 
@@ -19,7 +20,7 @@
 			<ul>
 				{#each items as item (item.href)}
 					<li>
-						<a href={item.href} aria-current={page.url.pathname === item.href ? 'page' : undefined}>
+						<a href={item.href} aria-current={navCurrent(item.href, page.url, { exact: true })}>
 							{item.label}
 						</a>
 					</li>

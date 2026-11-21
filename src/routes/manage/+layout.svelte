@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { navCurrent } from '#lib/nav.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import LogoMark from '#lib/components/LogoMark.svelte';
 	import SiteFooter from '#lib/components/SiteFooter.svelte';
@@ -27,12 +28,8 @@
 			: [])
 	]);
 
-	function current(href: string): 'page' | 'true' | undefined {
-		const path = page.url.pathname;
-		if (path === href) return 'page';
-		if (href !== resolve('/manage') && path.startsWith(`${href}/`)) return 'true';
-		return undefined;
-	}
+	const current = (href: string) =>
+		navCurrent(href, page.url, { exact: href === sections[0].href });
 </script>
 
 <a class="skip" href="#main">{m.skip_to_content()}</a>

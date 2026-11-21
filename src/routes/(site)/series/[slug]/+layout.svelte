@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { navCurrent } from '#lib/nav.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import ArtHeader from '#lib/components/ArtHeader.svelte';
 	import CreatorAvatar from '#lib/components/CreatorAvatar.svelte';
@@ -70,7 +71,7 @@
 	<ul>
 		{#each tabs as tab (tab.href)}
 			<li>
-				<a href={tab.href} aria-current={page.url.pathname === tab.href ? 'page' : undefined}>
+				<a href={tab.href} aria-current={navCurrent(tab.href, page.url, { exact: true })}>
 					{tab.label}
 				</a>
 			</li>
