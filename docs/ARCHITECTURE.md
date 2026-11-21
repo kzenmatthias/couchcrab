@@ -60,12 +60,51 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 
 ## YouTube sync
 
-- `npm run sync` (and later a scheduled job) walks every channel with `sync_enabled`.
-- Uploads come from the channel's uploads playlist (`playlistItems.list`, 1 quota unit per page). Details come from `videos.list` in batches of 50: duration, `contentDetails.caption` (creator captions), `liveStreamingDetails` (livestream VOD).
-- Shorts are detected by duration and skipped.
-- Each new video runs through the title rules of the series its creator takes part in, highest priority first. A match places it (main or Extras); no match puts it in Unsorted.
-- Every placement writes an `audit_log` entry, so a bad rule can be reverted.
-- YouTube API policy: stored API data must be refreshed or removed within 30 days. The sync refreshes `fetched_at` and a cleanup step drops stale data.
+Code in `src/lib/server/youtube/`: `client.ts` (YouTube Data API v3 over `fetch`), `classify.ts` (flags per video), `rules.ts` (the title rule engine, a pure function) and `sync.ts` (the service). `scripts/sync.ts` is the CLI. The API key comes from `YOUTUBE_API_KEY`; it only goes into request URLs and is redacted from every error message.
+
+```
+npm run sync                              # all channels with sync_enabled, then retention
+npm run sync -- --channel UCxxxxxxxx      # one channel (and only its videos for retention)
+npm run sync -- --dry-run                 # fetch and evaluate, write nothing, list each video
+npm run sync -- --refresh-only            # retention only
+```
+
+Without `YOUTUBE_API_KEY` the script prints a short note and exits with code 0, so the demo data works without a key. It exits with 1 when a channel or the retention step failed.
+
+### Per channel
+
+1. Channels of creators with `opted_out` are skipped (no API call). Channels with `sync_enabled` off are not read at all.
+2. `channels.list` (`contentDetails,snippet`) gives the uploads playlist.
+3. `playlistItems.list` pages through it (50 per page, newest first). An incremental sync stops at the first item published before `last_synced_at` minus a safety margin of 3 days (`SAFETY_MARGIN_S`), for late or rescheduled uploads. A first sync takes at most the 200 newest uploads (`FIRST_SYNC_MAX`, `firstSyncMax` option).
+4. `videos.list` (`contentDetails,snippet,liveStreamingDetails`) in batches of 50 gives the details. Durations are ISO 8601 (`PT32M15S`) and stored in seconds.
+5. Classification: `has_creator_captions` when `contentDetails.caption` is `"true"`; `is_live_vod` when `liveStreamingDetails.actualEndTime` is set; `is_short` when the duration is 180 seconds or less (`SHORT_MAX_SECONDS`) and the video is not a live VOD. The API has no Shorts flag, so a regular upload of three minutes or less also counts as a Short; an editor can still place it by hand.
+6. Upcoming items (scheduled streams and premieres) and streams that are live right now are skipped. `last_synced_at` is then set no later than the earliest skipped item, so a later sync picks it up once it has ended. Otherwise `last_synced_at` becomes the time of the sync.
+7. Writes, in one transaction per channel:
+   - A known video (same `youtube_video_id`) gets its title, publish date, duration, captions and live/Short flags refreshed and a new `fetched_at`. Its placement (`series_id`, `group_id`, `status`, `placed_by`) is never changed, so a placement by a user (`placed_by = user`) always survives.
+   - A new Short is stored with `status = ignored` and `placed_by = sync`. Storing it (instead of skipping it) keeps it out of Unsorted for good and lets an editor place a misdetected video.
+   - Any other new video is inserted as `unsorted`, then run through the rule engine. A match sets `series_id`, `group_id`, `status = placed` and `placed_by = rule`.
+   - Every insert writes an `audit_log` entry with actor `sync`; every placement writes a second entry with actor `rule` (before: unsorted, after: the placement and the rule id). Reverting the placement entry puts the video back in Unsorted. The helper is `src/lib/server/audit.ts`.
+8. A quota error stops the sync: the remaining channels and the retention step are reported as not run. Other errors are reported per channel and the next channel continues.
+
+A dry run performs the same writes inside a transaction and rolls it back, so its summary is exactly what a real run would do. The CLI prints the summary as a table (per channel: fetched, new, placed, unsorted, Shorts, skipped, updated, errors), plus the list of videos in a dry run.
+
+### Title rules
+
+`placeVideo(video, rules, series)` in `rules.ts` gets the enabled rules of every series the channel's creator takes part in (`series_creators`) and returns `{ seriesId, target, ruleId, groupId }` or `null` (Unsorted).
+
+- Rules are tried by `priority` (highest first), then by `id`. The first match wins.
+- A rule with `channel_id` set only applies to uploads of that channel.
+- `contains` is a case-insensitive substring match. `regex` is a JavaScript regular expression with the `i` flag; an invalid pattern or one longer than 200 characters never matches (it does not throw).
+- `target: extras` places the video in the series' Extras child (the series with `parent_id` pointing at it). If the series has no Extras child, the rule is skipped and the next rule gets a chance.
+- A livestream VOD goes to the Extras child even when the matching rule targets the main series, because livestreams are not episodes. Without an Extras child it stays in the main series.
+- When the destination series is grouped by week or session, the video gets the group whose window (`starts_at` up to `ends_at`, open-ended when `ends_at` is empty) contains its publish date.
+
+### Retention (YouTube API policy)
+
+The YouTube API Services policy requires stored API data to be refreshed or deleted within 30 days. After the channels, every run refreshes videos whose `fetched_at` is older than 25 days (`REFRESH_AFTER_S`) with `videos.list` in batches of 50:
+
+- Returned videos get their API fields and `fetched_at` refreshed; placement is untouched.
+- Videos YouTube no longer returns (deleted or private) are blanked: empty title, duration 0, publish date 0, flags off and `status = ignored`, with an `audit_log` entry (actor `sync`). The YouTube id and the placement are kept, because ids may be stored, and so the row keeps its watch progress. Blanked rows are checked again on every refresh; if YouTube returns the video again, its data and status (`placed` when it has a series, otherwise `unsorted`, or `ignored` for a Short) come back.
 - The app never downloads or re-hosts video.
 
 ## Auth and roles
@@ -98,6 +137,6 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 
 ## Testing and CI
 
-- Vitest for the rule engine, sync parsing, prefs merge and audit/revert.
+- Vitest for the rule engine, sync parsing, prefs merge and audit/revert. The sync tests run against a temporary SQLite database and a fake YouTube API built from the recorded-style fixtures in `tests/fixtures/youtube/` (fictional ids and titles); they never touch the network.
 - Playwright e2e against a freshly migrated and seeded database (`./data/e2e.db`) and the production build, with axe-core (WCAG 2.2 A and AA tags) on every main page in all three themes with reduced motion.
 - GitHub Actions: install, `check`, `lint`, unit tests, build, e2e.

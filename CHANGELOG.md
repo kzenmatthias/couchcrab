@@ -17,6 +17,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Data model for creators who claim their profile by signing in with Google (claims, verified channels, opt-out).
 - Automated accessibility checks (axe, WCAG 2.2 AA) in all three themes.
 - Designs for signing in, claiming a creator profile with Google and the creator dashboard.
+- YouTube sync (`npm run sync`): fetches new uploads of every synced channel, sorts them into series and Extras with the title rules (or Unsorted), skips Shorts, upcoming streams and opted-out creators, logs every change in the history and refreshes stored YouTube data within 25 days. Supports `--channel`, `--dry-run` and `--refresh-only`.
 
 ### Changed
 

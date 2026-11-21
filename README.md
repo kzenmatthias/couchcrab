@@ -99,7 +99,7 @@ Open http://localhost:5173. The demo data lets you work on the whole app without
 | `npm test` | Unit tests |
 | `npm run test:e2e` | Browser tests, including accessibility checks |
 | `npm run db:migrate` / `npm run db:seed` | Database setup and demo data |
-| `npm run sync` | Fetch new uploads from YouTube and sort them with the title rules |
+| `npm run sync` | Fetch new uploads from YouTube, sort them with the title rules and refresh stored data older than 25 days. Flags (after `--`): `--channel <youtube id>`, `--dry-run`, `--refresh-only`. Needs `YOUTUBE_API_KEY`; without it, it exits with a note |
 
 ## Documentation
 
