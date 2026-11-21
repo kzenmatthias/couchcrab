@@ -16,7 +16,20 @@ export default defineConfig({
 		reducedMotion: 'reduce',
 		trace: 'retain-on-failure'
 	},
-	projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+	projects: [
+		{
+			name: 'chromium',
+			use: { ...devices['Desktop Chrome'] },
+			testIgnore: '**/creator-visibility.e2e.ts'
+		},
+		// Tests that add creators or hide them run last, so counts in other tests stay stable.
+		{
+			name: 'after-all',
+			use: { ...devices['Desktop Chrome'] },
+			testMatch: '**/creator-visibility.e2e.ts',
+			dependencies: ['chromium']
+		}
+	],
 	webServer: {
 		// A fresh database with the demo data, then the production build.
 		command: 'npm run db:migrate -- --fresh && npm run db:seed && npm run build && node build',
