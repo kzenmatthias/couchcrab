@@ -27,7 +27,8 @@ src/
     (site)/          home, series/[slug] (timeline, by-creator, extras, about), creators/[slug],
                      watch/[videoId], [page] (site pages), later settings
     manage/          management tool (editor/admin)
-    auth/            Discord and Google login and callbacks
+    auth/            Discord and Google login and callbacks, POST signout
+    (site)/signin, (site)/claim  sign-in page and creator claim step
     prefs/           POST endpoint for language and theme (works without JavaScript)
   env.ts             environment variables (SvelteKit 3 `defineEnvVars`)
 messages/            en.json, nl.json (UI strings)
@@ -56,7 +57,8 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 | `pages` / `page_translations` | `pages`: id, slug. `page_translations`: page_id, locale, title, body (Markdown), updated_at |
 | `users` | id, discord_id (nullable), google_sub (nullable), name, avatar_url, role (`viewer`, `editor`, `admin`), trust, creator_id (the creator profile this user claimed). At least one of discord_id and google_sub is set. |
 | `claims` | id, user_id, creator_id (null when the channel is not on Couchcrab yet), youtube_channel_id, status (`verified`, `pending_review`, `rejected`), created_at, reviewed_by, reviewed_at |
-| `sessions` | id (hash of the session token), user_id, expires_at |
+| `sessions` | id (SHA-256 hash of the session token), user_id, expires_at |
+| `claim_checks` | session_id, user_id, channels (JSON: owned channel ids and titles), expires_at (15 minutes). The owned channels between Google sign-in and the claim step. |
 | `suggestions` | id, user_id, target_type, target_id, kind (`create`, `update`, `delete`), payload (JSON), note, is_creator_request, status (`open`, `approved`, `rejected`, `withdrawn`), reviewed_by, reviewed_at |
 | `audit_log` | id, actor (`user`, `rule`, `sync`), actor_user_id (set when actor is `user`), entity, entity_id, before, after (JSON), created_at, reverted_by |
 | `user_creators` | user_id, creator_id (global who-I-watch) |
@@ -115,13 +117,45 @@ The YouTube API Services policy requires stored API data to be refreshed or dele
 
 ## Auth and roles
 
-- Discord OAuth 2 (scope `identify`) with server-side sessions in SQLite (no third-party auth service).
-- Google OAuth 2 (scope `openid youtube.readonly`) for creators. After sign-in Couchcrab calls `channels.list?mine=true` once with the access token to see which YouTube channels the account owns, then discards the token; it is never stored. The Google account is linked through `users.google_sub`, so Google also works as a normal login for creators without Discord.
-- An owned channel that matches `channels.youtube_channel_id` is verified at once: a `claims` row with status `verified`, `channels.verified_at` and `verified_by_user_id`, `creators.claimed_at`, and `users.creator_id`. An owned channel that is not on Couchcrab yet becomes a `claims` row with status `pending_review` and a creator request in the review queue.
+Code in `src/lib/server/auth/`: `session.ts` (tokens, cookies, sliding expiry), `oauth.ts` (state, PKCE, token exchange), `discord.ts`, `google.ts`, `users.ts` (create, update and link users), `claims.ts` (the claim step), `guards.ts` (`requireUser`, `requireRole`), `signin.ts` (shared route steps) and `config.ts` (provider keys from the environment). Providers are called with plain `fetch`, injected so the unit tests never touch the network. No third-party auth service.
+
+### Sessions
+
+- The session cookie `couchcrab_session` holds 32 random bytes (base64url). It is `httpOnly`, `SameSite=Lax`, `path=/` and `Secure` everywhere except plain `http://localhost`.
+- Only the SHA-256 hash of the token is stored, as `sessions.id`. A session lasts 30 days and slides: a request in its last 15 days extends it to 30 days again. An expired session is deleted when it is used.
+- `hooks.server.ts` resolves `locals.user` (`id`, `name`, `avatarUrl`, `role`, `creatorId`) and `locals.sessionId` on every request.
+- `requireUser(locals)` throws 401 and `requireRole(locals, 'editor' | 'admin')` throws 401 or 403. An admin passes an editor check.
+- Sign out is `POST /auth/signout`. SvelteKit's origin check rejects cross-site form posts, so another site cannot sign you out. Deleting a session also deletes its claim check.
+
+### Sign-in
+
+| Route | Does |
+| --- | --- |
+| `/signin` | The two paths (Discord for viewers and editors, Google for creators). A provider without both keys in the environment shows a disabled button with an explanation. Errors from the callbacks arrive as `?error=` and are shown here. |
+| `/auth/discord`, `/auth/discord/callback` | Discord OAuth 2, scope `identify`, with state and PKCE (S256). |
+| `/auth/google`, `/auth/google/callback` | Google OAuth 2, scopes `openid` and `https://www.googleapis.com/auth/youtube.readonly`, with state and PKCE. |
+| `/claim` | The claim step after Google sign-in. |
+| `/auth/signout` | `POST` only. |
+
+- State and PKCE verifier live in `httpOnly` cookies on `/auth` for 10 minutes and are deleted at the callback, so each can be used once. The state is compared in constant time.
+- Discord: the user is created or updated by `discord_id`; name and avatar follow Discord on every sign-in. Ids in `ADMIN_DISCORD_IDS` get role `admin` on every sign-in. Editors are promoted by admins.
+- Google: `sub` comes from the ID token returned by the token endpoint (issuer, audience and expiry checked; the signature check is replaced by TLS, as OpenID Connect allows for a token received directly from the token endpoint). Couchcrab then calls `channels.list?part=snippet&mine=true` once with the access token and drops the token. It is never stored, returned or logged. A new Google-only user is named after their first channel.
+- Linking: when someone is already signed in, a new Discord or Google account is linked to that user instead of creating a new one. An account that already belongs to another user is never moved; the sign-in page explains the conflict.
+- `youtube.readonly` is a sensitive scope: the production Google OAuth app needs Google's OAuth verification before the public can use it. Local development works with test users.
+
+### Creator claims
+
+- After Google sign-in the owned channels (ids and titles only) are saved in `claim_checks` for 15 minutes, keyed by the session id, so the list survives the redirect to `/claim` without keeping the Google token. The record is only read for the same session and user and disappears on sign-out.
+- Each owned channel is classified (`claims.ts`): **claimable** (on Couchcrab, creator unclaimed and not opted out), **verified** (this user claimed its creator), **already claimed** by someone else, **not available** (this user already claimed another creator) or **needs review** (not on Couchcrab; an opted-out creator is treated the same so it stays private).
+- Channels that need review become a `claims` row with status `pending_review` and a creator request in `suggestions` (`is_creator_request`), once per user and channel.
+- "Claim <name>" (or a choice when the channels match several creators) re-checks everything on the server and, in one transaction, sets `creators.claimed_at`, `users.creator_id`, `channels.verified_at` and `verified_by_user_id` for the owned channels of that creator, inserts `claims` rows with status `verified` and writes an `audit_log` entry per change (actor `user`).
+- "This isn't me" signs out.
 - A claimed creator gets the "Verified creator" badge and may edit only their own creator profile and channels, change the placement of their own videos without review (written to `audit_log`, revertible by admins) and set `opted_out`, which hides all their videos. Every such write checks `users.creator_id` on the server.
-- `youtube.readonly` is a sensitive scope: the production Google OAuth app needs Google's OAuth verification before it can be used by the public. Local development works with test users.
-- `ADMIN_DISCORD_IDS` bootstraps admins. Editors are promoted by admins.
 - Every write in the management tool checks the role on the server.
+
+### Account menu
+
+Signed out, the header shows a "Sign in" link. Signed in, it shows an account button (avatar or initials; its accessible name includes the user's name) that opens a disclosure panel built on `<details>`, so it works without JavaScript. The panel has the signed-in line, the theme radio group (it moved here from the footer; with JavaScript a choice applies at once by setting the `theme` cookie, without it an Apply button posts to `/prefs`), links to the settings pages, "Creator dashboard" for claimed creators and Sign out. Escape and a click outside close it; Escape returns focus to the button.
 
 ## Translations
 

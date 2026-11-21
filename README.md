@@ -60,7 +60,7 @@ Couchcrab is in **early development**. The designs are done (see [docs/design](d
 | App | [SvelteKit](https://svelte.dev/docs/kit) (Svelte 5, TypeScript) |
 | Database | SQLite with [Drizzle ORM](https://orm.drizzle.team) |
 | Translations | [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) |
-| Login | Discord OAuth |
+| Login | Discord OAuth (viewers and editors), Google OAuth (creators), server-side sessions |
 | Video data | YouTube Data API v3, playback through the YouTube IFrame Player |
 | Tests | Vitest, Playwright with axe-core |
 
@@ -82,12 +82,38 @@ Open http://localhost:5173. The demo data lets you work on the whole app without
 
 ### Optional keys
 
+Everything works without keys: the sign-in buttons are then disabled with a short explanation, and the demo data needs no API. Put keys in `.env` (never commit it).
+
 | Variable | What for |
 | --- | --- |
 | `YOUTUBE_API_KEY` | Syncing real uploads (`npm run sync`). Free key from the [Google Cloud console](https://console.cloud.google.com/apis/library/youtube.googleapis.com). |
-| `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` | Sign in with Discord. Create an app in the [Discord developer portal](https://discord.com/developers/applications), redirect URL `http://localhost:5173/auth/discord/callback`. |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Creators claim their profile by signing in with Google. Create an OAuth client in the [Google Cloud console](https://console.cloud.google.com/apis/credentials), redirect URL `http://localhost:5173/auth/google/callback`. |
-| `ADMIN_DISCORD_IDS` | Comma-separated Discord user ids that get the admin role. |
+| `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` | Sign in with Discord (viewers and editors). |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Creators claim their profile by signing in with Google. |
+| `ADMIN_DISCORD_IDS` | Comma-separated Discord user ids that get the admin role on every sign-in. |
+
+Redirect URLs (use your own origin in production, e.g. `https://couchcrab.example`):
+
+| Provider | Redirect URL |
+| --- | --- |
+| Discord | `http://localhost:5173/auth/discord/callback` |
+| Google | `http://localhost:5173/auth/google/callback` |
+
+**Discord app**
+
+1. Open the [Discord developer portal](https://discord.com/developers/applications) and create a new application.
+2. Under **OAuth2**, copy the **Client ID** and reset/copy the **Client Secret** into `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`.
+3. Add the redirect URL above under **Redirects** and save. Couchcrab only asks for the `identify` scope.
+4. To make yourself admin, turn on Developer Mode in Discord, right-click your name, **Copy User ID**, and put it in `ADMIN_DISCORD_IDS`.
+
+**Google OAuth client**
+
+1. In the [Google Cloud console](https://console.cloud.google.com/), create (or pick) a project and enable the **YouTube Data API v3**.
+2. Under **Google Auth Platform** (OAuth consent screen), set up an **External** app in **Testing** mode. Add the scopes `openid` and `https://www.googleapis.com/auth/youtube.readonly`.
+3. Add the Google accounts you test with under **Test users**. Only those accounts can sign in while the app is in testing. `youtube.readonly` is a sensitive scope, so a public deployment needs Google's OAuth verification.
+4. Under **Clients** (Credentials), create an **OAuth client ID** of type **Web application** and add the redirect URL above under **Authorized redirect URIs**.
+5. Copy the client id and secret into `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+
+Couchcrab uses the Google access token once, to ask YouTube which channels the account owns (`channels.list?mine=true`), and then drops it. It keeps the Google account id and the ids and names of claimed channels, never the token.
 
 ### Useful commands
 

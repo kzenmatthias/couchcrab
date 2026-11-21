@@ -23,9 +23,14 @@ All notable changes to this project are documented here. The format follows [Kee
 - Creator list and creator pages with their YouTube channels, the "Verified creator" badge, their series and latest uploads.
 - Watch page with the YouTube player (privacy-enhanced mode), a "Watch on YouTube" link and the rest of the week or session as a queue.
 - Episode cards with the duration written out for screen readers and a CC badge for creator-made captions.
+- Sign in with Discord (viewers and editors) or Google (creators), with server-side sessions that last 30 days. Signing in with the other service while signed in links both to one account.
+- Sign-in page that explains both paths and what Couchcrab asks YouTube and keeps. Without keys on the server the buttons are disabled with an explanation.
+- Creators claim their profile: after Google sign-in Couchcrab lists the YouTube channels the account owns, a matching creator can be claimed at once (Verified creator) and other channels go to review.
+- Account menu in the header with the theme, links to your settings, the creator dashboard for claimed creators and Sign out. It works with the keyboard and without JavaScript.
 
 ### Changed
 
+- The theme switch moved from the footer to the account menu.
 - One creator list without fixed groups; creators are managed in the app.
 - The Series and Creators links in the header now open the new list pages.
 - Unsorted videos and creators who opted out are never shown on the public pages.
