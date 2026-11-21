@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { m } from '#lib/paraglide/messages.js';
 	import ArtHeader from '#lib/components/ArtHeader.svelte';
+	import ContinueWatching from '#lib/components/ContinueWatching.svelte';
 	import CreatorAvatar from '#lib/components/CreatorAvatar.svelte';
 	import EpisodeCard from '#lib/components/EpisodeCard.svelte';
 	import Rail from '#lib/components/Rail.svelte';
@@ -38,13 +39,10 @@
 	</div>
 {/if}
 
-<!--
-	Continue watching goes here, above New uploads, as a <Rail size="big">.
-	Progress arrives in the next round; until then there is nothing to show and nothing renders.
--->
+<ContinueWatching />
 
 {#if data.latest.length}
-	<Rail title={m.home_latest_heading()}>
+	<Rail title={m.home_latest_heading()} episodes>
 		{#each data.latest as video (video.id)}
 			<li><EpisodeCard {video} showSeries /></li>
 		{/each}

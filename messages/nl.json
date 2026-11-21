@@ -40,8 +40,13 @@
 	"series_kind_other": "Serie",
 	"series_creator_count": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "{count} maker",
 				"countPlural=*": "{count} makers"
@@ -71,8 +76,13 @@
 	"series_started": "Gestart in {date}",
 	"series_episode_count": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "{count} aflevering",
 				"countPlural=*": "{count} afleveringen"
@@ -154,8 +164,13 @@
 	"claim_title": "Claim je makersprofiel",
 	"claim_intro": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "Aangemeld met Google. Dit account heeft {count} YouTube-kanaal.",
 				"countPlural=*": "Aangemeld met Google. Dit account heeft {count} YouTube-kanalen."
@@ -184,5 +199,150 @@
 	"claim_error_expired": "Je kanaalcontrole is verlopen. Meld je opnieuw aan met Google om je kanalen te controleren.",
 	"claim_error_not_claimable": "Dit profiel kan niet geclaimd worden. Misschien is het intussen al geclaimd.",
 	"claim_no_check": "Om je profiel te claimen, meld je je aan met het Google-account van je YouTube-kanaal. De kanaalcontrole blijft 15 minuten geldig.",
-	"claim_claimed_already": "Je hebt {name} geclaimd."
+	"claim_claimed_already": "Je hebt {name} geclaimd.",
+	"badge_watched": "Gezien",
+	"badge_percent_watched": "{percent}% gezien",
+	"badge_title_hidden": "Titel verborgen",
+	"badge_title_hidden_spoiler": "Titel verborgen (spoilervrij)",
+	"episode_hidden_untitled": "Verborgen aflevering",
+	"home_continue_heading": "Verder kijken",
+	"creator_toggle_watching": "Kijk ik",
+	"creator_toggle_add": "Toevoegen",
+	"switch_on": "Aan",
+	"switch_off": "Uit",
+	"pov_watching": [
+		{
+			"declarations": [
+				"input total",
+				"local totalPlural = total: plural",
+				"input count"
+			],
+			"selectors": [
+				"totalPlural"
+			],
+			"match": {
+				"totalPlural=one": "Je kijkt naar {count} van {total} maker",
+				"totalPlural=*": "Je kijkt naar {count} van {total} makers"
+			}
+		}
+	],
+	"pov_badge_global": "Algemene lijst",
+	"pov_badge_custom": "Eigen lijst",
+	"pov_note_global": "Volgt je algemene lijst",
+	"pov_note_custom": "Eigen keuze voor deze reeks",
+	"pov_change": "Makers wijzigen",
+	"pov_reset": "Terug naar algemene lijst",
+	"series_options_heading": "Kijkopties",
+	"series_options_more": "Meer weergave- en afspeelinstellingen",
+	"setting_spoiler_free": "Spoilervrije modus",
+	"setting_spoiler_free_help": "Verberg titels van afleveringen die je nog niet zag",
+	"setting_creator_captions_only": "Toon alleen afleveringen met ondertitels van de maker",
+	"setting_creator_captions_only_help": "Geldt voor elke reeks, tenzij je het daar anders instelt. Automatische ondertitels tellen niet mee.",
+	"setting_creator_captions_only_series_help": "Verberg afleveringen zonder CC in deze reeks",
+	"settings_nav_label": "Instellingen",
+	"settings_nav_creators": "Naar wie ik kijk",
+	"settings_nav_display": "Weergave en toegankelijkheid",
+	"settings_saved_locally": "Je instellingen worden in deze browser bewaard.",
+	"settings_creators_title": "Naar wie ik kijk",
+	"settings_creators_intro": "Kies de makers van wie je het POV wilt zien. Reeksen volgen deze lijst, tenzij je het daar anders instelt.",
+	"settings_selected_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} gekozen",
+				"countPlural=*": "{count} gekozen"
+			}
+		}
+	],
+	"settings_select_all": "Alles kiezen",
+	"settings_clear_all": "Alles wissen",
+	"settings_find_creator": "Zoek een maker",
+	"settings_find_placeholder": "Naam",
+	"settings_all_creators": "Alle makers ({count})",
+	"settings_no_creator_match": "Geen maker met die naam.",
+	"settings_per_series_heading": "Per reeks",
+	"settings_per_series_intro": "Elke reeks volgt je algemene lijst, of heeft een eigen lijst.",
+	"settings_series_mode_legend": "Makers voor {title}",
+	"settings_mode_global": "Algemene lijst",
+	"settings_mode_custom": "Eigen lijst",
+	"settings_series_edit": "Wijzigen",
+	"settings_series_global_summary": "Volgt je algemene lijst: {count} van {total} makers",
+	"settings_series_custom_summary": "Eigen lijst: {count} van {total} makers",
+	"settings_series_title": "Naar wie ik kijk in {title}",
+	"settings_series_intro": "Kies wiens POV je in deze reeks ziet. Als je hier een maker wijzigt, krijgt de reeks een eigen lijst.",
+	"settings_back_to_creators": "Terug naar Naar wie ik kijk",
+	"settings_series_selected": "{count} van {total} gekozen",
+	"settings_series_global_hint": "Deze reeks volgt nu je algemene lijst.",
+	"settings_series_creators_label": "Makers in {title}",
+	"settings_series_back_to_series": "Naar {title}",
+	"settings_display_title": "Weergave en toegankelijkheid",
+	"settings_text_heading": "Tekst en opmaak",
+	"setting_text_size": "Tekstgrootte",
+	"setting_text_size_default": "Standaard",
+	"setting_text_size_large": "Groot",
+	"setting_text_size_larger": "Groter",
+	"setting_underline_links": "Alle links onderstrepen",
+	"setting_text_only": "Lijsten met alleen tekst",
+	"setting_text_only_help": "Toon afleveringen als een lijst met titels, zonder miniaturen",
+	"settings_motion_heading": "Beweging",
+	"setting_motion": "Animaties",
+	"setting_motion_system": "Volg mijn systeem",
+	"setting_motion_reduce": "Beperken",
+	"setting_motion_allow": "Toestaan",
+	"settings_playback_heading": "Afspelen",
+	"setting_autoplay": "Volgende aflevering automatisch afspelen",
+	"setting_countdown": "Aftellen voor de volgende aflevering",
+	"setting_countdown_seconds": "{seconds} s",
+	"setting_countdown_wait": "Wacht op mij",
+	"setting_spoiler_default": "Spoilervrij voor nieuwe reeksen",
+	"setting_spoiler_default_help": "Elke reeks zonder eigen keuze verbergt de titels van afleveringen die je nog niet zag",
+	"settings_captions_heading": "Ondertitels",
+	"setting_captions_on": "Ondertitels aanzetten als een video start",
+	"setting_caption_language": "Voorkeurstaal voor ondertitels",
+	"settings_shortcuts_heading": "Sneltoetsen",
+	"setting_shortcuts": "Sneltoetsen met één toets",
+	"setting_shortcuts_help": "Zet dit uit als je spraakbediening gebruikt of een schermlezer die ermee botst",
+	"shortcuts_table_caption": "Sneltoetsen op de kijkpagina",
+	"shortcuts_col_key": "Toets",
+	"shortcuts_col_action": "Actie",
+	"shortcuts_col_change": "Wijzigen",
+	"shortcut_next": "Volgende aflevering op de tijdlijn",
+	"shortcut_title": "Echte titel tonen of verbergen",
+	"shortcut_watched": "Markeren als gezien",
+	"shortcut_change": "Wijzigen",
+	"shortcut_press_any": "Druk op een toets",
+	"shortcut_press_key": "Druk op de nieuwe toets voor {action}, of op Escape om te annuleren.",
+	"shortcut_unchanged": "Sneltoets niet gewijzigd.",
+	"shortcut_invalid_key": "Gebruik een letter of een cijfer. Druk op Escape om te annuleren.",
+	"shortcut_key_taken": "{key} wordt al gebruikt voor {action}. Druk op een andere toets, of op Escape om te annuleren.",
+	"shortcut_saved": "{action}: toets {key}.",
+	"shortcuts_hint_label": "Sneltoetsen:",
+	"shortcut_next_short": "volgende",
+	"shortcut_title_short": "titel tonen",
+	"shortcut_watched_short": "gezien",
+	"shortcuts_change_link": "Sneltoetsen wijzigen of uitzetten",
+	"upnext_in": "Hierna over {seconds} s:",
+	"upnext_wait": "Hierna:",
+	"upnext_paused": "Aftellen gepauzeerd",
+	"upnext_play_now": "Nu afspelen",
+	"upnext_cancel": "Annuleren",
+	"upnext_announce": "Hierna over {seconds} seconden: {next}. Speel nu af of annuleer.",
+	"upnext_announce_wait": "Hierna: {next}. Speel nu af of annuleer.",
+	"upnext_cancelled": "Automatisch afspelen geannuleerd.",
+	"watch_hidden_heading": "{context}: {who}",
+	"watch_hidden_context": "{series}, {group}",
+	"watch_hidden_who": "{creator}, {episode}",
+	"watch_mark_watched": "Markeren als gezien",
+	"watch_show_title": "Echte titel tonen",
+	"watch_hide_title": "Echte titel verbergen",
+	"watch_next_link": "Volgende: {next}",
+	"watch_simulate_end": "Einde van de video nabootsen",
+	"settings_series_edit_label": "Wijzigen: {title}",
+	"shortcut_change_label": "Wijzigen: {action}"
 }

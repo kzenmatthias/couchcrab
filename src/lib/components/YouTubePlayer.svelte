@@ -2,7 +2,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import type { PosterSettings } from '#lib/server/db/schema.js';
 	import { isRealYoutubeId, seedFrom, youtubeWatchUrl } from '#lib/video.js';
-	import { loadYouTubeApi, type YTPlayer } from '#lib/youtube-iframe.js';
+	import { loadYouTubeApi, PLAYER_STATE, type YTPlayer } from '#lib/youtube-iframe.js';
 	import PosterArt from './PosterArt.svelte';
 
 	type Props = {
@@ -11,10 +11,33 @@
 		title: string;
 		poster: PosterSettings | null;
 		tint?: string | null;
+		/** Start playing at once (after "Play now" or the autoplay countdown). */
+		autoplay?: boolean;
+		/** Resume position in seconds. */
+		startAt?: number;
+		/** Captions on by default, and the preferred language. */
+		captions?: { on: boolean; language: string };
+		/** Called with the position on pause, every 15 s while playing and when leaving. */
+		onposition?: (seconds: number, durationS: number) => void;
+		onended?: () => void;
+		/** Offer "Simulate end of video" on the demo placeholder (dev and e2e builds only). */
+		testHooks?: boolean;
 	};
 
-	let { videoId, title, poster, tint = null }: Props = $props();
+	let {
+		videoId,
+		title,
+		poster,
+		tint = null,
+		autoplay = false,
+		startAt = 0,
+		captions = { on: false, language: 'en' },
+		onposition,
+		onended,
+		testHooks = false
+	}: Props = $props();
 
+	const SAVE_EVERY_MS = 15_000;
 	const real = $derived(isRealYoutubeId(videoId));
 	let target: HTMLDivElement | undefined = $state();
 	let failed = $state(false);
@@ -23,27 +46,72 @@
 		if (!real || !target) return;
 		const el = target;
 		let player: YTPlayer | null = null;
+		let timer: ReturnType<typeof setInterval> | null = null;
 		let cancelled = false;
+
+		/** Only a player that played has a position worth saving. */
+		let started = false;
+		const save = () => {
+			if (!player || !started) return;
+			try {
+				onposition?.(player.getCurrentTime(), player.getDuration());
+			} catch {
+				/* player not ready */
+			}
+		};
+		const stopTimer = () => {
+			if (timer) clearInterval(timer);
+			timer = null;
+		};
+
 		loadYouTubeApi()
 			.then((YT) => {
 				if (cancelled) return;
+				// Read the options here (not tracked): changing a setting must not reload the video.
+				const playerVars: Record<string, string | number> = {
+					rel: 0,
+					playsinline: 1,
+					autoplay: autoplay ? 1 : 0,
+					cc_load_policy: captions.on ? 1 : 0
+				};
+				if (captions.on) playerVars.cc_lang_pref = captions.language;
+				if (startAt > 0) playerVars.start = Math.floor(startAt);
 				player = new YT.Player(el, {
 					host: 'https://www.youtube-nocookie.com',
 					videoId,
 					width: '100%',
 					height: '100%',
-					// Captions follow the viewer's YouTube setting for now (a setting comes later).
-					playerVars: { cc_load_policy: 0, rel: 0, playsinline: 1, autoplay: 0 },
+					playerVars,
 					events: {
 						onReady: ({ target: p }) => {
 							p.getIframe().title = m.watch_player_label({ title });
+						},
+						onStateChange: ({ data }) => {
+							if (data === PLAYER_STATE.PLAYING) {
+								started = true;
+								stopTimer();
+								timer = setInterval(save, SAVE_EVERY_MS);
+							} else {
+								stopTimer();
+								if (data === PLAYER_STATE.PAUSED) save();
+								if (data === PLAYER_STATE.ENDED) {
+									save();
+									onended?.();
+								}
+							}
 						}
 					}
 				});
 			})
 			.catch(() => (failed = true));
+
+		window.addEventListener('pagehide', save);
 		return () => {
 			cancelled = true;
+			stopTimer();
+			window.removeEventListener('pagehide', save);
+			// Leaving for another page inside the app also saves the position.
+			save();
 			player?.destroy();
 		};
 	});
@@ -69,13 +137,20 @@
 				height={90}
 				{tint}
 			/>
-			<p class="msg">
-				{#if failed}
-					{m.watch_player_failed()}
-				{:else}
-					{m.watch_demo_placeholder()}
+			<div class="msg">
+				<p>
+					{#if failed}
+						{m.watch_player_failed()}
+					{:else}
+						{m.watch_demo_placeholder()}
+					{/if}
+				</p>
+				{#if testHooks && !real}
+					<button type="button" class="btn ghost" onclick={() => onended?.()}>
+						{m.watch_simulate_end()}
+					</button>
 				{/if}
-			</p>
+			</div>
 		</div>
 	{/if}
 </div>
@@ -122,5 +197,14 @@
 		padding: 14px 18px;
 		text-align: center;
 		font-weight: 700;
+	}
+	.msg p {
+		margin: 0;
+	}
+	.msg .btn {
+		margin-top: 10px;
+		background: #000;
+		color: #fff;
+		border-color: #fff;
 	}
 </style>

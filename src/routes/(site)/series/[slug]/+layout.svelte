@@ -4,12 +4,18 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import ArtHeader from '#lib/components/ArtHeader.svelte';
 	import CreatorAvatar from '#lib/components/CreatorAvatar.svelte';
+	import PovBar from '#lib/components/PovBar.svelte';
 	import SeriesMeta from '#lib/components/SeriesMeta.svelte';
+	import Switch from '#lib/components/Switch.svelte';
+	import { getViewing } from '#lib/prefs/store.svelte.js';
 	import { kindLabel } from '#lib/labels.js';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
 	const s = $derived(data.series);
+	const viewing = getViewing();
+	/** An Extras series follows the POV list and options of its parent. */
+	const pov = $derived(s.parent ? null : { id: s.id, slug: s.slug });
 
 	const tabs = $derived([
 		{ href: resolve('/(site)/series/[slug]', { slug: s.slug }), label: m.series_tab_timeline() },
@@ -53,6 +59,10 @@
 	{/if}
 </ArtHeader>
 
+{#if pov}
+	<PovBar series={pov} creators={data.creators} />
+{/if}
+
 <nav class="subnav" aria-label={m.series_subnav_label()}>
 	<ul>
 		{#each tabs as tab (tab.href)}
@@ -65,8 +75,32 @@
 	</ul>
 </nav>
 
-<div class="body">
-	{@render children()}
+<div class="body" class:with-options={pov}>
+	<div class="content">
+		{@render children()}
+	</div>
+	{#if pov}
+		<aside class="options" aria-labelledby="options-h">
+			<h2 id="options-h">{m.series_options_heading()}</h2>
+			<Switch
+				id="opt-spoiler"
+				label={m.setting_spoiler_free()}
+				description={m.setting_spoiler_free_help()}
+				checked={viewing.spoilerFree(pov.id)}
+				onchange={(on: boolean) => viewing.setSpoilerFree(pov.id, on)}
+			/>
+			<Switch
+				id="opt-captions"
+				label={m.setting_creator_captions_only()}
+				description={m.setting_creator_captions_only_series_help()}
+				checked={viewing.creatorCaptionsOnly(pov.id)}
+				onchange={(on: boolean) => viewing.setCreatorCaptionsOnly(pov.id, on)}
+			/>
+			<p class="more">
+				<a href={resolve('/(site)/settings/display')}>{m.series_options_more()}</a>
+			</p>
+		</aside>
+	{/if}
 </div>
 
 <style>
@@ -135,5 +169,26 @@
 	}
 	.body {
 		padding: 40px var(--page-pad) 0;
+	}
+	.body.with-options {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 300px;
+		gap: 40px;
+		align-items: start;
+	}
+	@media (max-width: 1000px) {
+		.body.with-options {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.options {
+			grid-row: 1;
+		}
+	}
+	.options h2 {
+		font-size: 1.125rem;
+		margin: 0 0 4px;
+	}
+	.more {
+		font-size: 0.875rem;
 	}
 </style>

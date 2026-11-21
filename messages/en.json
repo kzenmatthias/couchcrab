@@ -40,8 +40,13 @@
 	"series_kind_other": "Series",
 	"series_creator_count": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "{count} creator",
 				"countPlural=*": "{count} creators"
@@ -71,8 +76,13 @@
 	"series_started": "Started {date}",
 	"series_episode_count": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "{count} episode",
 				"countPlural=*": "{count} episodes"
@@ -154,8 +164,13 @@
 	"claim_title": "Claim your creator profile",
 	"claim_intro": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "Signed in with Google. This account owns {count} YouTube channel.",
 				"countPlural=*": "Signed in with Google. This account owns {count} YouTube channels."
@@ -184,5 +199,150 @@
 	"claim_error_expired": "Your channel check has expired. Sign in with Google again to check your channels.",
 	"claim_error_not_claimable": "This profile can't be claimed. It may have been claimed in the meantime.",
 	"claim_no_check": "To claim your profile, sign in with the Google account of your YouTube channel. The channel check stays valid for 15 minutes.",
-	"claim_claimed_already": "You claimed {name}."
+	"claim_claimed_already": "You claimed {name}.",
+	"badge_watched": "Watched",
+	"badge_percent_watched": "{percent}% watched",
+	"badge_title_hidden": "Title hidden",
+	"badge_title_hidden_spoiler": "Title hidden (spoiler-free)",
+	"episode_hidden_untitled": "Hidden episode",
+	"home_continue_heading": "Continue watching",
+	"creator_toggle_watching": "Watching",
+	"creator_toggle_add": "Add",
+	"switch_on": "On",
+	"switch_off": "Off",
+	"pov_watching": [
+		{
+			"declarations": [
+				"input total",
+				"local totalPlural = total: plural",
+				"input count"
+			],
+			"selectors": [
+				"totalPlural"
+			],
+			"match": {
+				"totalPlural=one": "Watching {count} of {total} creator",
+				"totalPlural=*": "Watching {count} of {total} creators"
+			}
+		}
+	],
+	"pov_badge_global": "Global list",
+	"pov_badge_custom": "Custom list",
+	"pov_note_global": "Follows your global list",
+	"pov_note_custom": "Custom for this series",
+	"pov_change": "Change creators",
+	"pov_reset": "Reset to global list",
+	"series_options_heading": "Viewing options",
+	"series_options_more": "More display and playback settings",
+	"setting_spoiler_free": "Spoiler-free mode",
+	"setting_spoiler_free_help": "Hide titles of unwatched episodes",
+	"setting_creator_captions_only": "Only show episodes with creator captions",
+	"setting_creator_captions_only_help": "Applies to every series unless you change it there. Auto-generated captions don't count.",
+	"setting_creator_captions_only_series_help": "Hide episodes without CC in this series",
+	"settings_nav_label": "Settings",
+	"settings_nav_creators": "Who I watch",
+	"settings_nav_display": "Display & accessibility",
+	"settings_saved_locally": "Your settings are saved in this browser.",
+	"settings_creators_title": "Who I watch",
+	"settings_creators_intro": "Pick the creators whose POV you want. Series follow this list unless you change it there.",
+	"settings_selected_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} selected",
+				"countPlural=*": "{count} selected"
+			}
+		}
+	],
+	"settings_select_all": "Select all",
+	"settings_clear_all": "Clear all",
+	"settings_find_creator": "Find a creator",
+	"settings_find_placeholder": "Name",
+	"settings_all_creators": "All creators ({count})",
+	"settings_no_creator_match": "No creator matches that name.",
+	"settings_per_series_heading": "Per series",
+	"settings_per_series_intro": "Each series follows your global list, or uses its own.",
+	"settings_series_mode_legend": "Creators for {title}",
+	"settings_mode_global": "Global list",
+	"settings_mode_custom": "Custom",
+	"settings_series_edit": "Edit",
+	"settings_series_global_summary": "Follows your global list: {count} of {total} creators",
+	"settings_series_custom_summary": "Custom: {count} of {total} creators",
+	"settings_series_title": "Who I watch in {title}",
+	"settings_series_intro": "Choose whose POV you see in this series. Changing a creator here gives the series its own list.",
+	"settings_back_to_creators": "Back to Who I watch",
+	"settings_series_selected": "{count} of {total} selected",
+	"settings_series_global_hint": "This series follows your global list now.",
+	"settings_series_creators_label": "Creators in {title}",
+	"settings_series_back_to_series": "Go to {title}",
+	"settings_display_title": "Display & accessibility",
+	"settings_text_heading": "Text and layout",
+	"setting_text_size": "Text size",
+	"setting_text_size_default": "Default",
+	"setting_text_size_large": "Large",
+	"setting_text_size_larger": "Larger",
+	"setting_underline_links": "Underline all links",
+	"setting_text_only": "Text-only lists",
+	"setting_text_only_help": "Show episodes as a list of titles, without thumbnails",
+	"settings_motion_heading": "Motion",
+	"setting_motion": "Animations",
+	"setting_motion_system": "Follow my system",
+	"setting_motion_reduce": "Reduce",
+	"setting_motion_allow": "Allow",
+	"settings_playback_heading": "Playback",
+	"setting_autoplay": "Autoplay next episode",
+	"setting_countdown": "Countdown before the next episode",
+	"setting_countdown_seconds": "{seconds} s",
+	"setting_countdown_wait": "Wait for me",
+	"setting_spoiler_default": "Spoiler-free for new series",
+	"setting_spoiler_default_help": "Every series without its own choice hides the titles of unwatched episodes",
+	"settings_captions_heading": "Captions",
+	"setting_captions_on": "Turn captions on when a video starts",
+	"setting_caption_language": "Preferred caption language",
+	"settings_shortcuts_heading": "Keyboard shortcuts",
+	"setting_shortcuts": "Single-key shortcuts",
+	"setting_shortcuts_help": "Turn off if you use speech input or a screen reader that conflicts",
+	"shortcuts_table_caption": "Shortcut keys on the watch page",
+	"shortcuts_col_key": "Key",
+	"shortcuts_col_action": "Action",
+	"shortcuts_col_change": "Change",
+	"shortcut_next": "Next episode on the timeline",
+	"shortcut_title": "Show or hide the real title",
+	"shortcut_watched": "Mark as watched",
+	"shortcut_change": "Change",
+	"shortcut_press_any": "Press a key",
+	"shortcut_press_key": "Press the new key for {action}, or Escape to cancel.",
+	"shortcut_unchanged": "Shortcut not changed.",
+	"shortcut_invalid_key": "Use a letter or a digit. Press Escape to cancel.",
+	"shortcut_key_taken": "{key} is already used for {action}. Press another key, or Escape to cancel.",
+	"shortcut_saved": "{action}: key {key}.",
+	"shortcuts_hint_label": "Shortcuts:",
+	"shortcut_next_short": "next",
+	"shortcut_title_short": "show title",
+	"shortcut_watched_short": "mark watched",
+	"shortcuts_change_link": "Change or turn off shortcuts",
+	"upnext_in": "Up next in {seconds} s:",
+	"upnext_wait": "Up next:",
+	"upnext_paused": "Countdown paused",
+	"upnext_play_now": "Play now",
+	"upnext_cancel": "Cancel",
+	"upnext_announce": "Up next in {seconds} seconds: {next}. Play now or cancel.",
+	"upnext_announce_wait": "Up next: {next}. Play now or cancel.",
+	"upnext_cancelled": "Autoplay cancelled.",
+	"watch_hidden_heading": "{context}: {who}",
+	"watch_hidden_context": "{series}, {group}",
+	"watch_hidden_who": "{creator}, {episode}",
+	"watch_mark_watched": "Mark as watched",
+	"watch_show_title": "Show real title",
+	"watch_hide_title": "Hide real title",
+	"watch_next_link": "Next: {next}",
+	"watch_simulate_end": "Simulate end of video",
+	"settings_series_edit_label": "Edit: {title}",
+	"shortcut_change_label": "Change: {action}"
 }

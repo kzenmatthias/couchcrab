@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { m } from '#lib/paraglide/messages.js';
+	import { getViewing } from '#lib/prefs/store.svelte.js';
 
 	type Props = {
 		/** Visible heading of the row; also names the scroll buttons. */
@@ -9,20 +10,26 @@
 		note?: string;
 		/** Larger cards, for Continue watching. */
 		size?: 'normal' | 'big';
+		/** Episode rows: a plain vertical list when "Text-only lists" is on. */
+		episodes?: boolean;
 		/** The `<li>` items. */
 		children: Snippet;
 	};
 
-	let { title, note, size = 'normal', children }: Props = $props();
+	let { title, note, size = 'normal', episodes = false, children }: Props = $props();
+
+	const viewing = getViewing();
+	const textList = $derived(episodes && viewing.prefs.display.textOnly);
 
 	const uid = $props.id();
 	let list: HTMLUListElement | undefined = $state();
 	let overflows = $state(false);
 
 	function prefersReducedMotion() {
+		const setting = document.documentElement.dataset.motion;
 		return (
-			document.documentElement.dataset.motion === 'reduce' ||
-			window.matchMedia('(prefers-reduced-motion: reduce)').matches
+			setting === 'reduce' ||
+			(setting !== 'allow' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
 		);
 	}
 
@@ -53,7 +60,7 @@
 		</h2>
 		<!-- The buttons need JavaScript and only help when the row overflows; Tab and
 		     scrolling work without them. -->
-		{#if overflows}
+		{#if overflows && !textList}
 			<div class="rail-btns">
 				<button type="button" aria-label={m.rail_back({ title })} onclick={() => scrollByPage(-1)}>
 					<span aria-hidden="true">‹</span>
@@ -68,7 +75,7 @@
 			</div>
 		{/if}
 	</div>
-	<ul class="rail" class:big={size === 'big'} bind:this={list}>
+	<ul class="rail" class:big={size === 'big'} class:text-list={textList} bind:this={list}>
 		{@render children()}
 	</ul>
 </section>
@@ -137,6 +144,14 @@
 	}
 	.rail :global(.poster) {
 		width: min(260px, 62vw);
+	}
+	.rail.text-list {
+		display: block;
+		overflow: visible;
+		scroll-snap-type: none;
+	}
+	.rail.text-list :global(.ep) {
+		width: auto;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.rail {

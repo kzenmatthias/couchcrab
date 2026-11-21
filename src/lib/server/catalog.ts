@@ -30,6 +30,8 @@ function videoQuery() {
 			episodeNumber: videos.episodeNumber,
 			groupId: videos.groupId,
 			seriesId: videos.seriesId,
+			seriesParentId: series.parentId,
+			creatorId: creators.id,
 			creatorSlug: creators.slug,
 			creatorName: creators.name,
 			creatorColor: creators.color,
@@ -46,7 +48,7 @@ function videoQuery() {
 
 type VideoRow = Awaited<ReturnType<ReturnType<typeof videoQuery>['all']>>[number];
 
-function toCard(r: VideoRow): VideoCard & { seriesId: number } {
+function toCard(r: VideoRow): VideoCard {
 	return {
 		id: r.id,
 		youtubeVideoId: r.youtubeVideoId,
@@ -57,7 +59,9 @@ function toCard(r: VideoRow): VideoCard & { seriesId: number } {
 		episodeNumber: r.episodeNumber,
 		groupId: r.groupId,
 		seriesId: r.seriesId!,
+		povSeriesId: r.seriesParentId ?? r.seriesId!,
 		creator: {
+			id: r.creatorId,
 			slug: r.creatorSlug,
 			name: r.creatorName,
 			color: r.creatorColor,
@@ -156,6 +160,7 @@ export function seriesDescription(seriesId: number, locale: string) {
 export function seriesCreatorList(seriesId: number) {
 	return db
 		.select({
+			id: creators.id,
 			slug: creators.slug,
 			name: creators.name,
 			color: creators.color,
@@ -207,13 +212,30 @@ export function seriesSessions(seriesId: number) {
 
 /* ---------- videos ---------- */
 
-export function latestVideos(limit = 12) {
+/**
+ * Newest uploads first. `keep` filters for the viewer (who I watch); a window of recent uploads
+ * is read so the filtered list is still full.
+ */
+export function latestVideos(limit = 12, keep: (video: VideoCard) => boolean = () => true) {
 	return videoQuery()
 		.where(visibleVideo)
 		.orderBy(desc(videos.publishedAt), desc(videos.id))
-		.limit(limit)
+		.limit(Math.max(limit, 400))
+		.all()
+		.map(toCard)
+		.filter(keep)
+		.slice(0, limit);
+}
+
+/** Public episodes by YouTube id, in the order of `ids` (unknown or hidden ids are skipped). */
+export function videosByYoutubeIds(ids: readonly string[]): VideoCard[] {
+	if (ids.length === 0) return [];
+	const rows = videoQuery()
+		.where(and(visibleVideo, inArray(videos.youtubeVideoId, [...ids])))
 		.all()
 		.map(toCard);
+	const byId = new Map(rows.map((r) => [r.youtubeVideoId, r]));
+	return ids.map((id) => byId.get(id)).filter((v): v is VideoCard => v !== undefined);
 }
 
 export function getVideo(youtubeVideoId: string) {
@@ -238,6 +260,7 @@ export function getVideo(youtubeVideoId: string) {
 		video: toCard(row),
 		series: {
 			id: s.id,
+			parentId: s.parentId,
 			slug: s.slug,
 			title: s.title,
 			grouping: s.grouping,
@@ -253,6 +276,7 @@ export function getVideo(youtubeVideoId: string) {
 export function listCreators() {
 	return db
 		.select({
+			id: creators.id,
 			slug: creators.slug,
 			name: creators.name,
 			color: creators.color,

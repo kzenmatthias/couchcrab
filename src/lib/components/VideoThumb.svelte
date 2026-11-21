@@ -12,23 +12,38 @@
 		label?: string | null;
 		/** Clock duration, e.g. "31:20". */
 		duration?: string | null;
+		/** Spoiler-free: a neutral striped card instead of the thumbnail. */
+		hidden?: boolean;
+		/** Percent watched (0 to 100); shows a progress bar along the bottom. */
+		progress?: number;
 	};
 
-	let { youtubeVideoId, poster, tint = null, label = null, duration = null }: Props = $props();
+	let {
+		youtubeVideoId,
+		poster,
+		tint = null,
+		label = null,
+		duration = null,
+		hidden = false,
+		progress = 0
+	}: Props = $props();
 
 	const real = $derived(isRealYoutubeId(youtubeVideoId));
 	const palette = $derived(poster?.type === 'art' ? poster.palette : undefined);
 </script>
 
 <!-- Decorative: the title, creator and duration are written out as text next to it. -->
-<span class="thumb" aria-hidden="true">
-	{#if real}
+<span class="thumb" class:hidden aria-hidden="true">
+	{#if hidden}
+		<!-- No thumbnail: it could give the story away. -->
+	{:else if real}
 		<img src={youtubeThumbnailUrl(youtubeVideoId)} alt="" loading="lazy" width="320" height="180" />
 	{:else}
 		<PosterArt {palette} seed={seedFrom(youtubeVideoId)} width={160} height={90} {tint} />
 	{/if}
 	{#if label}<span class="lbl">{label}</span>{/if}
 	{#if duration}<span class="dur">{duration}</span>{/if}
+	{#if progress > 0}<span class="bar" style:--p="{progress}%"></span>{/if}
 </span>
 
 <style>
@@ -48,6 +63,37 @@
 		inset: 0;
 		z-index: 1;
 		background: linear-gradient(180deg, transparent 40%, #000000cc);
+	}
+	.thumb.hidden {
+		background: repeating-linear-gradient(135deg, var(--surface) 0 18px, var(--surface2) 18px 36px);
+		color: var(--text);
+		border: 1px solid var(--line);
+	}
+	.thumb.hidden::before {
+		content: none;
+	}
+	.hidden .lbl {
+		font-size: 1.75rem;
+	}
+	.hidden .dur {
+		background: var(--bg);
+		color: var(--text);
+	}
+	.bar {
+		position: absolute;
+		z-index: 3;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 5px;
+		background: #ffffff59;
+	}
+	.bar::after {
+		content: '';
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: var(--p);
+		background: var(--accent);
 	}
 	img {
 		position: absolute;

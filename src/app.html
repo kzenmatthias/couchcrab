@@ -12,6 +12,18 @@
 			} catch {
 				/* storage unavailable: keep showing the notice */
 			}
+			// Display settings (src/lib/prefs/display.ts) before first paint, so text size,
+			// motion and link underlines never flash.
+			try {
+				var d = JSON.parse(localStorage.getItem('couchcrab:prefs') || '{}').display || {};
+				var r = document.documentElement.dataset;
+				if (d.textSize === 'large' || d.textSize === 'larger') r.textSize = d.textSize;
+				if (d.motion === 'reduce' || d.motion === 'allow') r.motion = d.motion;
+				if (d.underlineLinks === true) r.underlineLinks = 'on';
+				if (d.textOnly === true) r.textOnly = 'on';
+			} catch {
+				/* storage unavailable or broken: defaults */
+			}
 		</script>
 		%sveltekit.head%
 	</head>

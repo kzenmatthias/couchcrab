@@ -8,6 +8,19 @@ html {
 	font-size: 100%;
 }
 
+/* Text size setting (Display & accessibility). Everything is sized in rem. */
+html[data-text-size='large'] {
+	font-size: 112.5%;
+}
+html[data-text-size='larger'] {
+	font-size: 125%;
+}
+
+/* Underline all links setting */
+[data-underline-links='on'] a {
+	text-decoration: underline !important;
+}
+
 body {
 	margin: 0;
 	background: var(--bg);
@@ -56,10 +69,11 @@ ul.plain {
 	padding: 0;
 }
 
+/* The in-app motion setting: "reduce" always, "allow" overrides the system preference. */
 @media (prefers-reduced-motion: reduce) {
-	*,
-	*::before,
-	*::after {
+	html:not([data-motion='allow']) *,
+	html:not([data-motion='allow']) *::before,
+	html:not([data-motion='allow']) *::after {
 		transition: none !important;
 		animation: none !important;
 		scroll-behavior: auto !important;
@@ -108,4 +122,12 @@ ul.plain {
 	list-style: none;
 	margin: 0;
 	padding: 0;
+}
+
+/* Text-only lists (setting): episodes as plain text rows */
+.text-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	max-width: 56rem;
 }

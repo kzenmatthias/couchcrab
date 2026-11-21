@@ -2,10 +2,12 @@
 	import { resolve } from '$app/paths';
 	import { m } from '#lib/paraglide/messages.js';
 	import EpisodeCard from '#lib/components/EpisodeCard.svelte';
+	import { getViewing } from '#lib/prefs/store.svelte.js';
 	import type { VideoCard } from '#lib/video.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+	const viewing = getViewing();
 
 	/** Creators in name order, each with their episodes in upload order. */
 	const perCreator = $derived.by(() => {
@@ -28,7 +30,7 @@
 			</a>
 			<small>{m.series_episode_count({ count: group.videos.length })}</small>
 		</h2>
-		<ul class="card-grid">
+		<ul class={viewing.prefs.display.textOnly ? 'text-list' : 'card-grid'}>
 			{#each group.videos as video (video.id)}
 				<li><EpisodeCard {video} /></li>
 			{/each}

@@ -61,8 +61,15 @@
 			{#each data.uploads as v (v.id)}
 				<li>
 					<a class="t" href={resolve('/(site)/watch/[videoId]', { videoId: v.youtubeVideoId })}>
-						{v.title}
+						{#if v.titleHidden}
+							{v.episodeNumber
+								? m.episode_long({ number: v.episodeNumber })
+								: m.episode_hidden_untitled()}
+						{:else}
+							{v.title}
+						{/if}
 					</a>
+					{#if v.titleHidden}<span class="badge">{m.badge_title_hidden()}</span>{/if}
 					<span class="m">
 						<a href={resolve('/(site)/series/[slug]', { slug: v.series.slug })}>{v.series.title}</a>
 						· {spokenDuration(v.durationS, locale)}
@@ -85,6 +92,12 @@
 </section>
 
 <style>
+	.badge {
+		font-size: 0.75rem;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		padding: 0 6px;
+	}
 	.who {
 		display: flex;
 		gap: 20px 32px;

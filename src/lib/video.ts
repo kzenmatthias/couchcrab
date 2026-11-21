@@ -2,6 +2,7 @@
 import type { PosterSettings } from '#lib/server/db/schema.js';
 
 export type CreatorRef = {
+	id: number;
 	slug: string;
 	name: string;
 	color: string;
@@ -24,8 +25,13 @@ export type VideoCard = {
 	hasCreatorCaptions: boolean;
 	episodeNumber: number | null;
 	groupId: number | null;
+	seriesId: number;
+	/** The series whose who-I-watch list and viewing options apply (the parent of an Extras series). */
+	povSeriesId: number;
 	creator: CreatorRef;
 	series: SeriesRef;
+	/** Spoiler-free: the real title was removed (`title` is empty). */
+	titleHidden?: boolean;
 };
 
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;

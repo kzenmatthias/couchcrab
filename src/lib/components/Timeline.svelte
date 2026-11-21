@@ -4,6 +4,7 @@
 	import { formatDate, formatDateRange } from '#lib/i18n.js';
 	import { groupBySession, groupByWeek, sortTimeline, type SessionInfo } from '#lib/timeline.js';
 	import type { VideoCard } from '#lib/video.js';
+	import { getViewing } from '#lib/prefs/store.svelte.js';
 	import EpisodeCard from './EpisodeCard.svelte';
 
 	type Props = {
@@ -19,6 +20,8 @@
 	let { videos, grouping, sessions = [], anchor = null, heading }: Props = $props();
 
 	const locale = $derived(getLocale());
+	const viewing = getViewing();
+	const listClass = $derived(viewing.prefs.display.textOnly ? 'text-list' : 'card-grid');
 
 	type Section = { key: string; title: string; note: string | null; items: VideoCard[] };
 
@@ -62,7 +65,7 @@
 			<span>{section.title}</span>
 			{#if section.note}<span class="note">{section.note}</span>{/if}
 		</h2>
-		<ul class="card-grid">
+		<ul class={listClass}>
 			{#each section.items as video (video.id)}
 				<li><EpisodeCard {video} /></li>
 			{/each}

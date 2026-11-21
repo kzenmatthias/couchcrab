@@ -6,7 +6,13 @@
 export type YTPlayer = {
 	destroy(): void;
 	getIframe(): HTMLIFrameElement;
+	getCurrentTime(): number;
+	getDuration(): number;
+	getPlayerState(): number;
 };
+
+/** `YT.PlayerState` values used here. */
+export const PLAYER_STATE = { ENDED: 0, PLAYING: 1, PAUSED: 2 } as const;
 
 type YTNamespace = {
 	Player: new (
@@ -17,7 +23,10 @@ type YTNamespace = {
 			width?: string | number;
 			height?: string | number;
 			playerVars?: Record<string, string | number>;
-			events?: { onReady?: (event: { target: YTPlayer }) => void };
+			events?: {
+				onReady?: (event: { target: YTPlayer }) => void;
+				onStateChange?: (event: { target: YTPlayer; data: number }) => void;
+			};
 		}
 	) => YTPlayer;
 };
