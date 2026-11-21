@@ -64,6 +64,12 @@ There are no fixed creator groups (no "Hermits" vs "Friends"). A creator is simp
   - change the placement of their own videos directly (logged in the history, revertible by admins),
   - opt out: hide all their videos from Couchcrab.
 - A claimed creator cannot edit other creators.
+- All of this lives on the creator dashboard (`/creator`, "Creator dashboard" in the account menu), with three parts:
+  - **Profile**: bio, avatar URL, a profile colour from a fixed set that keeps the avatar initials readable (4.5:1, with a preview) and up to five links. "Hide my videos from Couchcrab" explains what happens and asks to confirm; the same page shows it again with "Show my videos again".
+  - **Channels**: verified channels and channels that still need review. A second channel can be unlinked after a confirmation (its videos leave Couchcrab); the main channel cannot. "Add another channel" goes through Google sign-in again, which creates a claim for review when the channel is not on Couchcrab yet.
+  - **My videos**: unsorted uploads first, then placed ones, then ignored ones, with filters for status and series. A video can be placed in a series the creator takes part in (or its Extras, with a session or week) or ignored.
+- Opting out hides the profile and every video from all public pages and from search, and the sync skips the creator's channels. Viewers keep their own progress.
+- Editors cannot change a claimed creator's bio, avatar or colour; admins can, and see when the creator last edited their profile.
 - The Google access token is used once for the ownership check and is not stored.
 - Google sign-in also works as a normal login for creators who don't use Discord.
 

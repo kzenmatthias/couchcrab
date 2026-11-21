@@ -51,7 +51,7 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 
 | Table | Purpose |
 | --- | --- |
-| `creators` | id, slug, name, color, avatar_url, bio, claimed_at (set once a user proved they own a channel), opted_out (hide all their videos) |
+| `creators` | id, slug, name, color, avatar_url, bio, links (JSON array of URLs, set by the claimed creator), claimed_at (set once a user proved they own a channel), opted_out (hide all their videos) |
 | `channels` | id, creator_id, youtube_channel_id, title, kind (`main`, `secondary`), sync_enabled, last_synced_at, verified_at, verified_by_user_id (the creator who proved ownership) |
 | `series` | id, slug, title, kind (`season`, `live_series`, `event`, `other`), status (`upcoming`, `ongoing`, `ended`), grouping (`week`, `session`, `none`), started_at, ended_at, poster (JSON: generated art settings or image url), parent_id (set for an Extras series) |
 | `series_translations` | series_id, locale, description |
@@ -66,7 +66,7 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 | `sessions` | id (SHA-256 hash of the session token), user_id, expires_at |
 | `claim_checks` | session_id, user_id, channels (JSON: owned channel ids and titles), expires_at (15 minutes). The owned channels between Google sign-in and the claim step. |
 | `suggestions` | id, user_id, target_type, target_id, kind (`create`, `update`, `delete`), payload (JSON), note, is_creator_request, status (`open`, `approved`, `rejected`, `withdrawn`), reviewed_by, reviewed_at |
-| `audit_log` | id, actor (`user`, `rule`, `sync`), actor_user_id (set when actor is `user`, and for `rule` entries of a rule run someone started in the management tool), entity, entity_id, before, after (JSON), created_at, reverted_by |
+| `audit_log` | id, actor (`user`, `creator`, `rule`, `sync`), actor_user_id (set when actor is `user` or `creator`, and for `rule` entries of a rule run someone started in the management tool), entity, entity_id, before, after (JSON), created_at, reverted_by |
 | `user_creators` | user_id, creator_id (global who-I-watch) |
 | `user_series_creators` | user_id, series_id, creator_id (custom list per series) |
 | `progress` | user_id, video_id, seconds, watched_at, updated_at |
@@ -161,7 +161,7 @@ Code in `src/lib/server/auth/`: `session.ts` (tokens, cookies, sliding expiry), 
 
 ### Account menu
 
-The header always has the menu, a disclosure panel built on `<details>` (so it works without JavaScript), with the same keyboard behaviour signed in and signed out. Signed out, the button reads "Menu"; the panel has a short note that choices are saved in this browser, the theme radio group, links to the settings pages and a "Sign in" link. Signed in, the button is an avatar or initials (its accessible name includes the user's name) and the panel has the signed-in line, the theme, the settings links, "Creator dashboard" for claimed creators and Sign out. The theme exists only here: with JavaScript a choice applies at once by setting the `theme` cookie, without it an Apply button posts to `/prefs`. Escape and a click outside close the panel; Escape returns focus to the button.
+The header always has the menu, a disclosure panel built on `<details>` (so it works without JavaScript), with the same keyboard behaviour signed in and signed out. Signed out, the button reads "Menu"; the panel has a short note that choices are saved in this browser, the theme radio group, links to the settings pages and a "Sign in" link. Signed in, the button is an avatar or initials (its accessible name includes the user's name) and the panel has the signed-in line, the theme, the settings links, "Creator dashboard" for claimed creators, "Manage" for editors and admins and Sign out. The theme exists only here: with JavaScript a choice applies at once by setting the `theme` cookie, without it an Apply button posts to `/prefs`. Escape and a click outside close the panel; Escape returns focus to the button.
 
 ### Account API (`/api/me/`)
 
@@ -178,6 +178,17 @@ All three need a session (401 otherwise). Writes need `content-type: application
 - `progress`: per user and video id; `watched_at` is set when watched (the first time is kept) and null otherwise. Times are whole seconds.
 
 The theme and the language stay in their cookies and are not part of the account.
+
+### Creator dashboard
+
+`/creator` (`src/routes/(site)/creator/`: Profile, `channels`, `videos`) is for users with `creatorId`. Signed out, the pages redirect to `/signin`; a signed-in user without a claimed profile gets a 403 whose error page (`creator/+error.svelte`) explains how to claim with Google. Like the management tool, every load and action calls `creatorActorFor(locals)` (`src/lib/server/manage/creator-http.ts`) itself, and every read and write goes through `src/lib/server/manage/creator-self.ts`:
+
+- `assertOwnCreator` reads `users.creator_id` from the database again (not from the session) and throws `ForbiddenError` unless it is the creator being acted on.
+- Videos must be on one of that creator's channels, and a placement must target a series in `series_creators` for that creator or the Extras child of one. Anything else is a 403, also for a crafted form post. The placement checks and writes are the ones of `videos.ts` (`parsePlacement`, `writePlacement`, `writeVideoStatus`): `placed_by = user`.
+- Profile edits accept bio, avatar URL, links (at most five http(s) URLs) and a colour from `PROFILE_COLORS` (`src/lib/creator-colors.ts`, each keeps the black or white avatar initials at 4.5:1 or more) or the colour the profile already has.
+- Unlinking deletes a secondary channel and its videos (the main channel cannot be unlinked). Opting out sets `creators.opted_out`; `catalog.ts` and the sync already hide and skip opted-out creators. The claim step still shows an opted-out creator to the user who claimed it.
+- Every write has an `audit_log` entry with actor `creator` and `actor_user_id`, with the same `before`/`after` shapes as the management tool, so admins can review and revert it. `lastCreatorEdit` shows admins on `/manage/creators/[id]` when the creator last edited their own profile.
+- The forms reuse the management tool's `Field`, `ErrorSummary`, `ConfirmPanel` and `Flash` components (`src/routes/manage/ui/`).
 
 ## Management tool
 
