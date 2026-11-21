@@ -32,10 +32,16 @@ All notable changes to this project are documented here. The format follows [Kee
 - Watch progress in this browser: "Watched" and "62% watched" badges on cards, a "Continue watching" row on home and a "Mark as watched" button. A video counts as watched from 90%.
 - Autoplay countdown at the end of a video, with "Play now" and "Cancel", paused while hovered or focused, announced once to screen readers, or "Wait for me" without counting.
 - Display & accessibility settings (`/settings/display`): text size, animations, underlined links, text-only lists, autoplay and countdown, captions on by default with a preferred language, only episodes with creator captions, and single-key shortcuts (N, S, M) that can be changed or turned off.
+- Signed in, Who I watch, spoiler-free mode, display settings and watch progress are kept in your account and follow you to other browsers. On the first sign-in in a browser, what you chose there is merged into the account, so nothing is lost. Signing out keeps the copy in the browser.
 
 ### Changed
 
 - The theme switch moved from the footer to the account menu.
+- Signed out, the header shows a Menu with the theme, links to your settings and Sign in, so everyone can pick a theme in one place.
 - One creator list without fixed groups; creators are managed in the app.
 - The Series and Creators links in the header now open the new list pages.
 - Unsorted videos and creators who opted out are never shown on the public pages.
+
+### Fixed
+
+- Creator pages show the real title of watched episodes in spoiler-free series, like the episode cards.

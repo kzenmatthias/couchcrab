@@ -13,6 +13,7 @@ src/
       auth/          Discord and Google OAuth, sessions, roles, creator claims
       youtube/       API client, sync, rule engine
       audit.ts       write and revert history entries
+      me.ts          the signed-in viewer's prefs and progress in the database
     components/      shared UI (cards, rails, timeline, player, POV bar, switches, dialogs)
     prefs/           viewing prefs store, cookie mirror, progress, sync adapter, theme, notice
     styles/          design tokens and base CSS
@@ -32,6 +33,7 @@ src/
     (site)/signin, (site)/claim  sign-in page and creator claim step
     prefs/           POST endpoint for language and theme (works without JavaScript)
     api/videos/      GET public episode cards by YouTube id (Continue watching, revealed titles)
+    api/me/          the signed-in viewer's prefs snapshot (GET, PUT) and progress batches (POST)
   env.ts             environment variables (SvelteKit 3 `defineEnvVars`)
 messages/            en.json, nl.json (UI strings)
 scripts/             migrate.ts, seed.ts, sync.ts (entry points for the npm scripts)
@@ -66,7 +68,7 @@ Names are indicative; the Drizzle schema in `src/lib/server/db/schema.ts` is the
 | `user_creators` | user_id, creator_id (global who-I-watch) |
 | `user_series_creators` | user_id, series_id, creator_id (custom list per series) |
 | `progress` | user_id, video_id, seconds, watched_at, updated_at |
-| `user_settings` | user_id, JSON (theme, text size, motion, autoplay, captions, spoiler defaults, shortcuts) |
+| `user_settings` | user_id, settings (JSON `AccountPrefs`: the viewing prefs without the creator lists, their item stamps, `creatorsMode`, `customSeries`), updated_at |
 
 ## YouTube sync
 
@@ -157,7 +159,23 @@ Code in `src/lib/server/auth/`: `session.ts` (tokens, cookies, sliding expiry), 
 
 ### Account menu
 
-Signed out, the header shows a "Sign in" link. Signed in, it shows an account button (avatar or initials; its accessible name includes the user's name) that opens a disclosure panel built on `<details>`, so it works without JavaScript. The panel has the signed-in line, the theme radio group (it moved here from the footer; with JavaScript a choice applies at once by setting the `theme` cookie, without it an Apply button posts to `/prefs`), links to the settings pages, "Creator dashboard" for claimed creators and Sign out. Escape and a click outside close it; Escape returns focus to the button.
+The header always has the menu, a disclosure panel built on `<details>` (so it works without JavaScript), with the same keyboard behaviour signed in and signed out. Signed out, the button reads "Menu"; the panel has a short note that choices are saved in this browser, the theme radio group, links to the settings pages and a "Sign in" link. Signed in, the button is an avatar or initials (its accessible name includes the user's name) and the panel has the signed-in line, the theme, the settings links, "Creator dashboard" for claimed creators and Sign out. The theme exists only here: with JavaScript a choice applies at once by setting the `theme` cookie, without it an Apply button posts to `/prefs`. Escape and a click outside close the panel; Escape returns focus to the button.
+
+### Account API (`/api/me/`)
+
+| Route | Does |
+| --- | --- |
+| `GET /api/me/snapshot` | `{ prefs, progress }`: the account's prefs (null when it never saved any) and progress by YouTube id (newest 3000). `no-store`. |
+| `PUT /api/me/snapshot` | `{ prefs }`: replaces the prefs. The body must be a version-1 prefs object; every field is cleaned with the prefs schema (`migratePrefs`), ids of creators or series that do not exist are dropped. Returns the stored prefs. |
+| `POST /api/me/progress` | `{ entries: { [youtubeId]: { seconds, watched, updatedAt } } }`, at most 100 entries (`PROGRESS_BATCH_MAX`). Per video the newest entry wins, also against the stored row; unknown videos are skipped; a time in the future is clamped to now. |
+
+All three need a session (401 otherwise). Writes need `content-type: application/json`, at most 256 KB, and an `Origin` header equal to the site's origin (403 otherwise), so another site cannot write to an account. The code is in `src/lib/server/me.ts`:
+
+- `user_creators`: the global who-I-watch list; `user_series_creators`: custom lists per series.
+- `user_settings.settings` (`AccountPrefs`): the rest of the prefs with their item stamps, plus `creatorsMode` (`all` or `list`) and `customSeries` (series with a custom list), because an empty list has no rows.
+- `progress`: per user and video id; `watched_at` is set when watched (the first time is kept) and null otherwise. Times are whole seconds.
+
+The theme and the language stay in their cookies and are not part of the account.
 
 ## Translations
 
@@ -193,35 +211,45 @@ Everything works without an account. The code lives in `src/lib/prefs/`:
 | `progress.ts` | Watch progress per YouTube video id under `couchcrab:progress`: `{ seconds, watched, updatedAt }`. Watched from 90% (`WATCHED_RATIO`) or when the video ends; Continue watching lists started (10 s or more), unwatched videos, newest first. At most 3000 entries. |
 | `mirror.ts` | The cookie mirror (below). |
 | `store.svelte.ts` | `ViewingStore`, the runes store, shared through context (`getViewing()`). |
-| `sync.ts` | `PrefsSyncAdapter` and `mergeSnapshots`. |
+| `sync.ts` | `PrefsSyncAdapter`, `mergeSnapshots` and the push rules. |
+| `account.ts` | The adapter for the account API (`/api/me/`). |
 | `display.ts` | Display settings as attributes on `<html>`. |
 
 Creators and series are referred to by database id. Defaults: watch everyone, spoiler-free off, autoplay on with a 15 s countdown, captions as YouTube decides, shortcuts N (next), S (show title), M (mark watched).
 
 ### What lives where
 
-- **localStorage**: all prefs and the progress. The progress never goes to the server.
+- **localStorage**: all prefs and the progress. Signed in, both are also kept in the account (see "Account sync").
 - **Cookie `viewing`**: a compact mirror of what the server needs to render without a flash: the global creator list, custom lists per series, spoiler-free and only-creator-captions (default and per-series overrides) and text-only lists. Format `1~g1.2.a~c5_1.2~s1~p3~q7~o1~r4~u6~t1` (version first, ids in base 36; `g` missing means everyone, `g` alone nobody). Only unreserved URL characters, at most 3800 characters: when a huge setup would not fit, custom series lists are dropped (largest first) and those series follow the global list on the server. The browser writes it; the server only reads it, in the page loads (`parseMirror(cookies.get('viewing'))`).
 - **`<html>` attributes**: `data-text-size` (`large`, `larger`), `data-motion` (`reduce`, `allow`), `data-underline-links`, `data-text-only`. An inline script in `src/app.html` sets them from localStorage before the first paint; `base.css` scales the root font size, underlines links and lets `allow` override `prefers-reduced-motion`.
 
 ### Rendering
 
 - The page loads filter with `forViewer()` from `src/lib/viewing.ts`: episodes of creators you don't watch and, when asked, episodes without creator captions are removed; in spoiler-free series the title is replaced by an empty string and `titleHidden: true`, so it is in neither the HTML nor the page data. An Extras video follows the list and options of its parent series (`povSeriesId`).
-- The store starts from the cookie on the server and during hydration, so both render the same. After mount it reads localStorage; progress-dependent parts (badges, Continue watching, revealed titles of watched episodes) appear then. Real titles of watched spoiler-free episodes come from `GET /api/videos?ids=…` (public data, at most 50 ids).
+- The store starts from the cookie on the server and during hydration, so both render the same. After mount it reads localStorage; progress-dependent parts (badges, Continue watching, revealed titles of watched episodes) appear then. Real titles of watched spoiler-free episodes (on the episode cards, the watch page and the creator page's upload list) come from `GET /api/videos?ids=…` (public data, at most 50 ids).
 - Every change goes to localStorage and the cookie. When the mirrored part changed, the root layout calls `invalidateAll()`, so the server loads run again with the new cookie.
 - Next episode (`nextEpisode`): the next item of the same week or session in timeline order that the viewer watches, else the first such item of a later group.
 - The watch page saves the position through the IFrame API on pause, every 15 s while playing and when leaving the page, and marks the video watched at 90% or when it ends. Captions use `cc_load_policy=1` and `cc_lang_pref` when "captions on" is set. Demo ids keep the placeholder; builds with `import.meta.env.DEV` or `VITE_TEST_HOOKS=1` (the e2e build) add a "Simulate end of video" button so the countdown can be tested without YouTube.
 
-### Sync adapter
+### Account sync
+
+Signed in, the account is the source of truth and the browser keeps a cache; signed out, everything stays in this browser. The root layout gets the user id from its server load and calls `viewing.connect(accountSyncAdapter(), userId)` once the store has read localStorage; signed out it calls `disconnect()`, which stops pushing and keeps the local copy.
 
 ```ts
 interface PrefsSyncAdapter {
 	pull(): Promise<{ prefs: Prefs; progress: ProgressMap } | null>;
-	push(snapshot: { prefs: Prefs; progress: ProgressMap }): Promise<void>;
+	pushPrefs(prefs: Prefs, options?: { keepalive?: boolean }): Promise<void>;
+	pushProgress(entries: ProgressMap, options?: { keepalive?: boolean }): Promise<void>;
 }
 ```
 
-`viewing.connect(adapter)` pulls the account's copy, merges it (`mergeSnapshots`: the prefs with the newest `updatedAt` win as a whole, progress is merged per video, newest entry first), applies and pushes the result; after that every change is pushed, debounced by 2 s. `disconnect()` stops pushing. The server side (`user_creators`, `user_series_creators`, `progress`, `user_settings`) comes with accounts.
+`accountSyncAdapter` (`src/lib/prefs/account.ts`) talks to the account API above. The rules (`src/lib/prefs/sync.ts`, unit tested):
+
+- **Items.** The prefs are split into items (`prefItems`): `creators`, `series.<id>`, `spoilerFree.default`, `spoilerFree.<id>`, `creatorCaptionsOnly.default`, `creatorCaptionsOnly.<id>`, `display`, `playback`, `shortcuts`. Every change through `viewing.update()` stamps the items it changed in `prefs.stamps` (Unix ms). Prefs saved before stamps existed get the stamp `updatedAt` for every item that differs from the default.
+- **Merge** (`mergeSnapshots`): per item the newest stamp wins (on a tie the browser's copy); an item that was never changed loses to one that was. Progress is merged per video, newest entry first.
+- **First merge.** The first time a browser connects to an account (remembered under `couchcrab:sync` in localStorage), creator lists set on both sides are combined: the global list (everyone wins over a list) and custom series lists. Later connects only take the newest item, so a removed creator stays removed.
+- **Push.** After the merge the store pushes the prefs when they differ from the account's, and the progress entries the account lacks or has older (compared in whole seconds; entries already pushed in an earlier visit are skipped). After that every prefs change and every progress write is pushed, debounced by 2 s; progress goes in batches of 100. A failed push is retried quietly, waiting longer each time (2 s doubling up to 60 s); playback never waits for it. When the page is hidden or closed, what is still pending is sent with `keepalive`.
+- **SSR.** The cookie mirror stays as it is: after the merge the store writes the new mirror and the root layout re-runs the server loads, so a second browser renders the account's lists after its first pull.
 
 ## Testing and CI
 
