@@ -120,6 +120,9 @@
 		<ul class="links">
 			<li><a href={resolve('/(site)/settings/creators')}>{m.account_who_i_watch()}</a></li>
 			<li><a href={resolve('/(site)/settings/display')}>{m.account_display()}</a></li>
+			{#if user}
+				<li><a href={resolve('/(site)/me/suggestions')}>{m.community_my_link()}</a></li>
+			{/if}
 			{#if user && user.creatorId !== null}
 				<li><a href={resolve('/(site)/creator')}>{m.account_creator_dashboard()}</a></li>
 			{/if}
