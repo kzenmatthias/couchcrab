@@ -2,18 +2,21 @@
  * `npm run sync`: fetches new uploads from YouTube, sorts them with the title rules and refreshes
  * stored API data older than 25 days.
  *
- *   npm run sync -- [--channel <youtube channel id>] [--dry-run] [--refresh-only]
+ *   npm run sync -- [--channel <youtube channel id>] [--dry-run] [--refresh-only] [--first-max <n>]
  */
 import { parseArgs } from 'node:util';
 import { openDatabase } from '../src/lib/server/db/client';
 import { createYouTubeClient } from '../src/lib/server/youtube/client';
-import { formatSummary, runSync } from '../src/lib/server/youtube/sync';
+import { FIRST_SYNC_MAX, formatSummary, runSync } from '../src/lib/server/youtube/sync';
 
 try {
 	process.loadEnvFile();
 } catch {
 	// No .env file: use the environment as it is.
 }
+
+const USAGE =
+	'Usage: npm run sync -- [--channel <youtube id>] [--dry-run] [--refresh-only] [--first-max <n>]';
 
 let args;
 try {
@@ -22,12 +25,13 @@ try {
 			channel: { type: 'string' },
 			'dry-run': { type: 'boolean', default: false },
 			'refresh-only': { type: 'boolean', default: false },
+			'first-max': { type: 'string' },
 			help: { type: 'boolean', short: 'h', default: false }
 		}
 	}).values;
 } catch (error) {
 	console.error(error instanceof Error ? error.message : error);
-	console.error('Usage: npm run sync -- [--channel <youtube id>] [--dry-run] [--refresh-only]');
+	console.error(USAGE);
 	process.exit(2);
 }
 
@@ -36,8 +40,21 @@ if (args.help) {
 
   --channel <id>   Only sync this YouTube channel id (UC...).
   --dry-run        Fetch and evaluate everything, but write nothing.
-  --refresh-only   Only refresh stored videos older than 25 days.`);
+  --refresh-only   Only refresh stored videos older than 25 days.
+  --first-max <n>  On a channel's first sync, take up to n of its latest uploads instead of
+                   ${FIRST_SYNC_MAX}. Use a large number (e.g. 20000) for the whole history.
+                   Costs about 2 quota units per 50 uploads. Later syncs are not affected.`);
 	process.exit(0);
+}
+
+let firstSyncMax: number | undefined;
+if (args['first-max'] !== undefined) {
+	firstSyncMax = Number(args['first-max']);
+	if (!/^\d+$/.test(args['first-max']) || !Number.isSafeInteger(firstSyncMax) || firstSyncMax < 1) {
+		console.error('--first-max must be a whole number of at least 1.');
+		console.error(USAGE);
+		process.exit(2);
+	}
 }
 
 const apiKey = process.env.YOUTUBE_API_KEY?.trim();
@@ -57,7 +74,8 @@ try {
 		client: createYouTubeClient({ apiKey }),
 		channel: args.channel,
 		dryRun: args['dry-run'],
-		refreshOnly: args['refresh-only']
+		refreshOnly: args['refresh-only'],
+		firstSyncMax
 	});
 	if (summary.dryRun) console.log('Dry run: nothing was written.\n');
 	console.log(formatSummary(summary, { actions: summary.dryRun }));
