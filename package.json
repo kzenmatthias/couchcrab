@@ -25,6 +25,7 @@
 		"db:seed": "tsx scripts/seed.ts",
 		"db:studio": "drizzle-kit studio",
 		"sync": "tsx scripts/sync.ts",
+		"make-admin": "tsx scripts/make-admin.ts",
 		"i18n:compile": "paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide --strategy cookie preferredLanguage baseLocale --silent"
 	},
 	"devDependencies": {
