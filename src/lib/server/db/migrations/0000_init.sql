@@ -21,11 +21,30 @@ CREATE TABLE `channels` (
 	`kind` text DEFAULT 'main' NOT NULL,
 	`sync_enabled` integer DEFAULT true NOT NULL,
 	`last_synced_at` integer,
-	FOREIGN KEY (`creator_id`) REFERENCES `creators`(`id`) ON UPDATE no action ON DELETE cascade
+	`verified_at` integer,
+	`verified_by_user_id` integer,
+	FOREIGN KEY (`creator_id`) REFERENCES `creators`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`verified_by_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `channels_youtube_channel_id_unique` ON `channels` (`youtube_channel_id`);--> statement-breakpoint
 CREATE INDEX `channels_creator_idx` ON `channels` (`creator_id`);--> statement-breakpoint
+CREATE TABLE `claims` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`user_id` integer NOT NULL,
+	`creator_id` integer,
+	`youtube_channel_id` text NOT NULL,
+	`status` text NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`reviewed_by` integer,
+	`reviewed_at` integer,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`creator_id`) REFERENCES `creators`(`id`) ON UPDATE no action ON DELETE set null,
+	FOREIGN KEY (`reviewed_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE set null
+);
+--> statement-breakpoint
+CREATE INDEX `claims_user_idx` ON `claims` (`user_id`);--> statement-breakpoint
+CREATE INDEX `claims_status_idx` ON `claims` (`status`,`created_at`);--> statement-breakpoint
 CREATE TABLE `creators` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`slug` text NOT NULL,
@@ -33,6 +52,8 @@ CREATE TABLE `creators` (
 	`color` text NOT NULL,
 	`avatar_url` text,
 	`bio` text,
+	`claimed_at` integer,
+	`opted_out` integer DEFAULT false NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
@@ -178,15 +199,21 @@ CREATE TABLE `user_settings` (
 --> statement-breakpoint
 CREATE TABLE `users` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`discord_id` text NOT NULL,
+	`discord_id` text,
+	`google_sub` text,
 	`name` text NOT NULL,
 	`avatar_url` text,
 	`role` text DEFAULT 'viewer' NOT NULL,
 	`trust` integer DEFAULT 0 NOT NULL,
-	`created_at` integer DEFAULT (unixepoch()) NOT NULL
+	`creator_id` integer,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	FOREIGN KEY (`creator_id`) REFERENCES `creators`(`id`) ON UPDATE no action ON DELETE set null,
+	CONSTRAINT "users_login_check" CHECK("users"."discord_id" IS NOT NULL OR "users"."google_sub" IS NOT NULL)
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `users_discord_id_unique` ON `users` (`discord_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `users_google_sub_unique` ON `users` (`google_sub`);--> statement-breakpoint
+CREATE INDEX `users_creator_idx` ON `users` (`creator_id`);--> statement-breakpoint
 CREATE TABLE `videos` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`youtube_video_id` text NOT NULL,

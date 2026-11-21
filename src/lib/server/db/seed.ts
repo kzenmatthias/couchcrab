@@ -4,6 +4,7 @@
  * Everything here is FICTIONAL: the creators, channels, series and videos are made up,
  * and the YouTube ids are fake. Real data comes from the community through the app.
  */
+import { eq } from 'drizzle-orm';
 import type { DB } from './client';
 import * as t from './schema';
 
@@ -119,6 +120,7 @@ export function clearDatabase(db: DB) {
 			t.userCreators,
 			t.auditLog,
 			t.suggestions,
+			t.claims,
 			t.sessions,
 			t.users,
 			t.pageTranslations,
@@ -420,6 +422,40 @@ export function seed(db: DB): SeedSummary {
 				captions: i === 1
 			});
 		});
+
+		/*
+		 * One creator has claimed their profile, so the UI can show the "Verified creator" state.
+		 * All other demo creators stay unclaimed.
+		 */
+		const claimedSlug: Slug = 'tidecaller-juno';
+		const claimedAt = new Date(SEASON_START + 20 * DAY);
+		const creatorUser = tx
+			.insert(t.users)
+			.values({
+				googleSub: 'demo-google-sub-0001',
+				name: 'Tidecaller Juno',
+				creatorId: creatorId.get(claimedSlug)!,
+				createdAt: claimedAt
+			})
+			.returning({ id: t.users.id })
+			.get();
+		tx.update(t.creators)
+			.set({ claimedAt })
+			.where(eq(t.creators.id, creatorId.get(claimedSlug)!))
+			.run();
+		tx.update(t.channels)
+			.set({ verifiedAt: claimedAt, verifiedByUserId: creatorUser.id })
+			.where(eq(t.channels.id, mainChannel.get(claimedSlug)!))
+			.run();
+		tx.insert(t.claims)
+			.values({
+				userId: creatorUser.id,
+				creatorId: creatorId.get(claimedSlug)!,
+				youtubeChannelId: fakeChannelId(claimedSlug),
+				status: 'verified',
+				createdAt: claimedAt
+			})
+			.run();
 
 		/* Uploads no rule could place */
 		[

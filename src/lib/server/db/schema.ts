@@ -7,6 +7,7 @@
 import { sql } from 'drizzle-orm';
 import {
 	type AnySQLiteColumn,
+	check,
 	index,
 	integer,
 	primaryKey,
@@ -32,6 +33,10 @@ export const creators = sqliteTable('creators', {
 	color: text('color').notNull(),
 	avatarUrl: text('avatar_url'),
 	bio: text('bio'),
+	/** Set when a user proved they own one of this creator's channels. */
+	claimedAt: integer('claimed_at', { mode: 'timestamp' }),
+	/** The creator asked to hide all their videos from Couchcrab. */
+	optedOut: bool('opted_out').notNull().default(false),
 	createdAt: createdAt()
 });
 
@@ -48,7 +53,12 @@ export const channels = sqliteTable(
 			.notNull()
 			.default('main'),
 		syncEnabled: bool('sync_enabled').notNull().default(true),
-		lastSyncedAt: integer('last_synced_at', { mode: 'timestamp' })
+		lastSyncedAt: integer('last_synced_at', { mode: 'timestamp' }),
+		/** Set when the owner proved ownership through Google sign-in. */
+		verifiedAt: integer('verified_at', { mode: 'timestamp' }),
+		verifiedByUserId: integer('verified_by_user_id').references((): AnySQLiteColumn => users.id, {
+			onDelete: 'set null'
+		})
 	},
 	(t) => [index('channels_creator_idx').on(t.creatorId)]
 );
@@ -204,17 +214,54 @@ export const pageTranslations = sqliteTable(
 
 /* ---------- people ---------- */
 
-export const users = sqliteTable('users', {
-	id: integer('id').primaryKey({ autoIncrement: true }),
-	discordId: text('discord_id').notNull().unique(),
-	name: text('name').notNull(),
-	avatarUrl: text('avatar_url'),
-	role: text('role', { enum: ['viewer', 'editor', 'admin'] })
-		.notNull()
-		.default('viewer'),
-	trust: integer('trust').notNull().default(0),
-	createdAt: createdAt()
-});
+/** A user signs in with Discord, Google or both, so at least one of the two ids is set. */
+export const users = sqliteTable(
+	'users',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		discordId: text('discord_id').unique(),
+		/** Google account id (`sub`), used by creators who claim their profile. */
+		googleSub: text('google_sub').unique(),
+		name: text('name').notNull(),
+		avatarUrl: text('avatar_url'),
+		role: text('role', { enum: ['viewer', 'editor', 'admin'] })
+			.notNull()
+			.default('viewer'),
+		trust: integer('trust').notNull().default(0),
+		/** The creator profile this user has claimed. */
+		creatorId: integer('creator_id').references(() => creators.id, { onDelete: 'set null' }),
+		createdAt: createdAt()
+	},
+	(t) => [
+		index('users_creator_idx').on(t.creatorId),
+		check('users_login_check', sql`${t.discordId} IS NOT NULL OR ${t.googleSub} IS NOT NULL`)
+	]
+);
+
+/**
+ * A creator's claim on a YouTube channel. A channel that is already on Couchcrab is verified
+ * automatically; a channel that is not becomes a creator request for review.
+ */
+export const claims = sqliteTable(
+	'claims',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		/** Null when the channel is not on Couchcrab yet. */
+		creatorId: integer('creator_id').references(() => creators.id, { onDelete: 'set null' }),
+		youtubeChannelId: text('youtube_channel_id').notNull(),
+		status: text('status', { enum: ['verified', 'pending_review', 'rejected'] }).notNull(),
+		createdAt: createdAt(),
+		reviewedBy: integer('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
+		reviewedAt: integer('reviewed_at', { mode: 'timestamp' })
+	},
+	(t) => [
+		index('claims_user_idx').on(t.userId),
+		index('claims_status_idx').on(t.status, t.createdAt)
+	]
+);
 
 /** Server-side auth sessions. `id` is a hash of the session token, never the token itself. */
 export const sessions = sqliteTable(
