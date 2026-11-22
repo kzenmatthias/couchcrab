@@ -94,6 +94,28 @@ describe('automatic poster', () => {
 		expect(viewOf(mainId)).toEqual({ kind: 'video', youtubeVideoId: first, frame: 'thumbnail' });
 	});
 
+	it('prefers uploads from the series start onward, on a main channel', () => {
+		db.update(t.series)
+			.set({ startedAt: day(10) })
+			.where(eq(t.series.id, mainId))
+			.run();
+		const secondary = db
+			.insert(t.channels)
+			.values({
+				creatorId: creatorB,
+				youtubeChannelId: 'UCcccccccccccccccccccccc',
+				title: 'vods',
+				kind: 'secondary'
+			})
+			.returning()
+			.get().id;
+		const preview = video(mainId, 3);
+		expect(viewOf(mainId)).toMatchObject({ youtubeVideoId: preview });
+		video(mainId, 10, { channelId: secondary });
+		const episode = video(mainId, 11);
+		expect(viewOf(mainId)).toMatchObject({ youtubeVideoId: episode });
+	});
+
 	it('skips Shorts, live VODs, unplaced videos and Extras videos', () => {
 		video(mainId, 1, { isShort: true });
 		video(mainId, 2, { isLiveVod: true });

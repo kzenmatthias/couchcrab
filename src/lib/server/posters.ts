@@ -5,7 +5,8 @@
  *   Extras (or, for an Extras series, its main series). Otherwise the poster is automatic.
  * - Automatic: the YouTube thumbnail of the first episode of the main series: the earliest
  *   published placed video, no Shorts, no live VODs, nothing from an opted-out creator or an
- *   unlinked channel. An Extras series uses the first episode of its main series.
+ *   unlinked channel. Uploads from before the series' start date and uploads on a secondary
+ *   channel only count when there is nothing else. An Extras series uses the first episode of its main series.
  * - No such episode: `null`, the plain surface.
  *
  * `resolvePosters` does this for many series with two queries, for the list pages.
@@ -71,13 +72,16 @@ export function resolvePosters(db: Executor, rows: readonly PosterRow[]): Map<nu
 			.select({
 				seriesId: t.videos.seriesId,
 				youtubeVideoId: t.videos.youtubeVideoId,
-				rank: sql<number>`row_number() over (partition by ${t.videos.seriesId} order by ${t.videos.publishedAt}, ${t.videos.id})`.as(
+				// Uploads from before the series started (announcements, previews) and uploads on a
+				// secondary channel (VODs, clips) only count when nothing else is there.
+				rank: sql<number>`row_number() over (partition by ${t.videos.seriesId} order by case when ${t.series.startedAt} is not null and ${t.videos.publishedAt} < ${t.series.startedAt} then 1 else 0 end, case when ${t.channels.kind} = 'main' then 0 else 1 end, ${t.videos.publishedAt}, ${t.videos.id})`.as(
 					'rank'
 				)
 			})
 			.from(t.videos)
 			.innerJoin(t.channels, eq(t.channels.id, t.videos.channelId))
 			.innerJoin(t.creators, eq(t.creators.id, t.channels.creatorId))
+			.innerJoin(t.series, eq(t.series.id, t.videos.seriesId))
 			.where(
 				and(visible(), eq(t.videos.isLiveVod, false), inArray(t.videos.seriesId, [...needAuto]))
 			)
