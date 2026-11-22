@@ -4,7 +4,8 @@
  * translates. See `src/lib/community/change.ts` for the shape.
  */
 import { eq, inArray } from 'drizzle-orm';
-import type { FieldChange, GroupRef, Val, ValCode } from '../../community/change.js';
+import type { FieldChange, GroupRef, PosterVal, Val, ValCode } from '../../community/change.js';
+import { normalizePoster } from '../../poster.js';
 import type { Executor } from '../audit.js';
 import * as t from '../db/schema.js';
 
@@ -63,6 +64,7 @@ export class Resolver {
 	private groups = new Map<number, GroupRef | null>();
 	private creators = new Map<number, string | null>();
 	private channels = new Map<number, string | null>();
+	private videos = new Map<string, string | null>();
 
 	constructor(private readonly db: Executor) {}
 
@@ -111,6 +113,19 @@ export class Resolver {
 		return ids.map((id) => this.creators.get(id) ?? `#${id}`).sort((a, b) => a.localeCompare(b));
 	}
 
+	videoTitle(youtubeVideoId: string): string | null {
+		if (!this.videos.has(youtubeVideoId))
+			this.videos.set(
+				youtubeVideoId,
+				this.db
+					.select({ v: t.videos.title })
+					.from(t.videos)
+					.where(eq(t.videos.youtubeVideoId, youtubeVideoId))
+					.get()?.v ?? null
+			);
+		return this.videos.get(youtubeVideoId)!;
+	}
+
 	channelTitle(id: number): string | null {
 		if (!this.channels.has(id))
 			this.channels.set(
@@ -124,8 +139,21 @@ export class Resolver {
 
 const ref = (name: string | null, id: number): Val => ({ text: name ?? `#${id}` });
 
+/** A stored poster as readable text parts. Old generated-art settings read as automatic. */
+function posterVal(r: Resolver, value: unknown): PosterVal {
+	const p = normalizePoster(value);
+	if (!p) return { kind: 'auto' };
+	if (p.type === 'image') return { kind: 'image', url: p.url };
+	return {
+		kind: 'video',
+		video: r.videoTitle(p.youtubeVideoId) ?? p.youtubeVideoId,
+		frame: p.frame
+	};
+}
+
 /** One value of a snapshot as a `Val`. */
 export function toVal(r: Resolver, entity: string, key: string, value: unknown): Val {
+	if (key === 'poster' && entity === 'series') return { poster: posterVal(r, value) };
 	if (value === null || value === undefined || value === '') return null;
 	if (typeof value === 'number') {
 		if (key === 'seriesId' || key === 'parentId') return ref(r.seriesTitle(value), value);
@@ -143,12 +171,6 @@ export function toVal(r: Resolver, entity: string, key: string, value: unknown):
 	if (typeof value === 'string') {
 		const code = codeOf(entity, key);
 		return code ? { code: value, of: code } : { text: value };
-	}
-	if (key === 'poster' && typeof value === 'object') {
-		const p = value as { type?: string; palette?: string; seed?: number; url?: string };
-		return {
-			text: p.type === 'image' ? (p.url ?? '') : `${p.palette ?? ''} ${p.seed ?? ''}`.trim()
-		};
 	}
 	return { text: JSON.stringify(value) };
 }
@@ -174,6 +196,9 @@ export function describeChanges(
 		const b = before?.[key];
 		const a = after?.[key];
 		if (before && after && same(b, a)) continue;
+		// Old generated-art settings and `null` both mean the automatic poster now.
+		if (before && after && key === 'poster' && same(normalizePoster(b), normalizePoster(a)))
+			continue;
 		if (key === 'descriptions') {
 			const bd = (b ?? {}) as Record<string, string>;
 			const ad = (a ?? {}) as Record<string, string>;

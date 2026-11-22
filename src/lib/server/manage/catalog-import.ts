@@ -15,7 +15,7 @@
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import { TransactionRollbackError } from 'drizzle-orm/errors';
 import { PROFILE_COLORS } from '../../creator-colors.js';
-import { isMotif, isPaletteName, PALETTES } from '../../poster-art.js';
+import { isPosterFrame, normalizePoster, POSTER_FRAMES, posterInput } from '../../poster.js';
 import { SLUG_MAX, SLUG_RE } from '../../slug.js';
 import type { DB } from '../db/client.js';
 import * as t from '../db/schema.js';
@@ -88,12 +88,7 @@ export interface CatalogRule {
 	withinSeriesDates: boolean | null;
 }
 
-export type CatalogPoster =
-	| { type: 'art'; palette: string; seed: number; motif?: string }
-	| {
-			type: 'image';
-			url: string;
-	  };
+export type CatalogPoster = t.PosterSettings;
 
 export interface CatalogSeries {
 	slug: string;
@@ -109,7 +104,7 @@ export interface CatalogSeries {
 	extras: boolean;
 	sessions: CatalogSession[];
 	rules: CatalogRule[];
-	/** Null: generated art chosen from the slug for a new series, unchanged for a known one. */
+	/** Null: automatic (the first episode) for a new series, unchanged for a known one. */
 	poster: CatalogPoster | null;
 }
 
@@ -135,15 +130,7 @@ export function colorForSlug(slug: string): string {
 	return PROFILE_COLORS[hash(slug) % PROFILE_COLORS.length].hex;
 }
 
-/** Generated poster art with a palette and seed chosen stably from the slug. */
-export function posterForSlug(slug: string): { type: 'art'; palette: string; seed: number } {
-	const names = Object.keys(PALETTES);
-	return {
-		type: 'art',
-		palette: names[hash(slug) % names.length],
-		seed: 1 + (hash(`${slug}:seed`) % 9999)
-	};
-}
+const YOUTUBE_VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 
 /* ---------- validation of the file ---------- */
 
@@ -382,16 +369,15 @@ export function parseCatalog(raw: unknown, locales: readonly string[]): ParseRes
 				} catch {
 					r.fail('poster.url', 'must be an http(s) URL');
 				}
-			} else {
-				const pr = reader(`${label}poster.`, rawPoster);
-				const palette = pr.str('palette', 40) ?? '';
-				if (palette && !isPaletteName(palette))
-					pr.fail('palette', `must be one of ${Object.keys(PALETTES).join(', ')}`);
-				const seed = pr.int('seed', 1, 9999, 1);
-				const motif = pr.str('motif', 40, { optional: true });
-				if (motif && !isMotif(motif)) pr.fail('motif', 'unknown motif');
-				poster = { type: 'art', palette, seed, ...(motif ? { motif } : {}) };
-			}
+			} else if (typeof rawPoster.youtubeVideoId === 'string') {
+				const youtubeVideoId = rawPoster.youtubeVideoId.trim();
+				const frame = rawPoster.frame ?? 'thumbnail';
+				if (!YOUTUBE_VIDEO_ID_RE.test(youtubeVideoId))
+					r.fail('poster.youtubeVideoId', 'must be a YouTube video id (11 characters)');
+				else if (!isPosterFrame(frame))
+					r.fail('poster.frame', `must be one of ${POSTER_FRAMES.join(', ')}`);
+				else poster = { type: 'video', youtubeVideoId, frame };
+			} else r.fail('poster', 'must have a youtubeVideoId (and frame) or a url');
 		}
 
 		series.push({
@@ -463,17 +449,6 @@ function describeError(where: string, error: unknown): string[] {
 const sameDate = (a: Date | null, b: Date | null) =>
 	(a?.getTime() ?? null) === (b?.getTime() ?? null);
 const dateText = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : '');
-
-function posterInput(poster: t.PosterSettings): Input {
-	return poster.type === 'image'
-		? { poster_type: 'image', poster_url: poster.url }
-		: {
-				poster_type: 'art',
-				palette: poster.palette,
-				seed: String(poster.seed),
-				motif: poster.motif ?? ''
-			};
-}
 
 /**
  * Writes the catalog in one transaction. When anything fails (a problem the file check could not
@@ -681,7 +656,8 @@ function writeCatalog(
 			: [];
 		// Participants added in the app stay.
 		const members = [...new Set([...storedMembers, ...memberIds])];
-		const poster: t.PosterSettings = file.poster ?? existing?.poster ?? posterForSlug(file.slug);
+		const stored = existing ? normalizePoster(existing.poster) : null;
+		const poster: t.PosterSettings | null = file.poster ?? stored;
 
 		const input: Input = {
 			title: file.title,
@@ -708,7 +684,7 @@ function writeCatalog(
 				existing.grouping !== file.grouping ||
 				!sameDate(existing.startedAt, toDate(file.startedAt)) ||
 				!sameDate(existing.endedAt, toDate(file.endedAt)) ||
-				JSON.stringify(existing.poster) !== JSON.stringify(poster) ||
+				JSON.stringify(stored) !== JSON.stringify(poster) ||
 				members.length !== storedMembers.length ||
 				Object.keys(descriptions).some((l) => descriptions[l] !== storedDescriptions[l]);
 			if (changed) {

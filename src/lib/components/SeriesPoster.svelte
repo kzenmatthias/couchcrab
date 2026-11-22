@@ -3,8 +3,8 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { formatDate } from '#lib/i18n.js';
-	import type { PosterSettings } from '#lib/server/db/schema.js';
-	import PosterArt from './PosterArt.svelte';
+	import { posterSources, posterSurface, type PosterView } from '#lib/poster.js';
+	import PosterImage from './PosterImage.svelte';
 
 	type Kind = 'season' | 'live_series' | 'event' | 'other';
 	type Props = {
@@ -12,13 +12,24 @@
 		title: string;
 		kind: Kind;
 		startedAt: Date | null;
-		poster: PosterSettings | null;
+		poster: PosterView;
 		creatorCount: number;
 		/** Heading level of the title, so it fits the outline of the page. */
 		headingLevel?: 2 | 3;
+		/** Lazy-load the image (posters in a list). */
+		lazy?: boolean;
 	};
 
-	let { slug, title, kind, startedAt, poster, creatorCount, headingLevel = 3 }: Props = $props();
+	let {
+		slug,
+		title,
+		kind,
+		startedAt,
+		poster,
+		creatorCount,
+		headingLevel = 3,
+		lazy = true
+	}: Props = $props();
 
 	const kindLabel: Record<Kind, () => string> = {
 		season: m.series_kind_season,
@@ -40,20 +51,18 @@
 </script>
 
 <article class="poster">
-	<span class="bg" aria-hidden="true">
-		{#if poster?.type === 'image'}
-			<img class="image" src={poster.url} alt="" />
-		{:else}
-			<PosterArt palette={poster?.palette} seed={poster?.seed ?? 1} motif={poster?.motif} />
-		{/if}
+	<span class="bg" aria-hidden="true" style:background-color={posterSurface(slug)}>
+		<PosterImage sources={posterSources(poster)} {lazy} />
 	</span>
 	<span class="tag">{kindLabel[kind]()}</span>
-	<svelte:element this={`h${headingLevel}`} class="title">
-		<a href={resolve('/(site)/series/[slug]', { slug })}>{title}</a>
-	</svelte:element>
-	<p>
-		{m.series_creator_count({ count: creatorCount })}{#if since}<br />{since}{/if}
-	</p>
+	<div class="text">
+		<svelte:element this={`h${headingLevel}`} class="title">
+			<a href={resolve('/(site)/series/[slug]', { slug })}>{title}</a>
+		</svelte:element>
+		<p>
+			{m.series_creator_count({ count: creatorCount })}{#if since}<br />{since}{/if}
+		</p>
+	</div>
 </article>
 
 <style>
@@ -68,14 +77,16 @@
 		isolation: isolate;
 		color: #fff;
 	}
-	/* Art and scrim sit below the text; the title link covers the whole poster. */
+	/*
+		Image (or the plain surface colour) and scrim sit below the text; the title link covers the
+		whole poster. The surface colours all reach 9:1 with white on their own.
+	*/
 	.bg {
 		position: absolute;
 		inset: 0;
 		z-index: -1;
 		overflow: hidden;
 		border-radius: inherit;
-		background: #000;
 	}
 	.bg::after {
 		content: '';
@@ -83,12 +94,16 @@
 		inset: 0;
 		background: linear-gradient(180deg, transparent 30%, var(--scrim) 75%);
 	}
-	.image {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
+	/*
+		A second scrim tied to the text itself: full strength (87% black or more) from 2rem above the
+		title down, however many lines the title takes, so white text stays above 4.5:1 on any image.
+		Not positioned, so the title link still covers the whole poster.
+	*/
+	.text {
+		margin: -4rem -20px -20px;
+		padding: 4rem 20px 20px;
+		border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+		background: linear-gradient(180deg, transparent, var(--scrim) 2rem);
 	}
 	.tag {
 		position: absolute;

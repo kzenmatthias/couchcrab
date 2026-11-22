@@ -426,8 +426,6 @@
 						videoId={id}
 						title={m.together_player_label({ creator: video.creator.name })}
 						durationS={video.durationS}
-						poster={video.series.poster}
-						tint={video.creator.color}
 						start={Math.max(
 							0,
 							where(id).state === 'playing' ? position - (span.offsets[id] ?? 0) : 0

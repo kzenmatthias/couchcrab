@@ -1,16 +1,12 @@
 <script lang="ts">
 	import { m } from '#lib/paraglide/messages.js';
-	import type { PosterSettings } from '#lib/server/db/schema.js';
-	import { isRealYoutubeId, seedFrom, youtubeWatchUrl } from '#lib/video.js';
+	import { isRealYoutubeId, youtubeWatchUrl } from '#lib/video.js';
 	import { loadYouTubeApi, PLAYER_STATE, type YTPlayer } from '#lib/youtube-iframe.js';
-	import PosterArt from './PosterArt.svelte';
 
 	type Props = {
 		videoId: string;
 		/** Video title, used to name the player frame. */
 		title: string;
-		poster: PosterSettings | null;
-		tint?: string | null;
 		/** Start playing at once (after "Play now" or the autoplay countdown). */
 		autoplay?: boolean;
 		/** Resume position in seconds. */
@@ -27,8 +23,6 @@
 	let {
 		videoId,
 		title,
-		poster,
-		tint = null,
 		autoplay = false,
 		startAt = 0,
 		captions = { on: false, language: 'en' },
@@ -130,13 +124,6 @@
 		</div>
 	{:else}
 		<div class="placeholder">
-			<PosterArt
-				palette={poster?.type === 'art' ? poster.palette : undefined}
-				seed={seedFrom(videoId)}
-				width={160}
-				height={90}
-				{tint}
-			/>
 			<div class="msg">
 				<p>
 					{#if failed}
@@ -185,9 +172,6 @@
 		display: grid;
 		place-items: center;
 		isolation: isolate;
-	}
-	.placeholder :global(.art) {
-		z-index: -1;
 	}
 	.msg {
 		margin: 16px;

@@ -61,8 +61,6 @@
 	{#if !textOnly}
 		<VideoThumb
 			youtubeVideoId={video.youtubeVideoId}
-			poster={video.series.poster}
-			tint={video.creator.color}
 			label={video.episodeNumber
 				? hidden
 					? m.episode_long({ number: video.episodeNumber })

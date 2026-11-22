@@ -2,7 +2,7 @@
 import { m } from '#lib/paraglide/messages.js';
 import { kindLabel, type SeriesKind, type SeriesStatus, statusLabel } from '#lib/labels.js';
 import { formatDate } from '#lib/i18n.js';
-import type { ActorType, GroupRef, RevertBlock, Val } from './change.js';
+import type { ActorType, GroupRef, PosterVal, RevertBlock, Val } from './change.js';
 
 const FIELDS: Record<string, () => string> = {
 	series: m.community_field_series,
@@ -95,9 +95,20 @@ function codeLabel(code: string, of: string): string {
 	}
 }
 
+function posterText(p: PosterVal): string {
+	if (p.kind === 'auto') return m.community_val_poster_auto();
+	if (p.kind === 'image') return m.community_val_poster_image({ url: p.url });
+	const frame =
+		p.frame === 'thumbnail'
+			? m.manage_poster_frame_thumbnail()
+			: m.manage_poster_frame_n({ number: p.frame });
+	return m.community_val_poster_video({ video: p.video, frame });
+}
+
 /** A value as text. `null` is "nothing". */
 export function valText(val: Val, locale: string): string {
 	if (val === null) return m.community_val_empty();
+	if ('poster' in val) return posterText(val.poster);
 	if ('text' in val) return val.text;
 	if ('code' in val) return codeLabel(val.code, val.of);
 	if ('group' in val) return groupLabel(val.group);

@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { navCurrent } from '#lib/nav.js';
 	import { m } from '#lib/paraglide/messages.js';
+	import { posterSurface } from '#lib/poster.js';
 	import ArtHeader from '#lib/components/ArtHeader.svelte';
 	import CreatorAvatar from '#lib/components/CreatorAvatar.svelte';
 	import PovBar from '#lib/components/PovBar.svelte';
@@ -39,7 +40,7 @@
 	]);
 </script>
 
-<ArtHeader poster={s.poster}>
+<ArtHeader poster={s.poster} surface={posterSurface(s.slug)}>
 	<p class="kicker">
 		{#if s.parent}
 			<a href={resolve('/(site)/series/[slug]', { slug: s.parent.slug })}>{s.parent.title}</a> ·

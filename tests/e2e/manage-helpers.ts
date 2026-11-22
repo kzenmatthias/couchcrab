@@ -72,3 +72,48 @@ export function setSiteText(key: string, locale: string, value: string) {
 }
 
 export const uniqueTag = () => randomBytes(3).toString('hex');
+
+/**
+ * A series of its own with Quillby and two placed episodes whose ids look like real YouTube ids
+ * (so the posters load images, which the test answers itself). Returns the slug and the ids.
+ */
+export function insertPosterSeries(tag: string) {
+	const slug = `poster-${tag}`;
+	const ids = [`e2ep${tag}a`, `e2ep${tag}b`];
+	withDb((db) => {
+		const now = Math.floor(Date.now() / 1000);
+		const series = db
+			.prepare(
+				`INSERT INTO series (slug, title, kind, status, grouping, started_at, created_at)
+				 VALUES (?, ?, 'season', 'ongoing', 'week', ?, ?) RETURNING id`
+			)
+			.get(slug, `Poster ${tag}`, now - 86400 * 10, now) as { id: number };
+		const creator = db.prepare("SELECT id FROM creators WHERE slug = 'quillby'").get() as {
+			id: number;
+		};
+		db.prepare('INSERT INTO series_creators (series_id, creator_id) VALUES (?, ?)').run(
+			series.id,
+			creator.id
+		);
+		const channel = db
+			.prepare("SELECT id FROM channels WHERE creator_id = ? AND kind = 'main'")
+			.get(creator.id) as { id: number };
+		ids.forEach((id, i) =>
+			db
+				.prepare(
+					`INSERT INTO videos (youtube_video_id, channel_id, title, published_at, duration_s,
+					 series_id, status, placed_by, fetched_at)
+					 VALUES (?, ?, ?, ?, 1200, ?, 'placed', 'user', ?)`
+				)
+				.run(
+					id,
+					channel.id,
+					`Poster ${tag} episode ${i + 1}`,
+					now - 86400 * (5 - i),
+					series.id,
+					now
+				)
+		);
+	});
+	return { slug, ids };
+}

@@ -1,13 +1,8 @@
 <script lang="ts">
-	import type { PosterSettings } from '#lib/server/db/schema.js';
-	import { isRealYoutubeId, seedFrom, youtubeThumbnailUrl } from '#lib/video.js';
-	import PosterArt from './PosterArt.svelte';
+	import { isRealYoutubeId, youtubeThumbnailUrl } from '#lib/video.js';
 
 	type Props = {
 		youtubeVideoId: string;
-		poster: PosterSettings | null;
-		/** Creator colour, used as the sun of the generated art. */
-		tint?: string | null;
 		/** Short label on the image, e.g. "Ep 4". */
 		label?: string | null;
 		/** Clock duration, e.g. "31:20". */
@@ -20,8 +15,6 @@
 
 	let {
 		youtubeVideoId,
-		poster,
-		tint = null,
 		label = null,
 		duration = null,
 		hidden = false,
@@ -29,7 +22,6 @@
 	}: Props = $props();
 
 	const real = $derived(isRealYoutubeId(youtubeVideoId));
-	const palette = $derived(poster?.type === 'art' ? poster.palette : undefined);
 </script>
 
 <!-- Decorative: the title, creator and duration are written out as text next to it. -->
@@ -38,8 +30,7 @@
 		<!-- No thumbnail: it could give the story away. -->
 	{:else if real}
 		<img src={youtubeThumbnailUrl(youtubeVideoId)} alt="" loading="lazy" width="320" height="180" />
-	{:else}
-		<PosterArt {palette} seed={seedFrom(youtubeVideoId)} width={160} height={90} {tint} />
+		<!-- Demo ids have no image: the plain dark surface stays. -->
 	{/if}
 	{#if label}<span class="lbl">{label}</span>{/if}
 	{#if duration}<span class="dur">{duration}</span>{/if}

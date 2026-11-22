@@ -2,13 +2,23 @@ import { locales } from '#lib/paraglide/runtime.js';
 import { db } from '#lib/server/db/index.js';
 import { listCreators } from '#lib/server/manage/creators.js';
 import { actorFor, handleServiceError, load as guarded, paramId } from '#lib/server/manage/http.js';
-import { createExtras, updateSeries } from '#lib/server/manage/series.js';
+import { createExtras, posterVideoChoices, updateSeries } from '#lib/server/manage/series.js';
+import { resolvePoster } from '#lib/server/posters.js';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, parent }) => {
 	const actor = actorFor(locals, 'editor');
+	const { detail } = await parent();
+	const s = detail.series;
 	return {
 		creators: guarded(() => listCreators(db, actor)),
+		posterVideos: guarded(() => posterVideoChoices(db, actor, s.id)).map((v) => ({
+			youtubeVideoId: v.youtubeVideoId,
+			title: v.title,
+			creator: v.creator
+		})),
+		// What "Automatic" shows now: resolved as if nothing was chosen.
+		autoPoster: resolvePoster(db, { id: s.id, parentId: s.parentId, poster: null }),
 		saved: url.searchParams.get('saved') === '1'
 	};
 };
