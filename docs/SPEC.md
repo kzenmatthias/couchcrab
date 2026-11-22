@@ -35,7 +35,7 @@ There are no fixed creator groups (no "Hermits" vs "Friends"). A creator is simp
 ## Viewing
 
 - **Home:** continue watching, new uploads from the creators you watch, series, your creators.
-- **Series page:** header with poster art, POV bar (who you watch here, global or custom), sub-pages: mixed timeline, by creator, Extras, about and history.
+- **Series page:** header with the poster image, POV bar (who you watch here, global or custom), sub-pages: mixed timeline, by creator, Extras, about and history.
 - **Mixed timeline:** episodes of the chosen POVs sorted by upload date and grouped per week. Live series are grouped per session (groups made by the community). Uploads that no rule could place go to "Unsorted".
 - **Creator page:** all series of a creator, links to their channels, latest uploads.
 - **Search:** series, creators (by name or channel) and episodes, ignoring case and accents, in three sections with counts and "Show all". Hidden titles of spoiler-free series are neither searched nor shown.

@@ -8,7 +8,7 @@ Many fans watch with captions, a screen reader, a keyboard, a switch device or l
 - **Keyboard.** Everything works with Tab, Shift+Tab, Enter, Space and Escape. Focus is always visible (3 px outline). A skip link leads to the main content. Dialogs move focus in and return it on close.
 - **Not colour alone.** States are written out: "Watching", "Watched", "62% watched", "Title hidden".
 - **Contrast.** Text 4.5:1, large text and UI parts 3:1, in all three themes. Text on artwork always has a scrim.
-- **No images of text.** Poster art contains no text; titles are real text on top.
+- **No images of text.** Poster images are decorative (`alt=""`); titles are real text on top, on a scrim.
 - **Motion.** Respect `prefers-reduced-motion` and the in-app setting. Nothing moves or plays by itself without a setting the user controls.
 - **Autoplay.** Visible countdown that pauses on hover and focus, with "Play now" and "Cancel", announced once to screen readers. Can be turned off or set to "wait for me".
 - **Captions.** Show the CC badge only for creator-made captions. Offer the filter and the "captions on by default" setting.
