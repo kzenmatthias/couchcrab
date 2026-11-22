@@ -91,6 +91,9 @@ export function insertPosterSeries(tag: string) {
 		const creator = db.prepare("SELECT id FROM creators WHERE slug = 'quillby'").get() as {
 			id: number;
 		};
+		db.prepare(
+			"INSERT INTO series_translations (series_id, locale, description) VALUES (?, 'en', ?)"
+		).run(series.id, 'A series made by the e2e test.');
 		db.prepare('INSERT INTO series_creators (series_id, creator_id) VALUES (?, ?)').run(
 			series.id,
 			creator.id
