@@ -9,7 +9,7 @@
 	import SeriesPoster from '#lib/components/SeriesPoster.svelte';
 	import VerifiedBadge from '#lib/components/VerifiedBadge.svelte';
 	import { getViewing } from '#lib/prefs/store.svelte.js';
-	import { seedFrom, spokenDuration, youtubeChannelUrl } from '#lib/video.js';
+	import { spokenDuration, youtubeChannelUrl } from '#lib/video.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -45,7 +45,7 @@
 	<title>{c.name} · {m.site_name()}</title>
 </svelte:head>
 
-<ArtHeader poster={{ type: 'art', palette: 'dusk', seed: seedFrom(c.slug) }} tint={c.color}>
+<ArtHeader poster={null} surface={c.color}>
 	<div class="who">
 		<CreatorAvatar name={c.name} color={c.color} avatarUrl={c.avatarUrl} size={120} />
 		<div>

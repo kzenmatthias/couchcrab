@@ -1,6 +1,4 @@
 /** Shared shapes and helpers for episodes, used by the server loads and the components. */
-import type { PosterSettings } from '#lib/server/db/schema.js';
-
 export type CreatorRef = {
 	id: number;
 	slug: string;
@@ -12,7 +10,6 @@ export type CreatorRef = {
 export type SeriesRef = {
 	slug: string;
 	title: string;
-	poster: PosterSettings | null;
 };
 
 /** One episode as the cards, timelines and the player need it. */
@@ -55,13 +52,6 @@ export function youtubeWatchUrl(id: string): string {
 
 export function youtubeChannelUrl(channelId: string): string {
 	return `https://www.youtube.com/channel/${encodeURIComponent(channelId)}`;
-}
-
-/** A small stable number from a string, used as a poster-art seed for an episode. */
-export function seedFrom(value: string): number {
-	let h = 7;
-	for (const c of value) h = (h * 31 + c.charCodeAt(0)) % 100_003;
-	return h;
 }
 
 /** Clock-style duration for the thumbnail badge: `31:20`, `1:12:00`. Not locale dependent. */

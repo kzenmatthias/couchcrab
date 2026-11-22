@@ -1,6 +1,6 @@
 /** Series, their participants, translations, poster, Extras child and groups. */
-import { and, asc, count, eq, inArray, isNull, ne } from 'drizzle-orm';
-import { isMotif, isPaletteName } from '../../poster-art.js';
+import { and, asc, count, eq, inArray, isNull, ne, or } from 'drizzle-orm';
+import { normalizePoster, POSTER_FRAMES } from '../../poster.js';
 import type { DB } from '../db/client.js';
 import * as t from '../db/schema.js';
 import {
@@ -135,22 +135,119 @@ function slugTaken(db: DB | Tx, slug: string, exceptId?: number) {
 	);
 }
 
-function parsePoster(c: Checker, input: Input): t.PosterSettings | null {
-	const type = oneOf(c, input, 'poster_type', ['art', 'image'] as const, 'art');
+const YOUTUBE_VIDEO_ID = /^[A-Za-z0-9_-]{11}$/;
+
+/** The series and its Extras child, or an Extras series and its main series. */
+function seriesFamily(db: DB | Tx, seriesId: number): number[] {
+	const row = db
+		.select({ id: t.series.id, parentId: t.series.parentId })
+		.from(t.series)
+		.where(eq(t.series.id, seriesId))
+		.get();
+	if (!row) return [];
+	const main = row.parentId ?? row.id;
+	return db
+		.select({ id: t.series.id })
+		.from(t.series)
+		.where(or(eq(t.series.id, main), eq(t.series.parentId, main)))
+		.all()
+		.map((r) => r.id);
+}
+
+/**
+ * The episodes an editor can choose as the poster: placed, non-Short videos of the series and its
+ * Extras (or main series), oldest first.
+ */
+export function posterVideoChoices(db: DB, actor: Actor, seriesId: number) {
+	assertRole(actor, 'editor');
+	const family = seriesFamily(db, seriesId);
+	if (family.length === 0) return [];
+	return db
+		.select({
+			youtubeVideoId: t.videos.youtubeVideoId,
+			title: t.videos.title,
+			publishedAt: t.videos.publishedAt,
+			creator: t.creators.name
+		})
+		.from(t.videos)
+		.innerJoin(t.channels, eq(t.channels.id, t.videos.channelId))
+		.innerJoin(t.creators, eq(t.creators.id, t.channels.creatorId))
+		.where(
+			and(
+				eq(t.videos.status, 'placed'),
+				eq(t.videos.isShort, false),
+				inArray(t.videos.seriesId, family)
+			)
+		)
+		.orderBy(asc(t.videos.publishedAt), asc(t.videos.id))
+		.all();
+}
+
+/**
+ * Poster fields: `poster_type` is `auto` (stored as null), `video` (`poster_video`, a YouTube id,
+ * and `poster_frame`) or `image` (`poster_url`). A chosen video must be a placed, non-Short
+ * episode of this series family, unless it is the one already stored (so other edits keep
+ * working when that episode moved later; the public pages then fall back to automatic). A video
+ * Couchcrab does not know yet (the catalog import, before the first sync) is accepted.
+ */
+function parsePoster(
+	db: DB | Tx,
+	c: Checker,
+	input: Input,
+	seriesId: number | undefined,
+	current: t.PosterSettings | null
+): t.PosterSettings | null {
+	// `art` is what older forms and history entries send: generated art is gone, so automatic.
+	const raw = text(input, 'poster_type');
+	const type = oneOf(
+		c,
+		{ poster_type: raw === 'art' ? 'auto' : raw },
+		'poster_type',
+		['auto', 'video', 'image'] as const,
+		'auto'
+	);
 	if (type === 'image') {
 		const url = optionalUrl(c, input, 'poster_url');
 		if (!url && !c.errors.poster_url) c.fail('poster_url', 'required');
 		return url ? { type: 'image', url } : null;
 	}
-	const palette = text(input, 'palette') || 'meadow';
-	if (!isPaletteName(palette)) c.fail('palette', 'invalid_choice');
-	const motif = text(input, 'motif');
-	if (motif && !isMotif(motif)) c.fail('motif', 'invalid_choice');
-	const seed = integerField(c, input, 'seed', { min: 1, max: 9999, fallback: 1 });
-	return { type: 'art', palette, seed, ...(motif ? { motif } : {}) };
+	if (type !== 'video') return null;
+	const youtubeVideoId = text(input, 'poster_video');
+	const frame = oneOf(c, input, 'poster_frame', POSTER_FRAMES, 'thumbnail');
+	if (!youtubeVideoId) {
+		c.fail('poster_video', 'required');
+		return null;
+	}
+	if (!YOUTUBE_VIDEO_ID.test(youtubeVideoId)) {
+		c.fail('poster_video', 'invalid_choice');
+		return null;
+	}
+	const poster = { type: 'video', youtubeVideoId, frame } as const;
+	if (current?.type === 'video' && current.youtubeVideoId === youtubeVideoId) return poster;
+	const video = db
+		.select({ seriesId: t.videos.seriesId, status: t.videos.status, isShort: t.videos.isShort })
+		.from(t.videos)
+		.where(eq(t.videos.youtubeVideoId, youtubeVideoId))
+		.get();
+	if (video) {
+		const family = seriesId ? seriesFamily(db, seriesId) : [];
+		const ok =
+			video.status === 'placed' &&
+			!video.isShort &&
+			video.seriesId !== null &&
+			family.includes(video.seriesId);
+		if (!ok) c.fail('poster_video', 'invalid_choice');
+	}
+	return poster;
 }
 
-function parseSeries(db: DB, input: Input, locales: readonly string[], exceptId?: number) {
+function parseSeries(
+	db: DB,
+	input: Input,
+	locales: readonly string[],
+	exceptId?: number,
+	currentPoster: t.PosterSettings | null = null
+) {
 	const c = new Checker();
 	const title = requiredText(c, input, 'title', TITLE_MAX);
 	const slug = slugField(c, input, title, (s) => slugTaken(db, s, exceptId));
@@ -180,7 +277,7 @@ function parseSeries(db: DB, input: Input, locales: readonly string[], exceptId?
 			.all();
 		if (known.length !== creatorIds.length) c.fail('creators', 'invalid_choice');
 	}
-	const poster = parsePoster(c, input);
+	const poster = parsePoster(db, c, input, exceptId, currentPoster);
 	return {
 		c,
 		values: { title, slug, kind, status, grouping, startedAt, endedAt, poster },
@@ -253,7 +350,13 @@ export function updateSeries(
 ): SeriesRow {
 	assertRole(actor, 'editor');
 	const current = getSeries(db, actor, seriesId);
-	const { c, values, descriptions, creatorIds } = parseSeries(db, input, locales, seriesId);
+	const { c, values, descriptions, creatorIds } = parseSeries(
+		db,
+		input,
+		locales,
+		seriesId,
+		normalizePoster(current.series.poster)
+	);
 	c.done();
 	return db.transaction((tx) => {
 		const row = tx.update(t.series).set(values).where(eq(t.series.id, seriesId)).returning().get();

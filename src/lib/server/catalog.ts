@@ -11,8 +11,10 @@
 import { and, desc, eq, inArray, isNotNull, isNull, max, sql } from 'drizzle-orm';
 import { pickTranslation } from '#lib/i18n.js';
 import { matchesTerms, matchRank, normalizeSearch, searchTerms } from '#lib/search.js';
+import type { PosterView } from '#lib/poster.js';
 import type { VideoCard } from '#lib/video.js';
 import { db, schema } from './db/index.js';
+import { resolvePosters } from './posters.js';
 
 const { creators, channels, series, seriesCreators, seriesTranslations, groups, videos } = schema;
 
@@ -43,8 +45,7 @@ function videoQuery() {
 			creatorColor: creators.color,
 			creatorAvatarUrl: creators.avatarUrl,
 			seriesSlug: series.slug,
-			seriesTitle: series.title,
-			seriesPoster: series.poster
+			seriesTitle: series.title
 		})
 		.from(videos)
 		.innerJoin(channels, eq(channels.id, videos.channelId))
@@ -74,7 +75,7 @@ function toCard(r: VideoRow): VideoCard {
 			color: r.creatorColor,
 			avatarUrl: r.creatorAvatarUrl
 		},
-		series: { slug: r.seriesSlug, title: r.seriesTitle, poster: r.seriesPoster }
+		series: { slug: r.seriesSlug, title: r.seriesTitle }
 	};
 }
 
@@ -89,7 +90,8 @@ export type SeriesSummary = {
 	grouping: (typeof series.$inferSelect)['grouping'];
 	startedAt: Date | null;
 	endedAt: Date | null;
-	poster: (typeof series.$inferSelect)['poster'];
+	/** The resolved poster: a public episode's image, an image URL, or `null` (plain surface). */
+	poster: PosterView;
 	creatorCount: number;
 	episodeCount: number;
 	lastUploadAt: Date | null;
@@ -121,6 +123,7 @@ export function listSeries(where = isNull(series.parentId)): SeriesSummary[] {
 		.groupBy(videos.seriesId)
 		.all();
 
+	const posters = resolvePosters(db, rows);
 	const cc = new Map(creatorCounts.map((r) => [r.seriesId, r.n]));
 	const es = new Map(episodeStats.map((r) => [r.seriesId, r]));
 	return rows
@@ -133,7 +136,7 @@ export function listSeries(where = isNull(series.parentId)): SeriesSummary[] {
 			grouping: r.grouping,
 			startedAt: r.startedAt,
 			endedAt: r.endedAt,
-			poster: r.poster,
+			poster: posters.get(r.id) ?? null,
 			creatorCount: cc.get(r.id) ?? 0,
 			episodeCount: es.get(r.id)?.n ?? 0,
 			lastUploadAt: es.get(r.id)?.last ?? null
@@ -271,8 +274,7 @@ export function getVideo(youtubeVideoId: string) {
 			slug: s.slug,
 			title: s.title,
 			grouping: s.grouping,
-			startedAt: s.startedAt,
-			poster: s.poster
+			startedAt: s.startedAt
 		},
 		group
 	};

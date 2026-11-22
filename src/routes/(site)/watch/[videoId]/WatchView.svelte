@@ -151,8 +151,6 @@
 			<YouTubePlayer
 				videoId={v.youtubeVideoId}
 				title={heading}
-				poster={data.series.poster}
-				tint={v.creator.color}
 				{autoplay}
 				{startAt}
 				captions={{
@@ -297,8 +295,6 @@
 						<span class="qt">
 							<VideoThumb
 								youtubeVideoId={item.youtubeVideoId}
-								poster={item.series.poster}
-								tint={item.creator.color}
 								label={itemTitle === undefined ? episodeLabel(item) : null}
 								duration={clockDuration(item.durationS)}
 								hidden={itemTitle === undefined}

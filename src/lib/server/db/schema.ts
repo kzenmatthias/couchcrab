@@ -5,6 +5,7 @@
  * Timestamps are stored as integer Unix seconds (`mode: 'timestamp'`).
  */
 import { sql } from 'drizzle-orm';
+import type { PosterSettings } from '../../poster.js';
 import {
 	type AnySQLiteColumn,
 	check,
@@ -76,9 +77,8 @@ export const channels = sqliteTable(
 	(t) => [index('channels_creator_idx').on(t.creatorId)]
 );
 
-/** Settings for the generated poster art, or an uploaded image. */
-export type PosterSettings =
-	{ type: 'art'; palette: string; seed: number; motif?: string } | { type: 'image'; url: string };
+/** A chosen episode and frame, or an image URL. `null` is automatic (see `src/lib/poster.ts`). */
+export type { PosterSettings };
 
 export const series = sqliteTable(
 	'series',

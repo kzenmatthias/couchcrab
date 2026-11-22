@@ -9,6 +9,7 @@
 	import SeriesMeta from '#lib/components/SeriesMeta.svelte';
 	import SeriesPoster from '#lib/components/SeriesPoster.svelte';
 	import { kindLabel } from '#lib/labels.js';
+	import { posterSurface } from '#lib/poster.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -20,7 +21,7 @@
 </svelte:head>
 
 {#if featured}
-	<ArtHeader poster={featured.poster} size="tall">
+	<ArtHeader poster={featured.poster} surface={posterSurface(featured.slug)} size="tall">
 		<p class="kicker">{m.home_featured_kicker({ kind: kindLabel(featured.kind) })}</p>
 		<h1>{featured.title}</h1>
 		{#if featured.description}

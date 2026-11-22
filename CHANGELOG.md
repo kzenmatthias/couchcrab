@@ -12,6 +12,10 @@ All notable changes to this project are documented here. The format follows [Kee
 - The catalog import accepts a YouTube channel id as a rule's `channel` and a rule's `withinSeriesDates`.
 - `npm run sync -- --first-max <n>`: let a channel's first sync take more than the 200 latest uploads, up to its whole history.
 
+### Changed
+
+- Series posters and series headers show a YouTube image of an episode instead of generated art: automatically the thumbnail of the first episode, or an episode and frame (thumbnail or one of YouTube's three frames) chosen by an editor in the series form. A series without episodes gets a plain coloured poster with its title. The generated art, its palettes and motifs are gone; existing art posters become automatic. The catalog import takes `poster: { youtubeVideoId, frame }` or `{ url }`.
+
 ## [0.1.0] - 2026-11-21
 
 First version: feature complete, running locally with demo data, not online yet.

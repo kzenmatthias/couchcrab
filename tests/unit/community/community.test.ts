@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { DB } from '#lib/server/db/client.js';
 import * as t from '#lib/server/db/schema.js';
 import { ForbiddenError, ValidationError } from '#lib/server/manage/core.js';
-import { createGroup } from '#lib/server/manage/series.js';
+import { valText } from '#lib/community/labels.js';
+import { describeChanges } from '#lib/server/community/changes.js';
+import { createGroup, getSeries, updateSeries } from '#lib/server/manage/series.js';
+import { seriesValues } from '../../../src/routes/manage/series/helpers.js';
 import { placeVideoByHand, setVideoStatus } from '#lib/server/manage/videos.js';
 import { setUserRole } from '#lib/server/manage/users.js';
 import {
@@ -631,5 +634,52 @@ describe('history lists', () => {
 				(h) => h.entity === 'video' && JSON.stringify(h.label).includes(video.title)
 			)
 		).toBe(false);
+	});
+});
+
+describe('poster changes', () => {
+	it('reads as text, treats old art as automatic and reverts', () => {
+		const season = seriesBySlug(env.db, 'lanternfall-season-3');
+		const v = env.db
+			.select()
+			.from(t.videos)
+			.where(and(eq(t.videos.seriesId, season.id), eq(t.videos.status, 'placed')))
+			.all()[0];
+		const poster = { type: 'video', youtubeVideoId: v.youtubeVideoId, frame: '2' };
+		const [change] = describeChanges(env.db, 'series', { poster: null }, { poster });
+		expect(change).toEqual({
+			field: 'poster',
+			before: { poster: { kind: 'auto' } },
+			after: { poster: { kind: 'video', video: v.title, frame: '2' } }
+		});
+		expect(valText(change.after, 'en')).toBe(`Episode "${v.title}", Frame 2`);
+		expect(valText(change.before, 'en')).toBe('Automatic (first episode)');
+		expect(
+			describeChanges(
+				env.db,
+				'series',
+				{ poster: { type: 'art', palette: 'dusk', seed: 2 } },
+				{ poster: null }
+			)
+		).toEqual([]);
+
+		const d = getSeries(env.db, env.editor, season.id);
+		updateSeries(
+			env.db,
+			env.editor,
+			season.id,
+			{
+				...seriesValues(d.series, d.translations, d.creatorIds),
+				poster_type: 'video',
+				poster_video: v.youtubeVideoId,
+				poster_frame: '2'
+			},
+			LOCALES
+		);
+		const entry = lastAudit(env.db);
+		revertEntry(env.db, env.editor, entry.id, LOCALES);
+		expect(seriesBySlug(env.db, 'lanternfall-season-3').poster).toBeNull();
+		revertEntry(env.db, env.editor, lastAudit(env.db).id, LOCALES);
+		expect(seriesBySlug(env.db, 'lanternfall-season-3').poster).toEqual(poster);
 	});
 });

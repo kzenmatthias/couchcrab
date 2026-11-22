@@ -16,8 +16,15 @@ export type ValCode =
 
 export type GroupRef = { kind: 'session' | 'week'; number: number; title: string | null };
 
+/** A poster setting, readable: the episode by its title (or id when unknown). */
+export type PosterVal =
+	| { kind: 'auto' }
+	| { kind: 'video'; video: string; frame: 'thumbnail' | '1' | '2' | '3' }
+	| { kind: 'image'; url: string };
+
 export type Val =
 	| null
+	| { poster: PosterVal }
 	| { text: string }
 	| { code: string; of: ValCode }
 	| { group: GroupRef }

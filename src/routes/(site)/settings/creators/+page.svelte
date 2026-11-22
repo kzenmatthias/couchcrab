@@ -2,8 +2,9 @@
 	import { resolve } from '$app/paths';
 	import { m } from '#lib/paraglide/messages.js';
 	import CreatorToggle from '#lib/components/CreatorToggle.svelte';
-	import PosterArt from '#lib/components/PosterArt.svelte';
+	import PosterImage from '#lib/components/PosterImage.svelte';
 	import RadioGroup from '#lib/components/RadioGroup.svelte';
+	import { posterSources, posterSurface } from '#lib/poster.js';
 	import { getViewing } from '#lib/prefs/store.svelte.js';
 	import type { PageProps } from './$types';
 
@@ -83,13 +84,8 @@
 	<ul>
 		{#each data.series as s (s.id)}
 			<li id="series-{s.slug}">
-				<span class="poster" aria-hidden="true">
-					<PosterArt
-						palette={s.poster?.type === 'art' ? s.poster.palette : undefined}
-						seed={s.poster?.type === 'art' ? s.poster.seed : 1}
-						width={160}
-						height={90}
-					/>
+				<span class="poster" aria-hidden="true" style:background-color={posterSurface(s.slug)}>
+					<PosterImage sources={posterSources(s.poster)} lazy />
 				</span>
 				<span class="info">
 					<b>{s.title}</b>

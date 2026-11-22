@@ -40,6 +40,8 @@
 		{values}
 		errors={form?.action === 'save' ? form.errors : null}
 		creators={data.creators}
+		posterVideos={data.posterVideos}
+		autoPoster={data.autoPoster}
 		isNew={false}
 		submitLabel={m.manage_save()}
 	/>

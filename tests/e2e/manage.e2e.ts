@@ -1,8 +1,10 @@
+import { crc32, deflateSync } from 'node:zlib';
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { signIn, userIdByName } from './auth-helpers.js';
 import {
 	idOf,
+	insertPosterSeries,
 	insertUnsorted,
 	setSiteText,
 	siteText,
@@ -74,7 +76,8 @@ test('an editor creates a series with a participant and a rule, applies it and p
 	await page.keyboard.press('Space');
 	await expect(quillby).toBeChecked();
 	await expect(page.getByText('Selected: 1')).toBeVisible();
-	await page.getByLabel('Palette').selectOption('dusk');
+	// A new series has no episodes yet: the poster stays automatic.
+	await expect(page.getByRole('radio', { name: 'Automatic (first episode)' })).toBeChecked();
 	await page.getByRole('button', { name: 'Create' }).click();
 	await expect(page).toHaveURL(/\/manage\/series\/\d+\?saved=1$/);
 	await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
@@ -163,6 +166,121 @@ test('an admin edits the Dutch footer disclaimer and sees it on the site', async
 	} finally {
 		setSiteText('footer_disclaimer', 'nl', original);
 	}
+});
+
+/** A plain grey PNG, wider than YouTube's 120 px placeholder. */
+function png(width = 320, height = 180): Buffer {
+	const chunk = (type: string, data: Buffer) => {
+		const body = Buffer.concat([Buffer.from(type), data]);
+		const out = Buffer.alloc(body.length + 8);
+		out.writeUInt32BE(data.length, 0);
+		body.copy(out, 4);
+		out.writeUInt32BE(crc32(body), body.length + 4);
+		return out;
+	};
+	const header = Buffer.alloc(13);
+	header.writeUInt32BE(width, 0);
+	header.writeUInt32BE(height, 4);
+	header.set([8, 0, 0, 0, 0], 8); // 8-bit greyscale
+	const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(width, 0x80)]);
+	return Buffer.concat([
+		Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+		chunk('IHDR', header),
+		chunk('IDAT', deflateSync(Buffer.concat(Array.from({ length: height }, () => row)))),
+		chunk('IEND', Buffer.alloc(0))
+	]);
+}
+
+/** Answers YouTube image requests: only the files in `available` exist. */
+async function fakeYouTubeImages(page: Page, available: (file: string) => boolean) {
+	await page.route('https://i.ytimg.com/**', (route) => {
+		const file = new URL(route.request().url()).pathname.split('/').pop()!;
+		return available(file)
+			? route.fulfill({ contentType: 'image/png', body: png() })
+			: route.fulfill({ status: 404, body: '' });
+	});
+}
+
+test('an editor chooses an episode and a frame as the poster, with a fallback to smaller sizes', async ({
+	page,
+	context,
+	baseURL
+}) => {
+	const tag = uniqueTag();
+	const { slug, ids } = insertPosterSeries(tag);
+	// No maxres images: the posters fall back to sd, as for many real videos.
+	await fakeYouTubeImages(page, (file) => !file.startsWith('maxres'));
+	await signIn(context, baseURL!, userIdByName('Demo Editor'));
+
+	// Automatic: the thumbnail of the first episode, lazy in the list.
+	await page.goto('/series');
+	const poster = page.locator('article.poster', {
+		has: page.getByRole('heading', { name: `Poster ${tag}` })
+	});
+	const img = poster.locator('img');
+	await img.scrollIntoViewIfNeeded();
+	await expect(img).toHaveAttribute('src', `https://i.ytimg.com/vi/${ids[0]}/sddefault.jpg`);
+	await expect(img).toHaveAttribute('alt', '');
+	await expect(img).toHaveAttribute('loading', 'lazy');
+
+	await page.goto(`/manage/series/${idOf('series', slug)}`);
+	const auto = page.getByRole('radio', { name: 'Automatic (first episode)' });
+	await expect(auto).toBeChecked();
+	const choose = page.getByRole('radio', { name: 'Choose an episode' });
+	await choose.focus();
+	await page.keyboard.press('ArrowUp');
+	await page.keyboard.press('ArrowDown');
+	await expect(choose).toBeChecked();
+	const episode = page.getByRole('combobox', { name: 'Episode', exact: true });
+	await expect(episode.locator('option')).toHaveText([
+		`Poster ${tag} episode 1 (Quillby)`,
+		`Poster ${tag} episode 2 (Quillby)`
+	]);
+	await episode.selectOption(ids[1]);
+	const frames = page.getByRole('group', { name: 'Image from the episode' });
+	await expect(frames.getByRole('radio')).toHaveCount(4);
+	await expect(frames.getByRole('radio', { name: 'Thumbnail' })).toBeChecked();
+	await frames.getByRole('radio', { name: 'Frame 2' }).check();
+	// The previews are decorative; the preview poster shows the chosen frame.
+	await expect(frames.locator('img').nth(2)).toHaveAttribute('src', /\/sd2\.jpg$/);
+	await expect(page.locator('figure.preview img')).toHaveAttribute(
+		'src',
+		`https://i.ytimg.com/vi/${ids[1]}/sd2.jpg`
+	);
+
+	for (const theme of THEMES) {
+		await context.addCookies([{ name: 'theme', value: theme, url: baseURL! }]);
+		await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
+		const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+		expect(results.violations).toEqual([]);
+	}
+
+	await page.getByRole('button', { name: 'Save' }).click();
+	await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
+	await page.reload();
+	await expect(page.getByRole('radio', { name: 'Choose an episode' })).toBeChecked();
+	await expect(page.getByRole('combobox', { name: 'Episode', exact: true })).toHaveValue(ids[1]);
+	await expect(page.getByRole('radio', { name: 'Frame 2' })).toBeChecked();
+
+	// The header is not lazy and shows the chosen frame.
+	await page.goto(`/series/${slug}`);
+	const header = page.locator('.art-wrap img');
+	await expect(header).toHaveAttribute('src', `https://i.ytimg.com/vi/${ids[1]}/sd2.jpg`);
+	await expect(header).not.toHaveAttribute('loading', 'lazy');
+
+	// When no size loads at all, the plain surface with the title is left.
+	await page.unroute('https://i.ytimg.com/**');
+	await fakeYouTubeImages(page, () => false);
+	await page.goto(`/series/${slug}`);
+	await expect(page.locator('.art-wrap img')).toHaveCount(0);
+	await expect(page.getByRole('heading', { level: 1, name: `Poster ${tag}` })).toBeVisible();
+
+	// Back to automatic.
+	await page.goto(`/manage/series/${idOf('series', slug)}`);
+	await page.getByRole('radio', { name: 'Automatic (first episode)' }).check();
+	await expect(page.getByRole('combobox', { name: 'Episode', exact: true })).toHaveCount(0);
+	await page.getByRole('button', { name: 'Save' }).click();
+	await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
 });
 
 const PAGES = [

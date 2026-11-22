@@ -261,8 +261,7 @@ export function seed(db: DB): SeedSummary {
 				kind: 'season',
 				status: 'ongoing',
 				grouping: 'week',
-				startedAt: new Date(SEASON_START),
-				poster: { type: 'art', palette: 'meadow', seed: 11 }
+				startedAt: new Date(SEASON_START)
 			},
 			seasonMembers,
 			{
@@ -333,8 +332,7 @@ export function seed(db: DB): SeedSummary {
 				status: 'ongoing',
 				grouping: 'none',
 				parentId: season,
-				startedAt: new Date(SEASON_START),
-				poster: { type: 'art', palette: 'meadow', seed: 12 }
+				startedAt: new Date(SEASON_START)
 			},
 			['brassmoth', 'driftwood-dot', 'pebblewick'],
 			{
@@ -375,8 +373,7 @@ export function seed(db: DB): SeedSummary {
 				kind: 'live_series',
 				status: 'ongoing',
 				grouping: 'session',
-				startedAt: new Date(liveStart),
-				poster: { type: 'art', palette: 'ember', seed: 4 }
+				startedAt: new Date(liveStart)
 			},
 			liveMembers,
 			{
@@ -431,8 +428,7 @@ export function seed(db: DB): SeedSummary {
 				status: 'ended',
 				grouping: 'none',
 				startedAt: new Date(eventStart),
-				endedAt: at(eventStart, 2),
-				poster: { type: 'art', palette: 'night', seed: 9 }
+				endedAt: at(eventStart, 2)
 			},
 			['marrowfen', 'nimbleknot', 'ferrocrest', 'cobalt-wren'],
 			{
@@ -465,8 +461,7 @@ export function seed(db: DB): SeedSummary {
 				grouping: 'session',
 				parentId: event,
 				startedAt: new Date(eventStart),
-				endedAt: at(eventStart, 2),
-				poster: { type: 'art', palette: 'night', seed: 10 }
+				endedAt: at(eventStart, 2)
 			},
 			eventMembers,
 			{

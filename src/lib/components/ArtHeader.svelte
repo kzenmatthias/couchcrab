@@ -1,40 +1,29 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { PosterSettings } from '#lib/server/db/schema.js';
-	import PosterArt from './PosterArt.svelte';
+	import { posterSources, type PosterView } from '#lib/poster.js';
+	import PosterImage from './PosterImage.svelte';
 
 	type Props = {
-		poster: PosterSettings | null;
-		/** Optional sun or moon colour, e.g. a creator colour. */
-		tint?: string | null;
-		/** Seed when the poster has none (e.g. a creator header). */
-		seed?: number;
+		/** The series poster; `null` shows only the surface colour. */
+		poster: PosterView;
+		/** Colour behind the image, and all there is without one (`posterSurface`, a creator colour). */
+		surface: string;
 		/** `tall` for the home hero. */
 		size?: 'tall' | 'normal';
 		children: Snippet;
 	};
 
-	let { poster, tint = null, seed = 1, size = 'normal', children }: Props = $props();
+	let { poster, surface, size = 'normal', children }: Props = $props();
 </script>
 
 <!--
-	Large header with poster art behind the text. The art is decorative; the text always sits on
-	a scrim in the page background colour, so contrast does not depend on the art.
+	Large header with the poster image behind the text. The image is decorative; the text always
+	sits on a scrim in the page background colour, so contrast does not depend on the image.
+	Not lazy: it is at the top of the page.
 -->
 <div class="head {size}">
-	<div class="art-wrap" aria-hidden="true">
-		{#if poster?.type === 'image'}
-			<img src={poster.url} alt="" />
-		{:else}
-			<PosterArt
-				palette={poster?.type === 'art' ? poster.palette : undefined}
-				seed={poster?.type === 'art' ? poster.seed : seed}
-				motif={poster?.type === 'art' ? poster.motif : null}
-				width={160}
-				height={90}
-				{tint}
-			/>
-		{/if}
+	<div class="art-wrap" aria-hidden="true" style:background-color={surface}>
+		<PosterImage sources={posterSources(poster)} />
 	</div>
 	<div class="content">
 		{@render children()}
@@ -68,13 +57,6 @@
 		background:
 			linear-gradient(90deg, var(--bg) 0 40%, transparent 85%),
 			linear-gradient(0deg, var(--bg) 0 15%, transparent 60%);
-	}
-	img {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
 	}
 	.content {
 		max-width: 40rem;

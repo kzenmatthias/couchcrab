@@ -7,8 +7,7 @@ import {
 	type Catalog,
 	colorForSlug,
 	importCatalog,
-	parseCatalog,
-	posterForSlug
+	parseCatalog
 } from '#lib/server/manage/catalog-import.js';
 import { testDatabase } from '../auth/helpers.js';
 import { auditRows, creatorBySlug, seeded, seriesBySlug } from './fixtures.js';
@@ -69,7 +68,8 @@ describe('catalog import', () => {
 
 		const series = seriesBySlug(db, 'glimmerdeep-life');
 		expect(series).toMatchObject({ kind: 'live_series', status: 'ended', grouping: 'session' });
-		expect(series.poster).toEqual(posterForSlug('glimmerdeep-life'));
+		// No poster in the file: automatic (the first episode).
+		expect(series.poster).toBeNull();
 		const extras = seriesBySlug(db, 'glimmerdeep-life-extras');
 		expect(extras.parentId).toBe(series.id);
 		const translations = db
@@ -182,6 +182,39 @@ describe('catalog import', () => {
 			"series[0] glimmerdeep-life: rules[0].channel: UCunknown000000000000000 is not a channel of this series' creators"
 		]);
 		expect(db.select().from(t.creators).all()).toHaveLength(0);
+	});
+
+	it('takes a chosen episode or an image URL as the poster, and refuses others', () => {
+		const raw = fixture();
+		const s = (raw.series as Record<string, unknown>[])[0];
+		s.poster = { youtubeVideoId: 'abcdefghijk', frame: '2' };
+		run(db, raw);
+		expect(seriesBySlug(db, 'glimmerdeep-life').poster).toEqual({
+			type: 'video',
+			youtubeVideoId: 'abcdefghijk',
+			frame: '2'
+		});
+		// Leaving it out keeps the stored poster.
+		delete s.poster;
+		run(db, raw);
+		expect(seriesBySlug(db, 'glimmerdeep-life').poster).toMatchObject({ frame: '2' });
+		s.poster = { url: 'https://example.com/poster.jpg' };
+		run(db, raw);
+		expect(seriesBySlug(db, 'glimmerdeep-life').poster).toEqual({
+			type: 'image',
+			url: 'https://example.com/poster.jpg'
+		});
+
+		for (const bad of [
+			{ youtubeVideoId: 'short' },
+			{ youtubeVideoId: 'abcdefghijk', frame: '9' },
+			{ palette: 'meadow', seed: 3 }
+		]) {
+			s.poster = bad;
+			const result = parseCatalog(raw, LOCALES);
+			expect(result.ok).toBe(false);
+			if (!result.ok) expect(result.problems.some((p) => p.includes('poster'))).toBe(true);
+		}
 	});
 
 	it('changes nothing when run twice', () => {

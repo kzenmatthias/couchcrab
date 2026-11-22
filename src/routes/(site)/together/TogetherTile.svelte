@@ -1,23 +1,19 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { m } from '#lib/paraglide/messages.js';
-	import type { PosterSettings } from '#lib/server/db/schema.js';
-	import PosterArt from '#lib/components/PosterArt.svelte';
 	import {
 		createSimulatedPov,
 		createYouTubePov,
 		type PovPlayer,
 		type PovState
 	} from '#lib/pov-player.js';
-	import { isRealYoutubeId, seedFrom, youtubeWatchUrl } from '#lib/video.js';
+	import { isRealYoutubeId, youtubeWatchUrl } from '#lib/video.js';
 
 	type Props = {
 		videoId: string;
 		/** Accessible name of the player frame. */
 		title: string;
 		durationS: number;
-		poster: PosterSettings | null;
-		tint: string | null;
 		/** Position in the video when the player is made (seconds). */
 		start: number;
 		muted: boolean;
@@ -34,8 +30,6 @@
 		videoId,
 		title,
 		durationS,
-		poster,
-		tint,
 		start,
 		muted,
 		captions,
@@ -91,13 +85,6 @@
 		</div>
 	{:else}
 		<div class="placeholder">
-			<PosterArt
-				palette={poster?.type === 'art' ? poster.palette : undefined}
-				seed={seedFrom(videoId)}
-				width={160}
-				height={90}
-				{tint}
-			/>
 			<p class="msg">
 				{#if failed}
 					{m.watch_player_failed()}
@@ -143,9 +130,6 @@
 		display: grid;
 		place-items: center;
 		isolation: isolate;
-	}
-	.placeholder :global(.art) {
-		z-index: -1;
 	}
 	.msg {
 		margin: 12px;

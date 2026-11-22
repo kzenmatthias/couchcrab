@@ -9,8 +9,11 @@ import {
 	createGroup,
 	createSeries,
 	getSeries,
+	posterVideoChoices,
 	updateSeries
 } from '#lib/server/manage/series.js';
+import { posterInput } from '#lib/poster.js';
+import { seriesValues } from '../../../src/routes/manage/series/helpers.js';
 import { placeVideoByHand, setVideoStatus } from '#lib/server/manage/videos.js';
 import { auditRows, creatorBySlug, lastAudit, seeded, seriesBySlug } from './fixtures.js';
 
@@ -41,9 +44,8 @@ function newSeries(creatorSlugs: string[] = ['quillby']) {
 			started_at: '2026-09-01',
 			description_en: 'A test season.',
 			creators: creatorSlugs.map((s) => String(creatorBySlug(env.db, s).id)),
-			palette: 'tide',
-			motif: 'crown',
-			seed: '42'
+			poster_type: 'image',
+			poster_url: 'https://example.com/mossbound.jpg'
 		},
 		LOCALES
 	);
@@ -58,7 +60,7 @@ describe('series', () => {
 		expect(row).toMatchObject({
 			slug: 'mossbound',
 			status: 'ongoing',
-			poster: { type: 'art', palette: 'tide', seed: 42, motif: 'crown' }
+			poster: { type: 'image', url: 'https://example.com/mossbound.jpg' }
 		});
 		const detail = getSeries(env.db, env.editor, row.id);
 		expect(detail.creatorIds).toHaveLength(2);
@@ -86,7 +88,7 @@ describe('series', () => {
 						ended_at: '2026-09-01',
 						description_nl: 'Alleen Nederlands',
 						creators: ['99999'],
-						palette: 'neon'
+						poster_type: 'neon'
 					},
 					LOCALES
 				)
@@ -96,7 +98,7 @@ describe('series', () => {
 			ended_at: 'date_order',
 			description_en: 'required',
 			creators: 'invalid_choice',
-			palette: 'invalid_choice'
+			poster_type: 'invalid_choice'
 		});
 	});
 
@@ -159,6 +161,117 @@ describe('series', () => {
 	});
 });
 
+describe('series posters', () => {
+	const season = () => seriesBySlug(env.db, 'lanternfall-season-3');
+	const placedIn = (seriesId: number) =>
+		env.db
+			.select()
+			.from(t.videos)
+			.where(and(eq(t.videos.seriesId, seriesId), eq(t.videos.status, 'placed')))
+			.all();
+	/** The form as it is for the series, with other poster fields. */
+	const save = (seriesId: number, poster: Record<string, string>) => {
+		const d = getSeries(env.db, env.editor, seriesId);
+		return updateSeries(
+			env.db,
+			env.editor,
+			seriesId,
+			{ ...seriesValues(d.series, d.translations, d.creatorIds), ...poster },
+			LOCALES
+		);
+	};
+
+	it('lists the episodes of the series family, oldest first, without Shorts', () => {
+		const choices = posterVideoChoices(env.db, env.editor, season().id);
+		expect(choices.length).toBeGreaterThan(1);
+		const times = choices.map((c) => c.publishedAt.getTime());
+		expect(times).toEqual([...times].sort((a, b) => a - b));
+		expect(choices[0].creator).toBeTruthy();
+		expect(() => posterVideoChoices(env.db, env.viewer, season().id)).toThrow(ForbiddenError);
+	});
+
+	it('saves a chosen episode and frame, and automatic as null', () => {
+		const v = placedIn(season().id)[0];
+		const row = save(season().id, {
+			poster_type: 'video',
+			poster_video: v.youtubeVideoId,
+			poster_frame: '2'
+		});
+		expect(row.poster).toEqual({ type: 'video', youtubeVideoId: v.youtubeVideoId, frame: '2' });
+		expect(posterInput(row.poster)).toMatchObject({ poster_type: 'video', poster_frame: '2' });
+		expect(save(season().id, { poster_type: 'auto' }).poster).toBeNull();
+		// What older forms and history entries send.
+		expect(save(season().id, { poster_type: 'art', palette: 'meadow' }).poster).toBeNull();
+	});
+
+	it('refuses an episode of another series, a Short and a bad frame or id', () => {
+		const family = env.db
+			.select({ id: t.series.id })
+			.from(t.series)
+			.where(eq(t.series.parentId, season().id))
+			.all()
+			.map((r) => r.id)
+			.concat(season().id);
+		const other = env.db
+			.select()
+			.from(t.videos)
+			.where(eq(t.videos.status, 'placed'))
+			.all()
+			.find((v) => v.seriesId !== null && !family.includes(v.seriesId) && !v.isShort)!;
+		const id = season().id;
+		expect(
+			errorsOf(() =>
+				save(id, { poster_type: 'video', poster_video: other.youtubeVideoId, poster_frame: '1' })
+			)
+		).toEqual({ poster_video: 'invalid_choice' });
+		const short = placedIn(id)[0];
+		env.db.update(t.videos).set({ isShort: true }).where(eq(t.videos.id, short.id)).run();
+		expect(
+			errorsOf(() => save(id, { poster_type: 'video', poster_video: short.youtubeVideoId }))
+		).toEqual({ poster_video: 'invalid_choice' });
+		const ok = placedIn(id).find((v) => !v.isShort)!;
+		expect(
+			errorsOf(() =>
+				save(id, { poster_type: 'video', poster_video: ok.youtubeVideoId, poster_frame: '4' })
+			)
+		).toEqual({ poster_frame: 'invalid_choice' });
+		expect(errorsOf(() => save(id, { poster_type: 'video', poster_video: 'nope' }))).toEqual({
+			poster_video: 'invalid_choice'
+		});
+		expect(errorsOf(() => save(id, { poster_type: 'video', poster_video: '' }))).toEqual({
+			poster_video: 'required'
+		});
+		expect(errorsOf(() => save(id, { poster_type: 'image', poster_url: '' }))).toEqual({
+			poster_url: 'required'
+		});
+	});
+
+	it('accepts a video it does not know yet, and keeps the stored one when it moved', () => {
+		const id = season().id;
+		expect(
+			save(id, { poster_type: 'video', poster_video: 'notsyncedyt', poster_frame: '1' }).poster
+		).toMatchObject({ youtubeVideoId: 'notsyncedyt' });
+		const v = placedIn(id)[0];
+		save(id, { poster_type: 'video', poster_video: v.youtubeVideoId, poster_frame: '3' });
+		setVideoStatus(env.db, env.editor, v.id, 'ignored');
+		// An unrelated edit still saves; the public pages fall back to automatic.
+		const row = save(id, { title: 'Lanternfall S3' });
+		expect(row.poster).toEqual({ type: 'video', youtubeVideoId: v.youtubeVideoId, frame: '3' });
+	});
+
+	it('gives the Extras series the same poster', () => {
+		const v = placedIn(season().id)[0];
+		save(season().id, { poster_type: 'video', poster_video: v.youtubeVideoId, poster_frame: '1' });
+		const existing = env.db.select().from(t.series).where(eq(t.series.parentId, season().id)).get();
+		const extras = existing ?? createExtras(env.db, env.editor, season().id);
+		if (!existing) expect(extras.poster).toEqual(season().poster);
+		expect(
+			save(extras.id, { poster_type: 'video', poster_video: v.youtubeVideoId, poster_frame: '1' })
+				.poster
+		).toMatchObject({ youtubeVideoId: v.youtubeVideoId });
+	});
+});
+
 describe('title rules', () => {
 	it('validates regexes with the engine guard and Extras targets', () => {
 		const row = newSeries();
@@ -169,7 +282,10 @@ describe('title rules', () => {
 		).toEqual({ pattern: 'invalid_regex' });
 		expect(
 			errorsOf(() =>
-				createRule(env.db, env.editor, row.id, { pattern: 'x'.repeat(MAX_PATTERN_LENGTH + 1), match: 'contains' })
+				createRule(env.db, env.editor, row.id, {
+					pattern: 'x'.repeat(MAX_PATTERN_LENGTH + 1),
+					match: 'contains'
+				})
 			)
 		).toEqual({ pattern: 'pattern_too_long' });
 		expect(

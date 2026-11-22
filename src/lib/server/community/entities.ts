@@ -4,6 +4,7 @@
  * back through that layer (so every change is validated, role-checked and audit-logged).
  */
 import { asc, eq } from 'drizzle-orm';
+import { normalizePoster, posterInput } from '../../poster.js';
 import type { DB } from '../db/client.js';
 import * as t from '../db/schema.js';
 import { type Actor, hasRole, type Input, iso } from '../manage/core.js';
@@ -181,7 +182,6 @@ const on = (value: unknown) => (value ? 'on' : '');
 /** A series snapshot as the input of `updateSeries`. */
 export function seriesInput(s: Snapshot): Input {
 	const descriptions = (s.descriptions ?? {}) as Record<string, string>;
-	const poster = (s.poster ?? { type: 'art', palette: 'meadow', seed: 1 }) as t.PosterSettings;
 	return {
 		title: str(s.title),
 		slug: str(s.slug),
@@ -192,14 +192,7 @@ export function seriesInput(s: Snapshot): Input {
 		ended_at: dateInput(s.endedAt),
 		...Object.fromEntries(Object.entries(descriptions).map(([l, d]) => [`description_${l}`, d])),
 		creators: ((s.creatorIds ?? []) as number[]).map(String),
-		...(poster.type === 'image'
-			? { poster_type: 'image', poster_url: poster.url }
-			: {
-					poster_type: 'art',
-					palette: poster.palette,
-					seed: String(poster.seed),
-					motif: poster.motif ?? ''
-				})
+		...posterInput(normalizePoster(s.poster))
 	};
 }
 
